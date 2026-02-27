@@ -1,0 +1,89 @@
+.teams-container{
+  max-width:900px;
+  margin:auto;
+  padding:40px;
+  font-family:sans-serif;
+}
+
+.teams-title{
+  margin-bottom:25px;
+}
+
+.teams-card{
+  border:1px solid #e5e5e5;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+  background:white;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+}
+
+input{
+  flex:1;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:black;
+  color:white;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.team-list{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.team-list button{
+  background:#f1f1f1;
+  color:black;
+}
+
+.team-list button.active{
+  background:black;
+  color:white;
+}
+
+.list-item{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid #eee;
+}
+
+.role{
+  opacity:.6;
+}
+
+.danger{
+  background:#e54848;
+}
+
+.error{
+  color:red;
+  margin-top:10px;
+}
+
+.muted{
+  opacity:.6;
+}
+
+.teams-loading{
+  padding:40px;
+  text-align:center;
+}

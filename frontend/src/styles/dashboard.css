@@ -1,0 +1,12 @@
+.project-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  text-decoration: none;
+  color: #111;
+  background: #fff;
+}
+
+.project-card:hover {
+  background: #f9fafb;
+}

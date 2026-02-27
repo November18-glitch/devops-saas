@@ -1,0 +1,61 @@
+.app-header {
+  height: 70px;
+  background: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  padding: 0 30px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.header-avatar-placeholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome {
+  font-size: 13px;
+  color: gray;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.logout-btn {
+  background: #f3f4f6;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #e5e7eb;
+}

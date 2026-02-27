@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { supabase } from "../supabaseClient";
+import { Link } from "react-router-dom";
+
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) setError(error.message);
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>SaaS Logo + Name</h2>
+
+        <form onSubmit={handleLogin} style={styles.form}>
+          <label style={styles.label}>Email address</label>
+          <input
+            type="email"
+            required
+            style={styles.input}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <label style={styles.label}>Password</label>
+          <input
+            type="password"
+            required
+            style={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          {error && <p style={styles.error}>{error}</p>}
+
+          <button style={styles.button}>Login</button>
+        </form>
+
+        <p style={styles.footer}>
+          Don’t have an account? <Link to="/register">Register</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#fafafa",
+  },
+  card: {
+    width: 360,
+    padding: 32,
+    background: "#fff",
+    borderRadius: 6,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  input: {
+    padding: 10,
+    marginBottom: 16,
+    borderRadius: 4,
+    border: "1px solid #ccc",
+  },
+  button: {
+    padding: 12,
+    background: "#000",
+    color: "#fff",
+    border: "none",
+    borderRadius: 4,
+    cursor: "pointer",
+    marginTop: 8,
+  },
+  error: {
+    color: "red",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  footer: {
+    marginTop: 16,
+    textAlign: "center",
+    fontSize: 14,
+  },
+};
