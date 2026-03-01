@@ -35,7 +35,7 @@ export default function Register() {
       });
     }
 
-    alert("Account created!");
+    alert("Account created!\n\nPlease check your email to confirm your account before logging in.");
 
     // redirect to dashboard
     window.location.href = "/dashboard";
