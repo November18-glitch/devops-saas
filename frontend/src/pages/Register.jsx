@@ -9,34 +9,37 @@ export default function Register() {
   const [error, setError] = useState(null);
 
   const handleRegister = async (e) => {
-   e.preventDefault();
-   setError(null);
+    e.preventDefault();
+    setError(null);
 
-   const params = new URLSearchParams(window.location.search);
-   const inviteToken = params.get("invite");
+    const params = new URLSearchParams(window.location.search);
+    const inviteToken = params.get("invite");
 
-   const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username },
-    },
-  });
-
-   if (error) {
-    setError(error.message);
-    return;
-  }
-
-  /* ---------- ACCEPT INVITE ---------- */
-   if (inviteToken) {
-    await supabase.rpc("accept_invite", {
-      invite_token: inviteToken
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username },
+      },
     });
-  }
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    // accept invite if user came from invite link
+    if (inviteToken) {
+      await supabase.rpc("accept_invite", {
+        invite_token: inviteToken,
+      });
+    }
 
     alert("Account created!");
-};
+
+    // redirect to dashboard
+    window.location.href = "/dashboard";
+  };
 
   return (
     <div style={styles.page}>

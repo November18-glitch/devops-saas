@@ -16,7 +16,13 @@ export default function Login() {
       password,
     });
 
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    // redirect after successful login
+    window.location.href = "/dashboard";
   };
 
   return (
