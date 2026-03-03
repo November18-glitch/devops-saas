@@ -1,11 +1,13 @@
 /// <reference lib="deno.window" />
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
@@ -15,8 +17,9 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("authorization");
+
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+      return new Response(JSON.stringify({ error: "Missing Authorization" }), {
         status: 401,
         headers: corsHeaders,
       });
@@ -31,22 +34,19 @@ serve(async (req) => {
       });
     }
 
-    // Validate logged-in user
+    // client using user's JWT
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: { headers: { Authorization: authHeader } },
-      }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     const {
       data: { user },
-      error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid JWT" }), {
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Invalid user" }), {
         status: 401,
         headers: corsHeaders,
       });
@@ -59,13 +59,13 @@ serve(async (req) => {
       });
     }
 
-    // Admin client (bypass RLS)
+    // admin client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check if user is owner
+    // check if owner
     const { data: owner } = await supabaseAdmin
       .from("team_members")
       .select("id")
@@ -81,7 +81,7 @@ serve(async (req) => {
       });
     }
 
-    // Prevent duplicate invite
+    // prevent duplicate invites
     const { data: existingInvite } = await supabaseAdmin
       .from("team_invites")
       .select("id")
@@ -91,38 +91,24 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingInvite) {
-      return new Response(JSON.stringify({ error: "User already invited" }), {
+      return new Response(JSON.stringify({ error: "Already invited" }), {
         status: 400,
         headers: corsHeaders,
       });
     }
 
-    // Generate token
-    const token = crypto.randomUUID();
-
-    // Insert invite row
+    // insert invite
     await supabaseAdmin.from("team_invites").insert({
       team_id,
       email,
       role: role ?? "member",
-      token,
       accepted: false,
     });
 
-    // Send Supabase invite email
-    const siteUrl = Deno.env.get("PUBLIC_SITE_URL");
-
-    const { error: inviteError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback?token=${token}&team_id=${team_id}`,
-      });
-
-    if (inviteError) {
-      return new Response(JSON.stringify({ error: inviteError.message }), {
-        status: 400,
-        headers: corsHeaders,
-      });
-    }
+    // send invite email
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${Deno.env.get("PUBLIC_SITE_URL")}/dashboard`,
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
