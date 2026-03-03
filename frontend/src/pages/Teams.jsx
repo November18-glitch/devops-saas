@@ -89,46 +89,39 @@ export default function Teams() {
   }
 
   async function invite() {
-    setError("");
+  setError("");
 
-    if (!email || !activeTeamId) return;
+  if (!email || !activeTeamId) return;
 
-    try {
+  try {
 
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        setError("You must be logged in");
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke(
-        "send-team-invite",
-        {
-          body: {
-            email: email.trim().toLowerCase(),
-            team_id: activeTeamId,
-            role: "member"
-          }
+    const { data, error } = await supabase.functions.invoke(
+      "send-team-invite",
+      {
+        body: {
+          email,
+          team_id: activeTeamId,
+          role: "member"
         }
-      );
-
-      if (error) {
-        console.log("FUNCTION ERROR:", error);
-        setError(error.message);
-        return;
       }
+    );
 
-      console.log("SUCCESS:", data);
-
-      setEmail("");
-      loadInvites(activeTeamId);
-
-    } catch (err) {
-      console.error("CATCH ERROR:", err);
-      setError(err.message);
+    if (error) {
+      console.log("FUNCTION ERROR:", error);
+      setError(error.message);
+      return;
     }
+
+    console.log("SUCCESS:", data);
+
+    setEmail("");
+    loadInvites(activeTeamId);
+
+  } catch (err) {
+    console.error("CATCH ERROR:", err);
+    setError(err.message);
   }
+}
 
   async function deleteInvite(id) {
     await supabase.from("team_invites").delete().eq("id", id);
