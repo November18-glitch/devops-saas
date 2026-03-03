@@ -95,18 +95,18 @@ export default function Teams() {
 
     try {
 
-      // 🔥 IMPORTANT: get access token manually
       const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
+
+      if (!session) {
+        setError("You must be logged in");
+        return;
+      }
 
       const { data, error } = await supabase.functions.invoke(
         "send-team-invite",
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          },
           body: {
-            email,
+            email: email.trim().toLowerCase(),
             team_id: activeTeamId,
             role: "member"
           }
