@@ -74,7 +74,10 @@ export default function Teams() {
 
     const { data: team } = await supabase
       .from("teams")
-      .insert({ name: teamName.trim(), owner_id: user.id })
+      .insert({
+        name: teamName.trim(),
+        owner_id: user.id
+      })
       .select()
       .single();
 
@@ -89,39 +92,37 @@ export default function Teams() {
   }
 
   async function invite() {
-  setError("");
 
-  if (!email || !activeTeamId) return;
+    setError("");
 
-  try {
+    if (!email || !activeTeamId) return;
 
-    const { data, error } = await supabase.functions.invoke(
-      "send-team-invite",
-      {
-        body: {
+    try {
+
+      const token = crypto.randomUUID();
+
+      const { error } = await supabase
+        .from("team_invites")
+        .insert({
           email,
           team_id: activeTeamId,
-          role: "member"
-        }
+          role: "member",
+          token,
+          accepted: false
+        });
+
+      if (error) {
+        setError(error.message);
+        return;
       }
-    );
 
-    if (error) {
-      console.log("FUNCTION ERROR:", error);
-      setError(error.message);
-      return;
+      setEmail("");
+      loadInvites(activeTeamId);
+
+    } catch (err) {
+      setError(err.message);
     }
-
-    console.log("SUCCESS:", data);
-
-    setEmail("");
-    loadInvites(activeTeamId);
-
-  } catch (err) {
-    console.error("CATCH ERROR:", err);
-    setError(err.message);
   }
-}
 
   async function deleteInvite(id) {
     await supabase.from("team_invites").delete().eq("id", id);
