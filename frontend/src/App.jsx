@@ -10,6 +10,7 @@ import Projects from "./pages/Projects";
 import ProfileSettings from "./pages/ProfileSettings";
 import Teams from "./pages/Teams";
 import AuthCallback from "./pages/AuthCallback";
+import Join from "./pages/Join";
 
 // Layout
 import Layout from "./components/Layout";
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/teams" element={<Teams />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/join" element={<Join />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
           </Route>
 

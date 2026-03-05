@@ -3,13 +3,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-serve(async (req) => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+}
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  }
+serve(async (req) => {
 
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -26,18 +26,34 @@ serve(async (req) => {
 
     const token = crypto.randomUUID()
 
+    // save invite
     await supabase.from("team_invites").insert({
       email,
       team_id,
-      role: role || "member",
-      token,
-      accepted: false
+      role,
+      token
     })
 
-    const siteUrl = Deno.env.get("PUBLIC_SITE_URL")
+    const inviteLink = `${Deno.env.get("PUBLIC_SITE_URL")}/join?token=${token}`
 
-    await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback`
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")
+
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: "DeployAlly <onboarding@resend.dev>",
+        to: email,
+        subject: "You were invited to a team",
+        html: `
+          <h2>You were invited to a team</h2>
+          <p>Click below to join:</p>
+          <a href="${inviteLink}">${inviteLink}</a>
+        `
+      })
     })
 
     return new Response(
