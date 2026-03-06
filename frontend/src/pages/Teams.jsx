@@ -93,36 +93,32 @@ export default function Teams() {
 
   async function invite() {
 
-    setError("");
+  setError("");
 
-    if (!email || !activeTeamId) return;
+  if (!email || !activeTeamId) return;
 
-    try {
-
-      const token = crypto.randomUUID();
-
-      const { error } = await supabase
-        .from("team_invites")
-        .insert({
-          email,
-          team_id: activeTeamId,
-          role: "member",
-          token,
-          accepted: false
-        });
-
-      if (error) {
-        setError(error.message);
-        return;
+  const { data, error } = await supabase.functions.invoke(
+    "send-team-invite",
+    {
+      body: {
+        email,
+        team_id: activeTeamId
       }
-
-      setEmail("");
-      loadInvites(activeTeamId);
-
-    } catch (err) {
-      setError(err.message);
     }
+  );
+
+  if (error) {
+    setError(error.message);
+    return;
   }
+
+  alert("Invite link copied:\n\n" + data.inviteLink);
+
+  navigator.clipboard.writeText(data.inviteLink);
+
+  setEmail("");
+
+}
 
   async function deleteInvite(id) {
     await supabase.from("team_invites").delete().eq("id", id);
