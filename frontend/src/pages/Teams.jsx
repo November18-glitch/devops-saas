@@ -18,19 +18,27 @@ export default function Teams() {
   }, []);
 
   async function load() {
-    setError("");
+
     setLoading(true);
+    setError("");
 
     const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) {
       setLoading(false);
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("team_members")
       .select("team_id, teams(id,name)")
       .eq("user_id", user.id);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
 
     const formatted = (data || []).map(t => ({
       id: t.teams.id,
@@ -39,7 +47,7 @@ export default function Teams() {
 
     setTeams(formatted);
 
-    if (formatted.length) {
+    if (formatted.length > 0) {
       setActiveTeamId(formatted[0].id);
       await loadMembers(formatted[0].id);
       await loadInvites(formatted[0].id);
@@ -49,30 +57,43 @@ export default function Teams() {
   }
 
   async function loadMembers(teamId) {
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("team_members")
       .select("id,role,profiles(email)")
       .eq("team_id", teamId);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
 
     setMembers(data || []);
   }
 
   async function loadInvites(teamId) {
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("team_invites")
       .select("*")
       .eq("team_id", teamId)
       .eq("accepted", false);
 
+    if (error) {
+      console.error(error);
+      return;
+    }
+
     setInvites(data || []);
   }
 
   async function createTeam() {
+
     if (!teamName.trim()) return;
 
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: team } = await supabase
+    const { data: team, error } = await supabase
       .from("teams")
       .insert({
         name: teamName.trim(),
@@ -80,6 +101,11 @@ export default function Teams() {
       })
       .select()
       .single();
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
 
     await supabase.from("team_members").insert({
       team_id: team.id,
@@ -93,139 +119,216 @@ export default function Teams() {
 
   async function invite() {
 
-  setError("");
+    setError("");
 
-  if (!email || !activeTeamId) return;
+    if (!email || !activeTeamId) return;
 
-  const { data, error } = await supabase.functions.invoke(
-    "send-team-invite",
-    {
-      body: {
-        email,
-        team_id: activeTeamId
+    try {
+
+      const { data, error } = await supabase.functions.invoke(
+        "send-team-invite",
+        {
+          body: {
+            email,
+            team_id: activeTeamId
+          }
+        }
+      );
+
+      if (error) {
+        setError(error.message);
+        return;
       }
-    }
-  );
 
-  if (error) {
-    setError(error.message);
-    return;
+      if (data?.inviteLink) {
+
+        await navigator.clipboard.writeText(data.inviteLink);
+
+        alert(
+          "Invite link copied to clipboard:\n\n" +
+          data.inviteLink
+        );
+
+      } else {
+
+        alert("Invite created");
+
+      }
+
+      setEmail("");
+      loadInvites(activeTeamId);
+
+    } catch (err) {
+
+      setError(err.message);
+
+    }
+
   }
 
-  alert("Invite link copied:\n\n" + data.inviteLink);
-
-  navigator.clipboard.writeText(data.inviteLink);
-
-  setEmail("");
-
-}
-
   async function deleteInvite(id) {
-    await supabase.from("team_invites").delete().eq("id", id);
+
+    await supabase
+      .from("team_invites")
+      .delete()
+      .eq("id", id);
+
     loadInvites(activeTeamId);
   }
 
   if (loading) return <div className="teams-loading">Loading teams...</div>;
 
   return (
+
     <div className="teams-container">
 
       <h1 className="teams-title">Teams</h1>
 
       <div className="teams-card">
+
         <h3>Create Team</h3>
+
         <div className="row">
+
           <input
             placeholder="Team name"
             value={teamName}
             onChange={e => setTeamName(e.target.value)}
           />
+
           <button
             onClick={createTeam}
             disabled={!teamName.trim()}
           >
             Create
           </button>
+
         </div>
+
       </div>
 
       <div className="teams-card">
+
         <h3>Your Teams</h3>
 
         <div className="team-list">
+
           {teams.map(t => (
+
             <button
               key={t.id}
               className={t.id === activeTeamId ? "active" : ""}
-              onClick={()=>{
+              onClick={() => {
+
                 setActiveTeamId(t.id);
                 loadMembers(t.id);
                 loadInvites(t.id);
+
               }}
             >
               {t.name}
             </button>
+
           ))}
+
         </div>
+
       </div>
 
       {activeTeamId && (
+
         <div className="teams-card">
+
           <h3>Members</h3>
 
-          {members.length === 0 && <p className="muted">No members yet</p>}
+          {members.length === 0 && (
+            <p className="muted">No members yet</p>
+          )}
 
           {members.map(m => (
+
             <div key={m.id} className="list-item">
+
               <span>{m.profiles?.email}</span>
-              <span className="role">{m.role}</span>
+
+              <span className="role">
+                {m.role}
+              </span>
+
             </div>
+
           ))}
+
         </div>
+
       )}
 
       {activeTeamId && (
+
         <div className="teams-card">
+
           <h3>Pending Invites</h3>
 
-          {invites.length === 0 && <p className="muted">No invites</p>}
+          {invites.length === 0 && (
+            <p className="muted">No invites</p>
+          )}
 
           {invites.map(i => (
+
             <div key={i.id} className="list-item">
+
               <span>{i.email}</span>
+
               <button
                 className="danger"
-                onClick={()=>deleteInvite(i.id)}
+                onClick={() => deleteInvite(i.id)}
               >
                 Remove
               </button>
+
             </div>
+
           ))}
+
         </div>
+
       )}
 
       {activeTeamId && (
+
         <div className="teams-card">
+
           <h3>Invite User</h3>
 
           <div className="row">
+
             <input
               placeholder="email address"
               value={email}
-              onChange={e=>setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
             />
+
             <button
               onClick={invite}
               disabled={!email}
             >
               Send Invite
             </button>
+
           </div>
 
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <p className="error">
+              {error}
+            </p>
+          )}
+
         </div>
+
       )}
 
     </div>
+
   );
+
 }
