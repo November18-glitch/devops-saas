@@ -119,53 +119,45 @@ export default function Teams() {
 
   async function invite() {
 
-    setError("");
-
-    if (!email || !activeTeamId) return;
-
-    try {
-
-      const { data, error } = await supabase.functions.invoke(
-        "send-team-invite",
-        {
-          body: {
-            email,
-            team_id: activeTeamId
-          }
-        }
-      );
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
-      if (data?.inviteLink) {
-
-        await navigator.clipboard.writeText(data.inviteLink);
-
-        alert(
-          "Invite link copied to clipboard:\n\n" +
-          data.inviteLink
-        );
-
-      } else {
-
-        alert("Invite created");
-
-      }
-
-      setEmail("");
-      loadInvites(activeTeamId);
-
-    } catch (err) {
-
-      setError(err.message);
-
-    }
-
+  if (!email || !activeTeamId) {
+    alert("Enter email");
+    return;
   }
 
+  const token = crypto.randomUUID();
+
+  const { error } = await supabase
+    .from("team_invites")
+    .insert({
+      email,
+      team_id: activeTeamId,
+      token,
+      accepted: false
+    });
+
+  if (error) {
+    console.error(error);
+    alert("Invite failed");
+    return;
+  }
+
+  await fetch("/api/sendInviteEmail", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email,
+      token
+    })
+  });
+
+  alert("Invite email sent!");
+
+  setEmail("");
+
+  loadInvites(activeTeamId);
+}
   async function deleteInvite(id) {
 
     await supabase

@@ -1,57 +1,54 @@
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { supabase } from "../supabaseClient"
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 export default function Join() {
 
-  const navigate = useNavigate()
+  const [params] = useSearchParams();
 
   useEffect(() => {
 
     async function joinTeam() {
 
-      const params = new URLSearchParams(window.location.search)
-      const token = params.get("token")
+      const token = params.get("token");
 
-      if (!token) return
-
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        navigate("/login")
-        return
-      }
+      if (!token) return;
 
       const { data: invite } = await supabase
         .from("team_invites")
         .select("*")
         .eq("token", token)
-        .single()
+        .single();
 
-      if (!invite) {
-        alert("Invite invalid")
-        return
+      if (!invite) return;
+
+      const { data: { user } } =
+        await supabase.auth.getUser();
+
+      if (!user) {
+        window.location.href = "/login";
+        return;
       }
 
       await supabase.from("team_members").insert({
         team_id: invite.team_id,
         user_id: user.id,
-        role: invite.role
-      })
+        role: "member"
+      });
 
       await supabase
         .from("team_invites")
         .update({ accepted: true })
-        .eq("id", invite.id)
+        .eq("id", invite.id);
 
-      navigate("/dashboard")
+      window.location.href = "/dashboard";
 
     }
 
-    joinTeam()
+    joinTeam();
 
-  }, [])
+  }, []);
 
-  return <div>Joining team...</div>
+  return <div>Joining team...</div>;
 
 }

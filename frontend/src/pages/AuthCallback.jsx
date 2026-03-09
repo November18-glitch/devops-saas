@@ -1,81 +1,60 @@
 import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { useNavigate } from "react-router-dom";
 
 export default function AuthCallback() {
 
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
   useEffect(() => {
 
-    async function finishInvite() {
+    async function handleInvite() {
 
-      // wait until Supabase session exists
-      const { data: { session } } = await supabase.auth.getSession();
+      const inviteToken = params.get("invite");
 
-      if (!session || !session.user) {
+      if (!inviteToken) {
+        navigate("/dashboard");
+        return;
+      }
+
+      const { data: invite } = await supabase
+        .from("team_invites")
+        .select("*")
+        .eq("token", inviteToken)
+        .single();
+
+      if (!invite) {
+        navigate("/dashboard");
+        return;
+      }
+
+      const { data: { user } } =
+        await supabase.auth.getUser();
+
+      if (!user) {
         navigate("/login");
         return;
       }
 
-      const user = session.user;
-      const email = user.email;
-      const userId = user.id;
+      await supabase.from("team_members").insert({
+        team_id: invite.team_id,
+        user_id: user.id,
+        role: "member"
+      });
 
-      // find pending invites for this email
-      const { data: invites, error } = await supabase
+      await supabase
         .from("team_invites")
-        .select("*")
-        .eq("email", email)
-        .eq("accepted", false);
-
-      if (error) {
-        console.error("Invite fetch error:", error);
-        navigate("/dashboard");
-        return;
-      }
-
-      if (!invites || invites.length === 0) {
-        navigate("/dashboard");
-        return;
-      }
-
-      for (const invite of invites) {
-
-        // prevent duplicate team member rows
-        const { data: existing } = await supabase
-          .from("team_members")
-          .select("id")
-          .eq("team_id", invite.team_id)
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (!existing) {
-
-          await supabase.from("team_members").insert({
-            team_id: invite.team_id,
-            user_id: userId,
-            role: invite.role
-          });
-
-        }
-
-        // mark invite accepted
-        await supabase
-          .from("team_invites")
-          .update({ accepted: true })
-          .eq("id", invite.id);
-
-      }
+        .update({ accepted: true })
+        .eq("id", invite.id);
 
       navigate("/dashboard");
 
     }
 
-    finishInvite();
+    handleInvite();
 
   }, []);
 
-  return <div style={{padding:"40px"}}>Joining team...</div>;
-
+  return <div>Joining team...</div>;
 }
