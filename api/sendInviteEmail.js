@@ -1,54 +1,35 @@
-import { Resend } from "resend";
+import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export default async function handler(req, res) {
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method not allowed" })
   }
-
-  const { email, token } = req.body;
-
-  const inviteLink =
-    `https://devops-saas.vercel.app/auth/callback?invite=${token}`;
 
   try {
 
-    await resend.emails.send({
-      from: "DeployAlly <onboarding@resend.dev>",
+    const { email, token } = req.body
+
+    const joinUrl = `https://deployally.vercel.app/join?token=${token}`
+
+    const data = await resend.emails.send({
+      from: "onboarding@resend.dev",
       to: email,
-      subject: "You're invited to join DeployAlly",
+      subject: "You're invited to DeployAlly",
       html: `
-        <h2>DeployAlly Team Invite</h2>
-
-        <p>You were invited to join a team.</p>
-
-        <a href="${inviteLink}"
-        style="
-        background:#6366f1;
-        color:white;
-        padding:12px 20px;
-        border-radius:6px;
-        text-decoration:none;
-        display:inline-block;
-        ">
-        Join Team
-        </a>
-
-        <p>If the button does not work:</p>
-        <p>${inviteLink}</p>
+        <h2>You were invited to DeployAlly</h2>
+        <p>Click below to join the team:</p>
+        <a href="${joinUrl}">${joinUrl}</a>
       `
-    });
+    })
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json(data)
 
   } catch (error) {
-
-    console.error(error);
-
-    return res.status(500).json({ error: "Email failed" });
-
+    console.error("EMAIL ERROR:", error)
+    return res.status(500).json({ error: error.message })
   }
 
 }
