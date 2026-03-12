@@ -23,9 +23,6 @@ export default function Projects() {
   const [deployments, setDeployments] = useState([]);
   const [deploying, setDeploying] = useState(false);
 
-  // ------------------------
-  // INIT
-  // ------------------------
   useEffect(() => {
     init();
   }, []);
@@ -33,37 +30,32 @@ export default function Projects() {
   async function init() {
     try {
       setLoading(true);
-      setError(null);
 
       const {
         data: { user },
-        error: authError,
       } = await supabase.auth.getUser();
 
-      if (authError || !user) throw new Error("Not authenticated");
+      if (!user) throw new Error("Not authenticated");
 
-      const { data: memberships, error: memberError } = await supabase
+      const { data: memberships } = await supabase
         .from("team_members")
         .select("team_id, role")
         .eq("user_id", user.id)
         .limit(1);
 
-      if (memberError) throw memberError;
-      if (!memberships || memberships.length === 0) {
-        throw new Error("No team found for this user");
-      }
+      if (!memberships || memberships.length === 0)
+        throw new Error("No team found");
 
       const membership = memberships[0];
+
       setTeamId(membership.team_id);
       setTeamRole(membership.role);
 
-      const { data: projectsData, error: projectError } = await supabase
+      const { data: projectsData } = await supabase
         .from("projects")
         .select("*")
         .eq("team_id", membership.team_id)
         .order("created_at", { ascending: false });
-
-      if (projectError) throw projectError;
 
       setProjects(projectsData || []);
     } catch (err) {
@@ -74,15 +66,9 @@ export default function Projects() {
     }
   }
 
-  // ------------------------
-  // PERMISSIONS
-  // ------------------------
   const canEdit = ["owner", "admin", "developer"].includes(teamRole);
   const canDelete = ["owner", "admin"].includes(teamRole);
 
-  // ------------------------
-  // PROJECT SELECTION
-  // ------------------------
   function selectProject(project) {
     setSelectedProject(project);
     setActiveTab("code");
@@ -92,9 +78,6 @@ export default function Projects() {
     setDeployments([]);
   }
 
-  // ------------------------
-  // CREATE PROJECT
-  // ------------------------
   async function createProject() {
     if (!newProjectName.trim() || !teamId) return;
 
@@ -120,13 +103,11 @@ export default function Projects() {
     selectProject(data);
   }
 
-  // ------------------------
-  // SAVE CODE SETTINGS
-  // ------------------------
   async function saveCode() {
     if (!canEdit || !selectedProject) return;
 
     let parsedEnv;
+
     try {
       parsedEnv = JSON.parse(envVars);
     } catch {
@@ -147,24 +128,14 @@ export default function Projects() {
 
     setSaving(false);
 
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Code settings saved ✅");
-    }
+    if (error) alert(error.message);
+    else alert("Code settings saved ✅");
   }
 
-  // ------------------------
-  // DELETE PROJECT
-  // ------------------------
   async function deleteProject() {
     if (!canDelete || !selectedProject) return;
 
-    const confirmed = window.confirm(
-      `Delete "${selectedProject.name}"?\nThis cannot be undone.`
-    );
-
-    if (!confirmed) return;
+    if (!window.confirm(`Delete "${selectedProject.name}"?`)) return;
 
     const { error } = await supabase
       .from("projects")
@@ -178,14 +149,8 @@ export default function Projects() {
 
     setProjects((prev) => prev.filter((p) => p.id !== selectedProject.id));
     setSelectedProject(null);
-    setActiveTab("code");
-
-    alert("Project deleted 🗑️");
   }
 
-  // ------------------------
-  // DEPLOY
-  // ------------------------
   const canDeploy = useMemo(() => {
     try {
       JSON.parse(envVars);
@@ -196,39 +161,43 @@ export default function Projects() {
   }, [repoUrl, branch, envVars]);
 
   async function deploy() {
-    if (!canEdit || !canDeploy || !selectedProject) return;
+    if (!canDeploy || !selectedProject) return;
 
     setDeploying(true);
 
-    const { data, error } = await supabase
-      .from("deployments")
-      .insert({
-        project_id: selectedProject.id,
-        status: "queued",
-        logs: "Deployment queued",
-      })
-      .select()
-      .single();
+    try {
+      const res = await fetch("/api/deployProject", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl: repoUrl,
+          projectName: selectedProject.name,
+        }),
+      });
 
-    if (error) {
-      setDeploying(false);
-      alert(error.message);
-      return;
-    }
+      const data = await res.json();
 
-    setDeployments((prev) => [data, ...prev]);
+      if (!res.ok) throw new Error(data.error || "Deployment failed");
 
-    setTimeout(async () => {
-      await supabase
+      const { data: dbDeployment } = await supabase
         .from("deployments")
-        .update({
-          status: "success",
-          logs: "Deployment successful 🎉",
+        .insert({
+          project_id: selectedProject.id,
+          status: "building",
+          logs: "Deployment started 🚀",
         })
-        .eq("id", data.id);
+        .select()
+        .single();
 
-      loadDeployments();
-    }, 2500);
+      setDeployments((prev) => [dbDeployment, ...prev]);
+
+      alert("Deployment started 🚀");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
 
     setDeploying(false);
   }
@@ -246,16 +215,11 @@ export default function Projects() {
   }
 
   useEffect(() => {
-    if (activeTab === "deploy" && selectedProject) {
-      loadDeployments();
-    }
+    if (activeTab === "deploy" && selectedProject) loadDeployments();
   }, [activeTab, selectedProject]);
 
-  // ------------------------
-  // RENDER
-  // ------------------------
   if (loading) return <div style={{ padding: 40 }}>Loading projects…</div>;
-  if (error) return <div style={{ padding: 40, color: "red" }}>{error}</div>;
+  if (error) return <div style={{ padding: 40 }}>{error}</div>;
 
   return (
     <div style={{ display: "flex", gap: 24 }}>
@@ -308,45 +272,58 @@ export default function Projects() {
         ) : (
           <>
             <div style={styles.tabs}>
-              <Tab label="Code" active={activeTab === "code"} onClick={() => setActiveTab("code")} />
-              <Tab label="Deploy" active={activeTab === "deploy"} onClick={() => setActiveTab("deploy")} />
-              <Tab label="Team" active={activeTab === "team"} onClick={() => setActiveTab("team")} />
+              <Tab
+                label="Code"
+                active={activeTab === "code"}
+                onClick={() => setActiveTab("code")}
+              />
+              <Tab
+                label="Deploy"
+                active={activeTab === "deploy"}
+                onClick={() => setActiveTab("deploy")}
+              />
+              <Tab
+                label="Team"
+                active={activeTab === "team"}
+                onClick={() => setActiveTab("team")}
+              />
             </div>
 
             <section style={styles.card}>
               {activeTab === "code" && (
                 <div style={styles.grid}>
-                  <Field label="Repository URL" value={repoUrl} onChange={setRepoUrl} />
+                  <Field
+                    label="Repository URL"
+                    value={repoUrl}
+                    onChange={setRepoUrl}
+                  />
                   <Field label="Branch" value={branch} onChange={setBranch} />
-                  <Field label="Environment Variables (JSON)" textarea value={envVars} onChange={setEnvVars} />
+                  <Field
+                    label="Environment Variables (JSON)"
+                    textarea
+                    value={envVars}
+                    onChange={setEnvVars}
+                  />
 
-                  <div style={{ display: "flex", gap: 12 }}>
-                    <button
-                      disabled={!canEdit || saving}
-                      onClick={saveCode}
-                      style={styles.primaryBtn}
-                    >
-                      Save settings
-                    </button>
-
-                    {canDelete && (
-                      <button onClick={deleteProject} style={styles.dangerBtn}>
-                        Delete Project
-                      </button>
-                    )}
-                  </div>
+                  <button onClick={saveCode} style={styles.primaryBtn}>
+                    Save settings
+                  </button>
                 </div>
               )}
 
               {activeTab === "deploy" && (
                 <>
-                  <button disabled={!canDeploy || deploying} onClick={deploy}>
-                    Deploy 🚀
+                  <button
+                    disabled={!canDeploy || deploying}
+                    onClick={deploy}
+                    style={styles.primaryBtn}
+                  >
+                    {deploying ? "Deploying..." : "Deploy 🚀"}
                   </button>
 
                   {deployments.map((d) => (
                     <div key={d.id} style={styles.deployRow}>
-                      <strong>{d.status.toUpperCase()}</strong>
+                      <strong>{d.status}</strong>
                       <span>{d.logs}</span>
                     </div>
                   ))}
@@ -354,7 +331,7 @@ export default function Projects() {
               )}
 
               {activeTab === "team" && (
-                <p>Team access is managed in the Teams section.</p>
+                <p>Team access managed in Teams section.</p>
               )}
             </section>
           </>
@@ -364,15 +341,16 @@ export default function Projects() {
   );
 }
 
-// ------------------------
-// UI HELPERS
-// ------------------------
 function Field({ label, value, onChange, textarea }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 13, opacity: 0.7 }}>{label}</span>
+      <span>{label}</span>
       {textarea ? (
-        <textarea rows={5} value={value} onChange={(e) => onChange(e.target.value)} />
+        <textarea
+          rows={5}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
       ) : (
         <input value={value} onChange={(e) => onChange(e.target.value)} />
       )}
@@ -419,14 +397,6 @@ const styles = {
   },
   primaryBtn: {
     background: "#6366f1",
-    color: "#fff",
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: 8,
-    cursor: "pointer",
-  },
-  dangerBtn: {
-    background: "#ef4444",
     color: "#fff",
     border: "none",
     padding: "8px 12px",

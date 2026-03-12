@@ -6,7 +6,11 @@ export default async function handler(req, res) {
 
   try {
 
-    const { repoUrl } = req.body
+    const { repoUrl, projectName } = req.body
+
+    if (!repoUrl) {
+      return res.status(400).json({ error: "Missing repoUrl" })
+    }
 
     const response = await fetch("https://api.vercel.com/v13/deployments", {
       method: "POST",
@@ -15,7 +19,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        name: "deployally-project",
+        name: projectName || "deployally-project",
         gitSource: {
           type: "github",
           repo: repoUrl
@@ -25,14 +29,15 @@ export default async function handler(req, res) {
 
     const data = await response.json()
 
-    res.status(200).json(data)
+    return res.status(200).json(data)
 
   } catch (error) {
 
-    console.error(error)
+    console.error("Deployment error:", error)
 
-    res.status(500).json({
-      error: "Deployment failed"
+    return res.status(500).json({
+      error: "Deployment failed",
+      message: error.message
     })
 
   }
