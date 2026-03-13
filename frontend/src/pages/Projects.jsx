@@ -161,46 +161,54 @@ export default function Projects() {
   }, [repoUrl, branch, envVars]);
 
   async function deploy() {
-    if (!canDeploy || !selectedProject) return;
+  if (!canDeploy || !selectedProject) return;
 
-    setDeploying(true);
+  setDeploying(true);
 
-    try {
-      const res = await fetch("/api/deployProject", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          repoUrl: repoUrl,
-          projectName: selectedProject.name,
-        }),
-      });
+  try {
+    const res = await fetch("/api/deployProject", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        repoUrl: repoUrl,
+        projectName: selectedProject.name,
+      }),
+    });
 
-      const data = await res.json();
+    const text = await res.text();
 
-      if (!res.ok) throw new Error(data.error || "Deployment failed");
-
-      const { data: dbDeployment } = await supabase
-        .from("deployments")
-        .insert({
-          project_id: selectedProject.id,
-          status: "building",
-          logs: "Deployment started 🚀",
-        })
-        .select()
-        .single();
-
-      setDeployments((prev) => [dbDeployment, ...prev]);
-
-      alert("Deployment started 🚀");
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+    if (!text) {
+      throw new Error("API returned empty response");
     }
 
-    setDeploying(false);
+    const data = JSON.parse(text);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Deployment failed");
+    }
+
+    const { data: dbDeployment } = await supabase
+      .from("deployments")
+      .insert({
+        project_id: selectedProject.id,
+        status: "building",
+        logs: "Deployment started 🚀",
+      })
+      .select()
+      .single();
+
+    setDeployments((prev) => [dbDeployment, ...prev]);
+
+    alert("Deployment started 🚀");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
+
+  setDeploying(false);
+}
 
   async function loadDeployments() {
     if (!selectedProject) return;
