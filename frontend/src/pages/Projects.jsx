@@ -187,29 +187,33 @@ export default function Projects() {
   }
 
   async function refreshDeploymentStatus(deployment) {
-    if (!deployment.deployment_id) return;
+  if (!deployment.deployment_id) return;
 
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/deploymentStatus?deploymentId=${deployment.deployment_id}`
-      );
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/deploymentStatus?deploymentId=${deployment.deployment_id}`
+    );
 
-      const data = await res.json();
+    const data = await res.json();
 
-      await supabase
-        .from("deployments")
-        .update({
-          status: data.status,
-          logs:
-            data.status === "READY"
-              ? "Deployment successful 🎉"
-              : data.status,
-        })
-        .eq("id", deployment.id);
-    } catch (err) {
-      console.error(err);
-    }
+    await supabase
+      .from("deployments")
+      .update({
+        status: data.status === "READY" ? "success" : data.status,
+        logs:
+          data.status === "READY"
+            ? "Deployment successful 🎉"
+            : "Building...",
+      })
+      .eq("id", deployment.id);
+
+    // 🔥 THIS IS THE IMPORTANT LINE
+    loadDeployments();
+
+  } catch (err) {
+    console.error(err);
   }
+}
 
   async function loadDeployments() {
     if (!selectedProject) return;
