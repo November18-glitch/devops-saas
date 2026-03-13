@@ -6,13 +6,20 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" })
     }
 
-    const { repoUrl, projectName } = req.body
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body || {}
+
+    const repoUrl = body.repoUrl
+    const projectName = body.projectName || "deployally"
 
     if (!repoUrl) {
-      return res.status(400).json({ error: "Missing repoUrl" })
+      return res.status(400).json({
+        error: "repoUrl missing"
+      })
     }
 
-    const vercelResponse = await fetch(
+    const response = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
         method: "POST",
@@ -21,7 +28,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          name: projectName || "deployally-project",
+          name: projectName,
           gitSource: {
             type: "github",
             repo: repoUrl
@@ -30,20 +37,20 @@ export default async function handler(req, res) {
       }
     )
 
-    const text = await vercelResponse.text()
+    const text = await response.text()
 
     return res.status(200).json({
       success: true,
-      vercelStatus: vercelResponse.status,
+      vercelStatus: response.status,
       response: text
     })
 
-  } catch (error) {
+  } catch (err) {
 
-    console.error("DEPLOY ERROR:", error)
+    console.error("DEPLOY ERROR:", err)
 
     return res.status(500).json({
-      error: error.message
+      error: err.message
     })
 
   }
