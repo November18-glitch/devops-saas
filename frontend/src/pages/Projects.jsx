@@ -144,47 +144,55 @@ export default function Projects() {
   }, [repoUrl, branch, envVars]);
 
   async function deploy() {
-    if (!canDeploy || !selectedProject) return;
+  if (!canDeploy || !selectedProject) return;
 
-    setDeploying(true);
+  setDeploying(true);
 
-    try {
-      const res = await fetch(`${API_BASE}/api/deployProject`, {
+  try {
+    const res = await fetch(
+      "https://devops-saas.vercel.app/api/deployProject",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          repoUrl,
+          repoUrl: repoUrl,
           projectName: selectedProject.name,
         }),
-      });
+      }
+    );
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Deployment failed");
-
-      const { data: dbDeployment } = await supabase
-        .from("deployments")
-        .insert({
-          project_id: selectedProject.id,
-          status: data.status || "building",
-          logs: "Deployment started 🚀",
-          deployment_id: data.deploymentId,
-        })
-        .select()
-        .single();
-
-      setDeployments((prev) => [dbDeployment, ...prev]);
-
-      alert("Deployment started 🚀");
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+    if (!res.ok) {
+      throw new Error(data.error || "Deployment failed");
     }
 
-    setDeploying(false);
+    // IMPORTANT: get the Vercel deployment id
+    const deploymentId = data.deploymentId;
+
+    const { data: dbDeployment } = await supabase
+      .from("deployments")
+      .insert({
+        project_id: selectedProject.id,
+        status: "building",
+        logs: "Deployment started 🚀",
+        deployment_id: deploymentId, // <-- THIS IS THE FIX
+      })
+      .select()
+      .single();
+
+    setDeployments((prev) => [dbDeployment, ...prev]);
+
+    alert("Deployment started 🚀");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
+
+  setDeploying(false);
+}
 
   async function refreshDeploymentStatus(deployment) {
   if (!deployment.deployment_id) return;
