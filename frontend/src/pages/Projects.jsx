@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
 
+const API_BASE = "https://devops-saas.vercel.app";
+
 export default function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -132,25 +134,6 @@ export default function Projects() {
     else alert("Code settings saved ✅");
   }
 
-  async function deleteProject() {
-    if (!canDelete || !selectedProject) return;
-
-    if (!window.confirm(`Delete "${selectedProject.name}"?`)) return;
-
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", selectedProject.id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setProjects((prev) => prev.filter((p) => p.id !== selectedProject.id));
-    setSelectedProject(null);
-  }
-
   const canDeploy = useMemo(() => {
     try {
       JSON.parse(envVars);
@@ -161,54 +144,72 @@ export default function Projects() {
   }, [repoUrl, branch, envVars]);
 
   async function deploy() {
-  if (!canDeploy || !selectedProject) return;
+    if (!canDeploy || !selectedProject) return;
 
-  setDeploying(true);
+    setDeploying(true);
 
-  try {
-    const res = await fetch("/api/deployProject", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        repoUrl: repoUrl,
-        projectName: selectedProject.name,
-      }),
-    });
+    try {
+      const res = await fetch(`${API_BASE}/api/deployProject`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl,
+          projectName: selectedProject.name,
+        }),
+      });
 
-    const text = await res.text();
+      const data = await res.json();
 
-    if (!text) {
-      throw new Error("API returned empty response");
+      if (!res.ok) throw new Error(data.error || "Deployment failed");
+
+      const { data: dbDeployment } = await supabase
+        .from("deployments")
+        .insert({
+          project_id: selectedProject.id,
+          status: data.status || "building",
+          logs: "Deployment started 🚀",
+          deployment_id: data.deploymentId,
+        })
+        .select()
+        .single();
+
+      setDeployments((prev) => [dbDeployment, ...prev]);
+
+      alert("Deployment started 🚀");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
     }
 
-    const data = JSON.parse(text);
-
-    if (!res.ok) {
-      throw new Error(data.error || "Deployment failed");
-    }
-
-    const { data: dbDeployment } = await supabase
-      .from("deployments")
-      .insert({
-        project_id: selectedProject.id,
-        status: "building",
-        logs: "Deployment started 🚀",
-      })
-      .select()
-      .single();
-
-    setDeployments((prev) => [dbDeployment, ...prev]);
-
-    alert("Deployment started 🚀");
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
+    setDeploying(false);
   }
 
-  setDeploying(false);
-}
+  async function refreshDeploymentStatus(deployment) {
+    if (!deployment.deployment_id) return;
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/deploymentStatus?deploymentId=${deployment.deployment_id}`
+      );
+
+      const data = await res.json();
+
+      await supabase
+        .from("deployments")
+        .update({
+          status: data.status,
+          logs:
+            data.status === "READY"
+              ? "Deployment successful 🎉"
+              : data.status,
+        })
+        .eq("id", deployment.id);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   async function loadDeployments() {
     if (!selectedProject) return;
@@ -220,10 +221,18 @@ export default function Projects() {
       .order("created_at", { ascending: false });
 
     setDeployments(data || []);
+
+    (data || []).forEach((d) => {
+      if (d.status === "building") {
+        refreshDeploymentStatus(d);
+      }
+    });
   }
 
   useEffect(() => {
-    if (activeTab === "deploy" && selectedProject) loadDeployments();
+    if (activeTab === "deploy" && selectedProject) {
+      loadDeployments();
+    }
   }, [activeTab, selectedProject]);
 
   if (loading) return <div style={{ padding: 40 }}>Loading projects…</div>;
@@ -290,42 +299,21 @@ export default function Projects() {
                 active={activeTab === "deploy"}
                 onClick={() => setActiveTab("deploy")}
               />
-              <Tab
-                label="Team"
-                active={activeTab === "team"}
-                onClick={() => setActiveTab("team")}
-              />
             </div>
 
             <section style={styles.card}>
               {activeTab === "code" && (
                 <div style={styles.grid}>
-                  <Field
-                    label="Repository URL"
-                    value={repoUrl}
-                    onChange={setRepoUrl}
-                  />
-                  <Field label="Branch" value={branch} onChange={setBranch} />
-                  <Field
-                    label="Environment Variables (JSON)"
-                    textarea
-                    value={envVars}
-                    onChange={setEnvVars}
-                  />
-
-                  <button onClick={saveCode} style={styles.primaryBtn}>
-                    Save settings
-                  </button>
+                  <Field label="Repository URL" value={repoUrl} onChange={setRepoUrl}/>
+                  <Field label="Branch" value={branch} onChange={setBranch}/>
+                  <Field label="Environment Variables (JSON)" textarea value={envVars} onChange={setEnvVars}/>
+                  <button onClick={saveCode} style={styles.primaryBtn}>Save settings</button>
                 </div>
               )}
 
               {activeTab === "deploy" && (
                 <>
-                  <button
-                    disabled={!canDeploy || deploying}
-                    onClick={deploy}
-                    style={styles.primaryBtn}
-                  >
+                  <button disabled={!canDeploy || deploying} onClick={deploy} style={styles.primaryBtn}>
                     {deploying ? "Deploying..." : "Deploy 🚀"}
                   </button>
 
@@ -336,10 +324,6 @@ export default function Projects() {
                     </div>
                   ))}
                 </>
-              )}
-
-              {activeTab === "team" && (
-                <p>Team access managed in Teams section.</p>
               )}
             </section>
           </>
@@ -354,11 +338,7 @@ function Field({ label, value, onChange, textarea }) {
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <span>{label}</span>
       {textarea ? (
-        <textarea
-          rows={5}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <textarea rows={5} value={value} onChange={(e) => onChange(e.target.value)} />
       ) : (
         <input value={value} onChange={(e) => onChange(e.target.value)} />
       )}
@@ -434,3 +414,4 @@ const styles = {
     marginTop: 8,
   },
 };
+
