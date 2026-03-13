@@ -196,18 +196,28 @@ export default function Projects() {
 
     const data = await res.json();
 
+    let status = "building";
+    let logs = "Building...";
+
+    if (data.status === "READY") {
+      status = "success";
+      logs = "Deployment successful 🎉";
+    }
+
+    if (data.status === "ERROR") {
+      status = "failed";
+      logs = "Deployment failed ❌";
+    }
+
     await supabase
       .from("deployments")
       .update({
-        status: data.status === "READY" ? "success" : data.status,
-        logs:
-          data.status === "READY"
-            ? "Deployment successful 🎉"
-            : "Building...",
+        status,
+        logs
       })
       .eq("id", deployment.id);
 
-    // 🔥 THIS IS THE IMPORTANT LINE
+    // reload UI
     loadDeployments();
 
   } catch (err) {
