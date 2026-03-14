@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-
   try {
 
     if (req.method !== "POST") {
@@ -10,30 +9,45 @@ export default async function handler(req, res) {
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
-        error: "repoUrl and projectName are required"
+        error: "repoUrl and projectName required"
       });
     }
 
-    // -----------------------------
-    // Clean GitHub repo URL
-    // -----------------------------
+    // -------------------------
+    // Parse GitHub URL properly
+    // -------------------------
 
-    let repoPath = repoUrl
-      .replace("https://github.com/", "")
-      .replace("http://github.com/", "")
-      .replace(".git", "")
-      .trim();
+    let owner;
+    let repo;
 
-    if (repoPath.endsWith("/")) {
-      repoPath = repoPath.slice(0, -1);
+    try {
+
+      const url = new URL(repoUrl);
+
+      const parts = url.pathname
+        .replace(/^\/|\/$/g, "") // remove leading/trailing /
+        .split("/");
+
+      owner = parts[0];
+      repo = parts[1];
+
+    } catch {
+      return res.status(400).json({
+        error: "Invalid GitHub repository URL"
+      });
     }
 
-    // Example result:
-    // vercel/nextjs-boilerplate
+    if (!owner || !repo) {
+      return res.status(400).json({
+        error: "Could not extract owner/repo from URL"
+      });
+    }
 
-    // -----------------------------
+    const repoPath = `${owner}/${repo}`;
+
+    // -------------------------
     // Sanitize project name
-    // -----------------------------
+    // -------------------------
 
     const safeName = projectName
       .toLowerCase()
@@ -42,9 +56,9 @@ export default async function handler(req, res) {
       .replace(/---+/g, "-")
       .slice(0, 100);
 
-    // -----------------------------
+    // -------------------------
     // Fetch repo info from GitHub
-    // -----------------------------
+    // -------------------------
 
     const githubRes = await fetch(
       `https://api.github.com/repos/${repoPath}`
@@ -56,16 +70,17 @@ export default async function handler(req, res) {
       console.error("GitHub API error:", githubData);
 
       return res.status(500).json({
-        error: "Failed to fetch GitHub repo",
-        details: githubData
+        error: "GitHub repo not found",
+        repoPath
       });
     }
 
     const repoId = githubData.id;
+    const defaultBranch = githubData.default_branch;
 
-    // -----------------------------
+    // -------------------------
     // Create Vercel deployment
-    // -----------------------------
+    // -------------------------
 
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
@@ -76,15 +91,12 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-
           name: safeName,
-
           gitSource: {
             type: "github",
             repoId: repoId,
-            ref: branch || "main"
+            ref: branch || defaultBranch
           }
-
         })
       }
     );
@@ -92,27 +104,22 @@ export default async function handler(req, res) {
     const vercelData = await vercelRes.json();
 
     if (!vercelRes.ok) {
-
       console.error("Vercel API error:", vercelData);
 
       return res.status(500).json({
-        error: vercelData.error?.message || "Deployment failed",
-        details: vercelData
+        error: vercelData.error?.message || "Deployment failed"
       });
-
     }
 
     return res.status(200).json({
-
       deploymentId: vercelData.id,
       status: vercelData.readyState,
       url: vercelData.url
-
     });
 
   } catch (err) {
 
-    console.error("Deploy API crash:", err);
+    console.error("Deploy crash:", err);
 
     return res.status(500).json({
       error: "Internal server error",
@@ -120,5 +127,4 @@ export default async function handler(req, res) {
     });
 
   }
-
 }
