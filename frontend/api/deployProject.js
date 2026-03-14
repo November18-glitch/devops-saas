@@ -19,10 +19,15 @@ export default async function handler(req, res) {
       .replace("https://github.com/", "")
       .replace(".git", "");
 
-    // -----------------------------
-    // 1. Get GitHub repository ID
-    // -----------------------------
+    // sanitize project name for Vercel
+    const safeName = projectName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/---+/g, "-")
+      .slice(0, 100);
 
+    // get GitHub repo ID
     const githubRes = await fetch(
       `https://api.github.com/repos/${repoPath}`,
       {
@@ -36,7 +41,6 @@ export default async function handler(req, res) {
 
     if (!githubRes.ok) {
       console.error("GitHub error:", githubData);
-
       return res.status(500).json({
         error: "Failed to fetch GitHub repo"
       });
@@ -44,10 +48,7 @@ export default async function handler(req, res) {
 
     const repoId = githubData.id;
 
-    // -----------------------------
-    // 2. Create Vercel deployment
-    // -----------------------------
-
+    // create deployment
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
@@ -57,15 +58,12 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-
-          name: projectName,
-
+          name: safeName,
           gitSource: {
             type: "github",
             repoId: repoId,
             ref: branch || "main"
           }
-
         })
       }
     );
@@ -73,21 +71,17 @@ export default async function handler(req, res) {
     const vercelData = await vercelRes.json();
 
     if (!vercelRes.ok) {
-
-      console.error("Vercel API error:", vercelData);
+      console.error("Vercel error:", vercelData);
 
       return res.status(500).json({
         error: vercelData.error?.message || "Deployment failed"
       });
-
     }
 
     return res.status(200).json({
-
       deploymentId: vercelData.id,
       status: vercelData.readyState,
       url: vercelData.url
-
     });
 
   } catch (err) {
@@ -102,3 +96,4 @@ export default async function handler(req, res) {
   }
 
 }
+
