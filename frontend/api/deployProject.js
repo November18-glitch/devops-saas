@@ -1,11 +1,11 @@
 export default async function handler(req, res) {
   try {
-    // Only allow POST
+
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName } = req.body;
+    const { repoUrl, projectName, branch } = req.body;
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
@@ -13,8 +13,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Convert GitHub URL to repo format
-    // example: https://github.com/user/repo -> user/repo
+    // convert github url → repo format
     const repo = repoUrl
       .replace("https://github.com/", "")
       .replace(".git", "");
@@ -29,28 +28,23 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           name: projectName,
+
           gitSource: {
             type: "github",
             repo: repo,
-          },
+            ref: branch || "main"   // 🔥 REQUIRED
+          }
+
         }),
       }
     );
 
     const data = await vercelResponse.json();
 
-    // If Vercel returned error
     if (!vercelResponse.ok) {
-      console.error("Vercel API error:", data);
+      console.error("Vercel error:", data);
       return res.status(500).json({
-        error: data.error?.message || "Vercel deployment failed",
-      });
-    }
-
-    // Ensure deployment id exists
-    if (!data.id) {
-      return res.status(500).json({
-        error: "Deployment ID missing from Vercel response",
+        error: data.error?.message || "Deployment failed",
       });
     }
 
@@ -60,12 +54,12 @@ export default async function handler(req, res) {
       url: data.url,
     });
 
-  } catch (error) {
-    console.error("Deploy API error:", error);
+  } catch (err) {
+    console.error("Deploy API error:", err);
 
     return res.status(500).json({
       error: "Internal server error",
-      details: error.message,
+      details: err.message,
     });
   }
 }
