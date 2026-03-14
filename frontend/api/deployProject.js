@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+
   try {
 
     if (req.method !== "POST") {
@@ -9,57 +10,95 @@ export default async function handler(req, res) {
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
-        error: "repoUrl and projectName are required",
+        error: "repoUrl and projectName are required"
       });
     }
 
-    // convert github url → repo format
-    const repo = repoUrl
+    // convert repo url → owner/repo
+    const repoPath = repoUrl
       .replace("https://github.com/", "")
       .replace(".git", "");
 
-    const vercelResponse = await fetch(
+    // -----------------------------
+    // 1. Get GitHub repository ID
+    // -----------------------------
+
+    const githubRes = await fetch(
+      `https://api.github.com/repos/${repoPath}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+        }
+      }
+    );
+
+    const githubData = await githubRes.json();
+
+    if (!githubRes.ok) {
+      console.error("GitHub error:", githubData);
+
+      return res.status(500).json({
+        error: "Failed to fetch GitHub repo"
+      });
+    }
+
+    const repoId = githubData.id;
+
+    // -----------------------------
+    // 2. Create Vercel deployment
+    // -----------------------------
+
+    const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
+
           name: projectName,
 
           gitSource: {
             type: "github",
-            repo: repo,
-            ref: branch || "main"   // 🔥 REQUIRED
+            repoId: repoId,
+            ref: branch || "main"
           }
 
-        }),
+        })
       }
     );
 
-    const data = await vercelResponse.json();
+    const vercelData = await vercelRes.json();
 
-    if (!vercelResponse.ok) {
-      console.error("Vercel error:", data);
+    if (!vercelRes.ok) {
+
+      console.error("Vercel API error:", vercelData);
+
       return res.status(500).json({
-        error: data.error?.message || "Deployment failed",
+        error: vercelData.error?.message || "Deployment failed"
       });
+
     }
 
     return res.status(200).json({
-      deploymentId: data.id,
-      status: data.readyState,
-      url: data.url,
+
+      deploymentId: vercelData.id,
+      status: vercelData.readyState,
+      url: vercelData.url
+
     });
 
   } catch (err) {
+
     console.error("Deploy API error:", err);
 
     return res.status(500).json({
       error: "Internal server error",
-      details: err.message,
+      details: err.message
     });
+
   }
+
 }
