@@ -29,7 +29,10 @@ export default async function handler(req, res) {
         .split("/");
 
       owner = parts[0];
-      repo = parts[1];
+
+      repo = parts[1]
+        .replace(".git", "")
+        .trim();
 
     } catch {
       return res.status(400).json({
@@ -45,16 +48,7 @@ export default async function handler(req, res) {
 
     const repoPath = `${owner}/${repo}`;
 
-    // -------------------------
-    // Sanitize project name
-    // -------------------------
-
-    const safeName = projectName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9._-]/g, "")
-      .replace(/---+/g, "-")
-      .slice(0, 100);
+    console.log("Parsed repo:", repoPath);
 
     // -------------------------
     // Fetch repo info from GitHub
@@ -73,23 +67,36 @@ export default async function handler(req, res) {
     const githubData = await githubRes.json();
 
     if (!githubRes.ok) {
+
       console.error("GitHub API error:", githubData);
 
       return res.status(500).json({
         error: "GitHub repo not found",
         repoPath
       });
+
     }
 
     const repoId = githubData.id;
     const defaultBranch = githubData.default_branch;
 
     // -------------------------
+    // Sanitize project name
+    // -------------------------
+
+    const safeName = projectName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/---+/g, "-")
+      .slice(0, 100);
+
+    // -------------------------
     // Create Vercel deployment
     // -------------------------
 
     const vercelRes = await fetch(
-      "https://api.vercel.com/v13/deployments",
+      "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
         method: "POST",
         headers: {
@@ -110,11 +117,13 @@ export default async function handler(req, res) {
     const vercelData = await vercelRes.json();
 
     if (!vercelRes.ok) {
+
       console.error("Vercel API error:", vercelData);
 
       return res.status(500).json({
         error: vercelData.error?.message || "Deployment failed"
       });
+
     }
 
     return res.status(200).json({
