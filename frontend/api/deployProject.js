@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     // -------------------------
-    // Parse GitHub URL properly
+    // Parse GitHub URL
     // -------------------------
 
     let owner;
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       const url = new URL(repoUrl);
 
       const parts = url.pathname
-        .replace(/^\/|\/$/g, "") // remove leading/trailing /
+        .replace(/^\/|\/$/g, "")
         .split("/");
 
       owner = parts[0];
@@ -61,7 +61,13 @@ export default async function handler(req, res) {
     // -------------------------
 
     const githubRes = await fetch(
-      `https://api.github.com/repos/${repoPath}`
+      `https://api.github.com/repos/${repoPath}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Accept: "application/vnd.github+json"
+        }
+      }
     );
 
     const githubData = await githubRes.json();
