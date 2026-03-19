@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
   try {
-
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -9,16 +8,14 @@ export default async function handler(req, res) {
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
-        error: "repoUrl and projectName required"
+        error: "repoUrl and projectName required",
       });
     }
 
     // -------------------------
-    // Parse GitHub URL
+    // Parse GitHub URL SAFELY
     // -------------------------
-
-    let owner;
-    let repo;
+    let owner, repo;
 
     try {
       const url = new URL(repoUrl);
@@ -29,16 +26,15 @@ export default async function handler(req, res) {
 
       owner = parts[0];
       repo = parts[1];
-
     } catch {
       return res.status(400).json({
-        error: "Invalid GitHub URL"
+        error: "Invalid GitHub URL",
       });
     }
 
     if (!owner || !repo) {
       return res.status(400).json({
-        error: "Invalid repo format"
+        error: "Invalid repo format",
       });
     }
 
@@ -47,27 +43,15 @@ export default async function handler(req, res) {
     console.log("Parsed repo:", repoPath);
 
     // -------------------------
-    // Sanitize project name
+    // 🔥 GitHub API CALL (FIXED)
     // -------------------------
-
-    const safeName = projectName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9._-]/g, "")
-      .replace(/---+/g, "-")
-      .slice(0, 100);
-
-    // -------------------------
-    // 🔥 FIX: AUTHENTICATED GitHub request
-    // -------------------------
-
     const githubRes = await fetch(
       `https://api.github.com/repos/${repoPath}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: "application/vnd.github+json"
-        }
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // 🔥 IMPORTANT
+          Accept: "application/vnd.github+json",
+        },
       }
     );
 
@@ -79,38 +63,44 @@ export default async function handler(req, res) {
       return res.status(500).json({
         error: "GitHub repo not found OR no access",
         details: githubData,
-        repoPath
       });
     }
 
     const repoId = githubData.id;
     const defaultBranch = githubData.default_branch;
 
-    console.log("Repo ID:", repoId);
+    // -------------------------
+    // Fix project name
+    // -------------------------
+    const safeName = projectName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/---+/g, "-")
+      .slice(0, 100);
 
     // -------------------------
-    // Create Vercel deployment
+    // 🔥 VERCEL DEPLOY (FINAL FIX)
     // -------------------------
-
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: safeName,
           gitSource: {
             type: "github",
             repoId: repoId,
-            ref: branch || defaultBranch
+            ref: branch || defaultBranch,
           },
           projectSettings: {
-            framework: null
-          }
-        })
+            framework: null, // let Vercel auto-detect
+          },
+        }),
       }
     );
 
@@ -121,24 +111,20 @@ export default async function handler(req, res) {
 
       return res.status(500).json({
         error: vercelData.error?.message || "Deployment failed",
-        details: vercelData
       });
     }
 
     return res.status(200).json({
       deploymentId: vercelData.id,
       status: vercelData.readyState,
-      url: `https://${vercelData.url}`
+      url: vercelData.url,
     });
-
   } catch (err) {
-
-    console.error("CRASH:", err);
+    console.error("Crash:", err);
 
     return res.status(500).json({
       error: "Internal server error",
-      details: err.message
+      details: err.message,
     });
-
   }
 }
