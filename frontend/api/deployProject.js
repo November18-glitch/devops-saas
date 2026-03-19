@@ -1,8 +1,6 @@
 export default async function handler(req, res) {
   try {
-    // -------------------------
-    // Only POST allowed
-    // -------------------------
+
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -11,63 +9,45 @@ export default async function handler(req, res) {
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
-        error: "repoUrl and projectName required",
+        error: "repoUrl and projectName required"
       });
     }
 
     // -------------------------
-    // CLEAN & PARSE REPO URL
+    // Parse GitHub URL
     // -------------------------
-
-    let cleanUrl = repoUrl.trim();
-
-    // remove duplicate pasted URLs (VERY IMPORTANT)
-    if (cleanUrl.includes("https://github.com/https://github.com/")) {
-      cleanUrl = cleanUrl.replace(
-        "https://github.com/https://github.com/",
-        "https://github.com/"
-      );
-    }
-
-    // remove trailing slash
-    cleanUrl = cleanUrl.replace(/\/$/, "");
 
     let owner;
     let repo;
 
     try {
-      const url = new URL(cleanUrl);
+      const url = new URL(repoUrl);
 
       const parts = url.pathname
         .replace(/^\/|\/$/g, "")
         .split("/");
 
       owner = parts[0];
+      repo = parts[1];
 
-      repo = parts[1]
-        ?.replace(".git", "")
-        .split("?")[0]
-        .split("#")[0]
-        .trim();
-
-    } catch (err) {
+    } catch {
       return res.status(400).json({
-        error: "Invalid GitHub repository URL",
+        error: "Invalid GitHub URL"
       });
     }
 
     if (!owner || !repo) {
       return res.status(400).json({
-        error: "Could not extract owner/repo",
+        error: "Invalid repo format"
       });
     }
 
     const repoPath = `${owner}/${repo}`;
 
-    console.log("FINAL REPO PATH:", repoPath);
+    console.log("Parsed repo:", repoPath);
 
     // -------------------------
-    // SANITIZE PROJECT NAME
+    // Sanitize project name
     // -------------------------
 
     const safeName = projectName
@@ -78,15 +58,16 @@ export default async function handler(req, res) {
       .slice(0, 100);
 
     // -------------------------
-    // FETCH GITHUB REPO
+    // 🔥 FIX: AUTHENTICATED GitHub request
     // -------------------------
 
     const githubRes = await fetch(
       `https://api.github.com/repos/${repoPath}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // IMPORTANT
-        },
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Accept: "application/vnd.github+json"
+        }
       }
     );
 
@@ -96,19 +77,19 @@ export default async function handler(req, res) {
       console.error("GitHub API error:", githubData);
 
       return res.status(500).json({
-        error: "GitHub repo not found",
-        repoPath,
+        error: "GitHub repo not found OR no access",
         details: githubData,
+        repoPath
       });
     }
 
     const repoId = githubData.id;
     const defaultBranch = githubData.default_branch;
 
-    console.log("Repo found:", repoPath, "ID:", repoId);
+    console.log("Repo ID:", repoId);
 
     // -------------------------
-    // CREATE VERCEL DEPLOYMENT
+    // Create Vercel deployment
     // -------------------------
 
     const vercelRes = await fetch(
@@ -117,22 +98,19 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           name: safeName,
-
           gitSource: {
             type: "github",
             repoId: repoId,
-            ref: branch || defaultBranch,
+            ref: branch || defaultBranch
           },
-
-          // REQUIRED FIX
           projectSettings: {
-            framework: null,
-          },
-        }),
+            framework: null
+          }
+        })
       }
     );
 
@@ -143,24 +121,24 @@ export default async function handler(req, res) {
 
       return res.status(500).json({
         error: vercelData.error?.message || "Deployment failed",
-        details: vercelData,
+        details: vercelData
       });
     }
-
-    console.log("Deployment created:", vercelData.id);
 
     return res.status(200).json({
       deploymentId: vercelData.id,
       status: vercelData.readyState,
-      url: vercelData.url,
+      url: `https://${vercelData.url}`
     });
 
   } catch (err) {
-    console.error("DEPLOY CRASH:", err);
+
+    console.error("CRASH:", err);
 
     return res.status(500).json({
       error: "Internal server error",
-      details: err.message,
+      details: err.message
     });
+
   }
 }
