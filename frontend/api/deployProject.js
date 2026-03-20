@@ -1,126 +1,47 @@
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST") {
+    if (req.method !== "DELETE") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName, branch } = req.body;
+    const { projectName } = req.body;
 
-    if (!repoUrl || !projectName) {
+    if (!projectName) {
       return res.status(400).json({
-        error: "repoUrl and projectName required",
+        error: "projectName required",
       });
     }
 
     // -------------------------
-    // Parse GitHub URL SAFELY
+    // Delete project from Vercel
     // -------------------------
-    let owner, repo;
-
-    try {
-      const url = new URL(repoUrl);
-
-      const parts = url.pathname
-        .replace(/^\/|\/$/g, "")
-        .split("/");
-
-      owner = parts[0];
-      repo = parts[1];
-    } catch {
-      return res.status(400).json({
-        error: "Invalid GitHub URL",
-      });
-    }
-
-    if (!owner || !repo) {
-      return res.status(400).json({
-        error: "Invalid repo format",
-      });
-    }
-
-    const repoPath = `${owner}/${repo}`;
-
-    console.log("Parsed repo:", repoPath);
-
-    // -------------------------
-    // 🔥 GitHub API CALL (FIXED)
-    // -------------------------
-    const githubRes = await fetch(
-      `https://api.github.com/repos/${repoPath}`,
+    const response = await fetch(
+      `https://api.vercel.com/v9/projects/${projectName}`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, // 🔥 IMPORTANT
-          Accept: "application/vnd.github+json",
-        },
-      }
-    );
-
-    const githubData = await githubRes.json();
-
-    if (!githubRes.ok) {
-      console.error("GitHub API error:", githubData);
-
-      return res.status(500).json({
-        error: "GitHub repo not found OR no access",
-        details: githubData,
-      });
-    }
-
-    const repoId = githubData.id;
-    const defaultBranch = githubData.default_branch;
-
-    // -------------------------
-    // Fix project name
-    // -------------------------
-    const safeName = projectName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9._-]/g, "")
-      .replace(/---+/g, "-")
-      .slice(0, 100);
-
-    // -------------------------
-    // 🔥 VERCEL DEPLOY (FINAL FIX)
-    // -------------------------
-    const vercelRes = await fetch(
-      "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
-      {
-        method: "POST",
+        method: "DELETE",
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: safeName,
-          gitSource: {
-            type: "github",
-            repoId: repoId,
-            ref: branch || defaultBranch,
-          },
-          projectSettings: {
-            framework: null, // let Vercel auto-detect
-          },
-        }),
       }
     );
 
-    const vercelData = await vercelRes.json();
+    if (!response.ok) {
+      const data = await response.json();
 
-    if (!vercelRes.ok) {
-      console.error("Vercel API error:", vercelData);
+      console.error("Delete error:", data);
 
       return res.status(500).json({
-        error: vercelData.error?.message || "Deployment failed",
+        error: "Failed to delete project on Vercel",
+        details: data,
       });
     }
 
     return res.status(200).json({
-      deploymentId: vercelData.id,
-      status: vercelData.readyState,
-      url: vercelData.url,
+      success: true,
+      message: "Project deleted from Vercel",
     });
   } catch (err) {
-    console.error("Crash:", err);
+    console.error("Delete crash:", err);
 
     return res.status(500).json({
       error: "Internal server error",
