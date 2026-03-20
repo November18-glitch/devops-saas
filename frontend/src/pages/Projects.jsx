@@ -4,210 +4,63 @@ import { supabase } from "../supabaseClient";
 const API_BASE = "https://devops-saas.vercel.app";
 
 export default function Projects() {
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activeTab, setActiveTab] = useState("code");
-
-  const [teamId, setTeamId] = useState(null);
-  const [teamRole, setTeamRole] = useState(null);
-
-  const [creating, setCreating] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
+  const [activeTab, setActiveTab] = useState("deploy");
 
   const [repoUrl, setRepoUrl] = useState("");
   const [branch, setBranch] = useState("main");
-  const [envVars, setEnvVars] = useState("{}");
-  const [saving, setSaving] = useState(false);
 
   const [deployments, setDeployments] = useState([]);
   const [deploying, setDeploying] = useState(false);
 
-
   useEffect(() => {
-    init();
+    loadProjects();
   }, []);
 
-
-  async function init() {
-
-    try {
-
-      setLoading(true);
-
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) throw new Error("Not authenticated");
-
-      const { data: memberships } = await supabase
-        .from("team_members")
-        .select("team_id, role")
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (!memberships || memberships.length === 0)
-        throw new Error("No team found");
-
-      const membership = memberships[0];
-
-      setTeamId(membership.team_id);
-      setTeamRole(membership.role);
-
-      const { data: projectsData } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("team_id", membership.team_id)
-        .order("created_at", { ascending: false });
-
-      setProjects(projectsData || []);
-
-    } catch (err) {
-
-      console.error(err);
-      setError(err.message);
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
+  async function loadProjects() {
+    const { data } = await supabase.from("projects").select("*");
+    setProjects(data || []);
   }
 
-
-  const canEdit = ["owner", "admin", "developer"].includes(teamRole);
-
-
-  function selectProject(project) {
-
-    setSelectedProject(project);
-    setActiveTab("code");
-
-    setRepoUrl(project.repo_url || "");
-    setBranch(project.default_branch || "main");
-    setEnvVars(JSON.stringify(project.env_vars || {}, null, 2));
-
-    setDeployments([]);
-
+  function selectProject(p) {
+    setSelectedProject(p);
+    setRepoUrl(p.repo_url || "");
+    setBranch(p.default_branch || "main");
   }
-
-
-  async function createProject() {
-
-    if (!newProjectName.trim() || !teamId) return;
-
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({
-        name: newProjectName.trim(),
-        team_id: teamId,
-        default_branch: "main",
-        env_vars: {},
-      })
-      .select()
-      .single();
-
-    if (error) {
-
-      alert(error.message);
-      return;
-
-    }
-
-    setProjects((prev) => [data, ...prev]);
-    setNewProjectName("");
-    setCreating(false);
-
-    selectProject(data);
-
-  }
-
-
-  async function saveCode() {
-
-    if (!canEdit || !selectedProject) return;
-
-    let parsedEnv;
-
-    try {
-
-      parsedEnv = JSON.parse(envVars);
-
-    } catch {
-
-      alert("Environment variables must be valid JSON");
-      return;
-
-    }
-
-    setSaving(true);
-
-    const { error } = await supabase
-      .from("projects")
-      .update({
-        repo_url: repoUrl,
-        default_branch: branch,
-        env_vars: parsedEnv,
-      })
-      .eq("id", selectedProject.id);
-
-    setSaving(false);
-
-    if (error) alert(error.message);
-    else alert("Code settings saved ✅");
-
-  }
-
 
   const canDeploy = useMemo(() => {
+    return !!repoUrl && !!branch;
+  }, [repoUrl, branch]);
 
-    try {
-
-      JSON.parse(envVars);
-      return !!repoUrl && !!branch;
-
-    } catch {
-
-      return false;
-
-    }
-
-  }, [repoUrl, branch, envVars]);
-
-
+  // -------------------------
+  // DEPLOY
+  // -------------------------
   async function deploy() {
-
     if (!canDeploy || !selectedProject) return;
 
     setDeploying(true);
 
     try {
-
-      const res = await fetch(
-        `${API_BASE}/api/deployProject`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            repoUrl: repoUrl,
-            projectName: selectedProject.name,
-            branch: branch
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/api/deployProject`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl,
+          projectName: selectedProject.name,
+          branch,
+        }),
+      });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Deployment failed");
+        throw new Error(data.error || "Deploy failed");
       }
 
-      const deploymentId = data.deploymentId;
+      const { deploymentId } = data;
 
       const { data: dbDeployment } = await supabase
         .from("deployments")
@@ -215,77 +68,25 @@ export default function Projects() {
           project_id: selectedProject.id,
           status: "building",
           logs: "Deployment started 🚀",
-          deployment_id: deploymentId
+          deployment_id: deploymentId,
         })
         .select()
         .single();
 
       setDeployments((prev) => [dbDeployment, ...prev]);
 
-      alert("Deployment started 🚀");
-
     } catch (err) {
-
       console.error(err);
       alert(err.message);
-
     }
 
     setDeploying(false);
-
   }
 
-
-  async function refreshDeploymentStatus(deployment) {
-
-    if (!deployment.deployment_id) return;
-
-    try {
-
-      const res = await fetch(
-        `${API_BASE}/api/deploymentStatus?deploymentId=${deployment.deployment_id}`
-      );
-
-      const data = await res.json();
-
-      let status = "building";
-      let logs = "Building...";
-
-      if (data.status === "READY") {
-
-        status = "success";
-        logs = "Deployment successful 🎉";
-
-      }
-
-      if (data.status === "ERROR") {
-
-        status = "failed";
-        logs = "Deployment failed ❌";
-
-      }
-
-      await supabase
-        .from("deployments")
-        .update({
-          status,
-          logs
-        })
-        .eq("id", deployment.id);
-
-      loadDeployments();
-
-    } catch (err) {
-
-      console.error(err);
-
-    }
-
-  }
-
-
+  // -------------------------
+  // LOAD + UPDATE STATUS
+  // -------------------------
   async function loadDeployments() {
-
     if (!selectedProject) return;
 
     const { data } = await supabase
@@ -297,299 +98,118 @@ export default function Projects() {
     setDeployments(data || []);
 
     (data || []).forEach((d) => {
-
       if (d.status === "building") {
-
-        refreshDeploymentStatus(d);
-
+        refreshStatus(d);
       }
-
     });
-
   }
 
+  async function refreshStatus(d) {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/deploymentStatus?deploymentId=${d.deployment_id}`
+      );
 
-  useEffect(() => {
+      const data = await res.json();
 
-    if (activeTab === "deploy" && selectedProject) {
+      let status = "building";
+      let logs = "Building...";
 
-      loadDeployments();
+      if (data.status === "READY") {
+        status = "success";
+        logs = `Live: https://${data.url}`;
+      }
 
+      if (data.status === "ERROR") {
+        status = "failed";
+        logs = "Deployment failed ❌";
+      }
+
+      await supabase
+        .from("deployments")
+        .update({ status, logs })
+        .eq("id", d.id);
+
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-  }, [activeTab, selectedProject]);
+  // -------------------------
+  // AUTO REFRESH (REAL SaaS)
+  // -------------------------
+  useEffect(() => {
+    if (!selectedProject) return;
 
+    loadDeployments();
 
-  if (loading) return <div style={{ padding: 40 }}>Loading projects…</div>;
-  if (error) return <div style={{ padding: 40 }}>{error}</div>;
+    const interval = setInterval(() => {
+      loadDeployments();
+    }, 5000);
 
+    return () => clearInterval(interval);
+  }, [selectedProject]);
 
+  // -------------------------
+  // UI
+  // -------------------------
   return (
-
-    <div style={{ display: "flex", gap: 24 }}>
-
-      <aside style={styles.sidebar}>
-
+    <div style={{ display: "flex", gap: 20 }}>
+      <aside style={{ width: 250 }}>
         <h3>Projects</h3>
 
         {projects.map((p) => (
-
           <div
             key={p.id}
             onClick={() => selectProject(p)}
             style={{
-              ...styles.projectItem,
-              background: selectedProject?.id === p.id ? "#6366f1" : "#fff",
-              color: selectedProject?.id === p.id ? "#fff" : "#000",
+              padding: 10,
+              cursor: "pointer",
+              background:
+                selectedProject?.id === p.id ? "#6366f1" : "#eee",
+              color:
+                selectedProject?.id === p.id ? "#fff" : "#000",
+              marginBottom: 6,
             }}
           >
             {p.name}
           </div>
-
         ))}
-
-        {canEdit && (
-
-          <div style={{ marginTop: 12 }}>
-
-            {creating ? (
-              <>
-                <input
-                  placeholder="Project name"
-                  value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  style={styles.input}
-                />
-
-                <button onClick={createProject} style={styles.primaryBtn}>
-                  Create
-                </button>
-              </>
-            ) : (
-
-              <button
-                onClick={() => setCreating(true)}
-                style={styles.primaryBtn}
-              >
-                + New Project
-              </button>
-
-            )}
-
-          </div>
-
-        )}
-
       </aside>
 
-
       <main style={{ flex: 1 }}>
-
         {!selectedProject ? (
-
-          <div>Select a project</div>
-
+          <p>Select project</p>
         ) : (
-
           <>
+            <h2>{selectedProject.name}</h2>
 
-            <div style={styles.tabs}>
+            <input
+              placeholder="Repo URL"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+            />
 
-              <Tab
-                label="Code"
-                active={activeTab === "code"}
-                onClick={() => setActiveTab("code")}
-              />
+            <input
+              placeholder="Branch"
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+            />
 
-              <Tab
-                label="Deploy"
-                active={activeTab === "deploy"}
-                onClick={() => setActiveTab("deploy")}
-              />
+            <button onClick={deploy} disabled={deploying}>
+              {deploying ? "Deploying..." : "Deploy 🚀"}
+            </button>
 
-            </div>
+            <hr />
 
-
-            <section style={styles.card}>
-
-              {activeTab === "code" && (
-
-                <div style={styles.grid}>
-
-                  <Field label="Repository URL" value={repoUrl} onChange={setRepoUrl} />
-
-                  <Field label="Branch" value={branch} onChange={setBranch} />
-
-                  <Field
-                    label="Environment Variables (JSON)"
-                    textarea
-                    value={envVars}
-                    onChange={setEnvVars}
-                  />
-
-                  <button onClick={saveCode} style={styles.primaryBtn}>
-                    Save settings
-                  </button>
-
-                </div>
-
-              )}
-
-
-              {activeTab === "deploy" && (
-
-                <>
-
-                  <button
-                    disabled={!canDeploy || deploying}
-                    onClick={deploy}
-                    style={styles.primaryBtn}
-                  >
-                    {deploying ? "Deploying..." : "Deploy 🚀"}
-                  </button>
-
-                  {deployments.map((d) => (
-
-                    <div key={d.id} style={styles.deployRow}>
-
-                      <strong>{d.status}</strong>
-
-                      <span>{d.logs}</span>
-
-                    </div>
-
-                  ))}
-
-                </>
-
-              )}
-
-            </section>
-
+            {deployments.map((d) => (
+              <div key={d.id}>
+                <strong>{d.status}</strong> — {d.logs}
+              </div>
+            ))}
           </>
-
         )}
-
       </main>
-
     </div>
-
   );
-
 }
-
-
-function Field({ label, value, onChange, textarea }) {
-
-  return (
-
-    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-
-      <span>{label}</span>
-
-      {textarea ? (
-
-        <textarea
-          rows={5}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-
-      ) : (
-
-        <input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-
-      )}
-
-    </label>
-
-  );
-
-}
-
-
-function Tab({ label, active, onClick }) {
-
-  return (
-
-    <div
-      onClick={onClick}
-      style={{
-        padding: "6px 16px",
-        borderRadius: 999,
-        cursor: "pointer",
-        background: active ? "#6366f1" : "#e5e7eb",
-        color: active ? "#fff" : "#000",
-      }}
-    >
-      {label}
-    </div>
-
-  );
-
-}
-
-
-const styles = {
-
-  sidebar: {
-    width: 260,
-    background: "#f4f6fb",
-    padding: 16,
-    borderRadius: 12,
-  },
-
-  projectItem: {
-    padding: 10,
-    marginBottom: 6,
-    borderRadius: 8,
-    cursor: "pointer",
-  },
-
-  input: {
-    width: "100%",
-    padding: 8,
-    borderRadius: 8,
-    border: "1px solid #ddd",
-    marginBottom: 6,
-  },
-
-  primaryBtn: {
-    background: "#6366f1",
-    color: "#fff",
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: 8,
-    cursor: "pointer",
-  },
-
-  tabs: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 16,
-  },
-
-  card: {
-    background: "#f4f6fb",
-    padding: 24,
-    borderRadius: 12,
-  },
-
-  grid: {
-    display: "grid",
-    gap: 16,
-  },
-
-  deployRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: 10,
-    background: "#fff",
-    borderRadius: 8,
-    marginTop: 8,
-  },
-
-};
