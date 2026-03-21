@@ -6,9 +6,10 @@ export default async function handler(req, res) {
 
     const { deploymentId } = req.query;
 
-    if (!deploymentId) {
+    // 🚨 STOP if invalid
+    if (!deploymentId || deploymentId === "undefined") {
       return res.status(400).json({
-        error: "deploymentId is required",
+        error: "Invalid deploymentId",
       });
     }
 
@@ -23,7 +24,15 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // 🚨 HANDLE NOT FOUND CLEANLY (NO CRASH)
     if (!response.ok) {
+      if (data?.error?.code === "not_found") {
+        return res.status(200).json({
+          status: "BUILDING",
+          note: "Deployment not ready yet",
+        });
+      }
+
       console.error("Vercel status error:", data);
 
       return res.status(500).json({
@@ -33,7 +42,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
-      status: data.readyState, // BUILDING, READY, ERROR
+      status: data.readyState,
       url: data.url,
     });
   } catch (err) {
