@@ -13,11 +13,11 @@ export default async function handler(req, res) {
     }
 
     // -------------------------
-    // 🔥 CLEAN PARSING (FIXED)
+    // 🔥 CLEAN + SAFE PARSING
     // -------------------------
     let cleanUrl = repoUrl.trim();
 
-    // remove .git if present
+    // remove .git
     cleanUrl = cleanUrl.replace(/\.git$/, "");
 
     // remove trailing slash
@@ -35,13 +35,12 @@ export default async function handler(req, res) {
 
     const owner = match[1];
     const repo = match[2];
-
     const repoPath = `${owner}/${repo}`;
 
     console.log("Parsed repo:", repoPath);
 
     // -------------------------
-    // SANITIZE NAME
+    // 🔥 SANITIZE PROJECT NAME
     // -------------------------
     const safeName = projectName
       .toLowerCase()
@@ -51,11 +50,16 @@ export default async function handler(req, res) {
       .slice(0, 100);
 
     // -------------------------
-    // 🔥 GITHUB REQUEST (FIXED)
+    // 🔥 GITHUB API (WITH TOKEN)
     // -------------------------
     const githubRes = await fetch(
-      `https://api.github.com/repos/${repoPath}`
-      // ❗ NO TOKEN NEEDED for PUBLIC repo
+      `https://api.github.com/repos/${repoPath}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Accept: "application/vnd.github+json",
+        },
+      }
     );
 
     const githubData = await githubRes.json();
@@ -64,7 +68,7 @@ export default async function handler(req, res) {
 
     if (!githubRes.ok) {
       return res.status(500).json({
-        error: "GitHub repo not found",
+        error: "GitHub repo not found OR no access",
         repoPath,
         github: githubData,
       });
@@ -74,10 +78,10 @@ export default async function handler(req, res) {
     const defaultBranch = githubData.default_branch;
 
     // -------------------------
-    // VERCEL DEPLOY
+    // 🔥 VERCEL DEPLOYMENT
     // -------------------------
     const vercelRes = await fetch(
-      "https://api.vercel.com/v13/deployments",
+      "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
         method: "POST",
         headers: {
@@ -100,15 +104,18 @@ export default async function handler(req, res) {
 
     const vercelData = await vercelRes.json();
 
-    console.log("VERCEL:", vercelData);
+    console.log("Vercel response:", vercelData);
 
     if (!vercelRes.ok) {
       return res.status(500).json({
-        error: vercelData.error?.message || "Deploy failed",
+        error: vercelData.error?.message || "Vercel deploy failed",
         details: vercelData,
       });
     }
 
+    // -------------------------
+    // ✅ SUCCESS
+    // -------------------------
     return res.status(200).json({
       deploymentId: vercelData.id,
       status: vercelData.readyState,
@@ -116,10 +123,11 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error("CRASH:", err);
+    console.error("DEPLOY CRASH:", err);
 
     return res.status(500).json({
-      error: err.message,
+      error: "Internal server error",
+      details: err.message,
     });
   }
 }
