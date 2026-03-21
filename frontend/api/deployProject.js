@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     }
 
     // -------------------------
-    // CLEAN URL
+    // CLEAN + PARSE URL
     // -------------------------
     let cleanUrl = repoUrl.trim();
     cleanUrl = cleanUrl.replace(/\.git$/, "");
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     console.log("Parsed repo:", repoPath);
 
     // -------------------------
-    // SAFE NAME
+    // SAFE PROJECT NAME
     // -------------------------
     const safeName = projectName
       .toLowerCase()
@@ -47,27 +47,43 @@ export default async function handler(req, res) {
       .slice(0, 100);
 
     // -------------------------
-    // GITHUB REQUEST
+    // GITHUB FETCH (WITH FALLBACK)
     // -------------------------
-    const githubRes = await fetch(
-      `https://api.github.com/repos/${repoPath}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: "application/vnd.github+json",
-        },
-      }
-    );
 
-    const githubText = await githubRes.text();
-
+    let githubRes;
     let githubData;
+
     try {
-      githubData = JSON.parse(githubText);
-    } catch {
-      console.error("GitHub NON-JSON:", githubText);
+      // TRY WITH TOKEN
+      githubRes = await fetch(
+        `https://api.github.com/repos/${repoPath}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            Accept: "application/vnd.github+json",
+          },
+        }
+      );
+
+      let text = await githubRes.text();
+      githubData = JSON.parse(text);
+
+      // IF TOKEN FAILS → RETRY WITHOUT TOKEN
+      if (!githubRes.ok) {
+        console.log("Token failed → retrying without token...");
+
+        githubRes = await fetch(
+          `https://api.github.com/repos/${repoPath}`
+        );
+
+        text = await githubRes.text();
+        githubData = JSON.parse(text);
+      }
+
+    } catch (err) {
+      console.error("GitHub fetch crash:", err);
       return res.status(500).json({
-        error: "GitHub returned invalid response",
+        error: "GitHub fetch failed",
       });
     }
 
@@ -85,7 +101,7 @@ export default async function handler(req, res) {
     const defaultBranch = githubData.default_branch;
 
     // -------------------------
-    // VERCEL DEPLOY
+    // CREATE VERCEL DEPLOYMENT
     // -------------------------
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
