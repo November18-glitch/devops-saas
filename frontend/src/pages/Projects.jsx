@@ -1,58 +1,89 @@
-const deployProject = async () => {
-  try {
-    const res = await fetch("/api/deployProject", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        repoUrl,
-        projectName,
-      }),
-    });
+import { useState } from "react";
 
-    const text = await res.text();
+export default function Projects() {
+  const [repoUrl, setRepoUrl] = useState("");
+  const [projectName, setProjectName] = useState("");
 
-    let data;
+  const deployProject = async () => {
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("RAW RESPONSE:", text);
-      alert("Server error");
-      return;
+      const res = await fetch("/api/deployProject", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl,
+          projectName,
+        }),
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("RAW RESPONSE:", text);
+        alert("Server error");
+        return;
+      }
+
+      if (!res.ok) {
+        alert(data.error || "Deploy failed");
+        return;
+      }
+
+      console.log("DEPLOYED:", data);
+
+      checkDeploymentStatus(data.deploymentId);
+
+    } catch (err) {
+      console.error("DEPLOY ERROR:", err);
     }
+  };
 
-    if (!res.ok) {
-      alert(data.error || "Deploy failed");
-      return;
-    }
+  const checkDeploymentStatus = async (id) => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/deploymentStatus?deploymentId=${id}`);
+      const data = await res.json();
 
-    console.log("DEPLOYED:", data);
+      console.log("STATUS:", data);
 
-    // 🔥 START STATUS POLLING
-    checkDeploymentStatus(data.deploymentId);
+      if (data.status === "READY") {
+        clearInterval(interval);
+        alert("✅ Deployment successful!");
+      }
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+      if (data.status === "ERROR") {
+        clearInterval(interval);
+        alert("❌ Deployment failed");
+      }
+    }, 3000);
+  };
 
-const checkDeploymentStatus = async (id) => {
-  const interval = setInterval(async () => {
-    const res = await fetch(`/api/deploymentStatus?deploymentId=${id}`);
-    const data = await res.json();
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>Deploy Project</h1>
 
-    console.log("STATUS:", data);
+      <input
+        type="text"
+        placeholder="GitHub Repo URL"
+        value={repoUrl}
+        onChange={(e) => setRepoUrl(e.target.value)}
+        style={{ display: "block", marginBottom: "10px", width: "300px" }}
+      />
 
-    if (data.status === "READY") {
-      clearInterval(interval);
-      alert("✅ Deployment successful!");
-    }
+      <input
+        type="text"
+        placeholder="Project Name"
+        value={projectName}
+        onChange={(e) => setProjectName(e.target.value)}
+        style={{ display: "block", marginBottom: "10px", width: "300px" }}
+      />
 
-    if (data.status === "ERROR") {
-      clearInterval(interval);
-      alert("❌ Deployment failed");
-    }
-
-  }, 3000);
-};
+      <button onClick={deployProject}>
+        Deploy 🚀
+      </button>
+    </div>
+  );
+}
