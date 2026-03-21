@@ -1,15 +1,17 @@
 export default async function handler(req, res) {
   try {
+    // 🚨 disable caching
+    res.setHeader("Cache-Control", "no-store");
+
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
     const { deploymentId } = req.query;
 
-    // 🚨 STOP if invalid
-    if (!deploymentId || deploymentId === "undefined") {
+    if (!deploymentId) {
       return res.status(400).json({
-        error: "Invalid deploymentId",
+        error: "deploymentId required",
       });
     }
 
@@ -24,19 +26,15 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // 🚨 HANDLE NOT FOUND CLEANLY (NO CRASH)
     if (!response.ok) {
       if (data?.error?.code === "not_found") {
         return res.status(200).json({
           status: "BUILDING",
-          note: "Deployment not ready yet",
         });
       }
 
-      console.error("Vercel status error:", data);
-
       return res.status(500).json({
-        error: "Failed to fetch deployment status",
+        error: "Failed to fetch deployment",
         details: data,
       });
     }
@@ -45,12 +43,10 @@ export default async function handler(req, res) {
       status: data.readyState,
       url: data.url,
     });
-  } catch (err) {
-    console.error("Status crash:", err);
 
+  } catch (err) {
     return res.status(500).json({
-      error: "Internal server error",
-      details: err.message,
+      error: err.message,
     });
   }
 }
