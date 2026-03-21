@@ -1,8 +1,5 @@
 export default async function handler(req, res) {
   try {
-    // 🚨 disable caching
-    res.setHeader("Cache-Control", "no-store");
-
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -15,7 +12,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const response = await fetch(
+    const vercelRes = await fetch(
       `https://api.vercel.com/v13/deployments/${deploymentId}`,
       {
         headers: {
@@ -24,18 +21,21 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const text = await vercelRes.text();
 
-    if (!response.ok) {
-      if (data?.error?.code === "not_found") {
-        return res.status(200).json({
-          status: "BUILDING",
-        });
-      }
-
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Status NON-JSON:", text);
       return res.status(500).json({
-        error: "Failed to fetch deployment",
-        details: data,
+        error: "Invalid Vercel response",
+      });
+    }
+
+    if (!vercelRes.ok) {
+      return res.status(500).json({
+        error: data.error?.message || "Status fetch failed",
       });
     }
 
@@ -45,8 +45,10 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
+    console.error("STATUS CRASH:", err);
+
     return res.status(500).json({
-      error: err.message,
+      error: "Internal server error",
     });
   }
 }

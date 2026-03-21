@@ -1,11 +1,12 @@
 export default async function handler(req, res) {
-  console.log("RAW repoUrl:", repoUrl)
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
     const { repoUrl, projectName, branch } = req.body;
+
+    console.log("RAW repoUrl:", repoUrl);
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
@@ -14,14 +15,10 @@ export default async function handler(req, res) {
     }
 
     // -------------------------
-    // 🔥 CLEAN + SAFE PARSING
+    // CLEAN URL
     // -------------------------
     let cleanUrl = repoUrl.trim();
-
-    // remove .git
     cleanUrl = cleanUrl.replace(/\.git$/, "");
-
-    // remove trailing slash
     cleanUrl = cleanUrl.replace(/\/$/, "");
 
     const match = cleanUrl.match(
@@ -30,7 +27,7 @@ export default async function handler(req, res) {
 
     if (!match) {
       return res.status(400).json({
-        error: "Invalid GitHub URL format",
+        error: "Invalid GitHub URL",
       });
     }
 
@@ -41,17 +38,16 @@ export default async function handler(req, res) {
     console.log("Parsed repo:", repoPath);
 
     // -------------------------
-    // 🔥 SANITIZE PROJECT NAME
+    // SAFE NAME
     // -------------------------
     const safeName = projectName
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9._-]/g, "")
-      .replace(/---+/g, "-")
       .slice(0, 100);
 
     // -------------------------
-    // 🔥 GITHUB API (WITH TOKEN)
+    // GITHUB REQUEST
     // -------------------------
     const githubRes = await fetch(
       `https://api.github.com/repos/${repoPath}`,
@@ -63,7 +59,17 @@ export default async function handler(req, res) {
       }
     );
 
-    const githubData = await githubRes.json();
+    const githubText = await githubRes.text();
+
+    let githubData;
+    try {
+      githubData = JSON.parse(githubText);
+    } catch {
+      console.error("GitHub NON-JSON:", githubText);
+      return res.status(500).json({
+        error: "GitHub returned invalid response",
+      });
+    }
 
     console.log("GitHub response:", githubData);
 
@@ -79,7 +85,7 @@ export default async function handler(req, res) {
     const defaultBranch = githubData.default_branch;
 
     // -------------------------
-    // 🔥 VERCEL DEPLOYMENT
+    // VERCEL DEPLOY
     // -------------------------
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
@@ -93,7 +99,7 @@ export default async function handler(req, res) {
           name: safeName,
           gitSource: {
             type: "github",
-            repoId: repoId,
+            repoId,
             ref: branch || defaultBranch,
           },
           projectSettings: {
@@ -103,20 +109,27 @@ export default async function handler(req, res) {
       }
     );
 
-    const vercelData = await vercelRes.json();
+    const vercelText = await vercelRes.text();
+
+    let vercelData;
+    try {
+      vercelData = JSON.parse(vercelText);
+    } catch {
+      console.error("Vercel NON-JSON:", vercelText);
+      return res.status(500).json({
+        error: "Vercel returned invalid response",
+      });
+    }
 
     console.log("Vercel response:", vercelData);
 
     if (!vercelRes.ok) {
       return res.status(500).json({
-        error: vercelData.error?.message || "Vercel deploy failed",
+        error: vercelData.error?.message || "Deploy failed",
         details: vercelData,
       });
     }
 
-    // -------------------------
-    // ✅ SUCCESS
-    // -------------------------
     return res.status(200).json({
       deploymentId: vercelData.id,
       status: vercelData.readyState,
