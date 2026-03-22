@@ -1,19 +1,21 @@
 export default async function handler(req, res) {
   try {
+    // ✅ Only allow GET
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { deploymentId } = req.query;
+    const { id } = req.query;
 
-    if (!deploymentId) {
+    if (!id) {
       return res.status(400).json({
-        error: "deploymentId required",
+        error: "Deployment ID is required",
       });
     }
 
+    // 🚀 Fetch deployment from Vercel
     const vercelRes = await fetch(
-      `https://api.vercel.com/v13/deployments/${deploymentId}`,
+      `https://api.vercel.com/v13/deployments/${id}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
@@ -27,28 +29,36 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(text);
     } catch {
-      console.error("Status NON-JSON:", text);
+      console.error("❌ Non-JSON from Vercel:", text);
       return res.status(500).json({
-        error: "Invalid Vercel response",
+        status: "ERROR",
       });
     }
 
     if (!vercelRes.ok) {
-      return res.status(500).json({
-        error: data.error?.message || "Status fetch failed",
+      console.error("❌ Vercel API error:", data);
+
+      return res.status(200).json({
+        status: "ERROR",
       });
     }
 
+    // ✅ Normalize status (IMPORTANT FOR FRONTEND)
+    let status = "BUILDING";
+
+    if (data.readyState === "READY") status = "READY";
+    else if (data.readyState === "ERROR") status = "ERROR";
+
     return res.status(200).json({
-      status: data.readyState,
-      url: data.url,
+      status,
+      url: data.url || null,
     });
 
   } catch (err) {
-    console.error("STATUS CRASH:", err);
+    console.error("💥 STATUS CRASH:", err);
 
-    return res.status(500).json({
-      error: "Internal server error",
+    return res.status(200).json({
+      status: "ERROR",
     });
   }
 }
