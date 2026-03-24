@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     console.log("Parsed repo:", `${owner}/${repo}`);
 
-    // ✅ OPTIONAL: check repo exists
+    // ✅ GET REPO DATA (IMPORTANT → gives repoId)
     const githubRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}`,
       {
@@ -36,13 +36,19 @@ export default async function handler(req, res) {
       }
     );
 
+    const githubData = await githubRes.json();
+
     if (!githubRes.ok) {
       return res.status(404).json({
         error: "GitHub repo not found or no access",
       });
     }
 
-    // 🚀 CREATE DEPLOYMENT (STATIC MODE)
+    const repoId = githubData.id;
+
+    console.log("Repo ID:", repoId);
+
+    // 🚀 CREATE DEPLOYMENT
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
@@ -56,16 +62,16 @@ export default async function handler(req, res) {
 
           gitSource: {
             type: "github",
-            repo: `${owner}/${repo}`,
+            repoId: repoId,      // ✅ REQUIRED
             ref: "main",
           },
 
-          // 🔥 THIS FIXES EVERYTHING
+          // ✅ STATIC DEPLOY FIX
           projectSettings: {
-            framework: null,          // ❌ no Next.js
-            buildCommand: null,       // ❌ no build
-            installCommand: null,     // ❌ no npm install
-            outputDirectory: ".",    // ✅ serve root (index.html)
+            framework: null,
+            buildCommand: null,
+            installCommand: null,
+            outputDirectory: ".",
           },
         }),
       }
