@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Parse repo
+    // ✅ Parse GitHub URL
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     console.log("Parsed repo:", `${owner}/${repo}`);
 
-    // ✅ GET REPO DATA (IMPORTANT → gives repoId)
+    // ✅ Get repo data (IMPORTANT → repoId)
     const githubRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}`,
       {
@@ -39,6 +39,7 @@ export default async function handler(req, res) {
     const githubData = await githubRes.json();
 
     if (!githubRes.ok) {
+      console.error("GitHub error:", githubData);
       return res.status(404).json({
         error: "GitHub repo not found or no access",
       });
@@ -48,7 +49,15 @@ export default async function handler(req, res) {
 
     console.log("Repo ID:", repoId);
 
-    // 🚀 CREATE DEPLOYMENT
+    // 🔥 IMPORTANT: UNIQUE PROJECT NAME (fixes Next.js bug forever)
+    const uniqueProjectName =
+      projectName.toLowerCase().replace(/\s+/g, "-") +
+      "-" +
+      Date.now();
+
+    console.log("Project name:", uniqueProjectName);
+
+    // 🚀 Create deployment (STATIC MODE)
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
@@ -58,19 +67,19 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: projectName,
+          name: uniqueProjectName,
 
           gitSource: {
             type: "github",
-            repoId: repoId,      // ✅ REQUIRED
+            repoId: repoId,
             ref: "main",
           },
 
-          // ✅ STATIC DEPLOY FIX
+          // 🔥 FORCE STATIC DEPLOY
           projectSettings: {
             framework: null,
-            buildCommand: null,
-            installCommand: null,
+            buildCommand: "",
+            installCommand: "",
             outputDirectory: ".",
           },
         }),
@@ -99,6 +108,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       deploymentId: data.id,
       url: data.url,
+      projectName: uniqueProjectName,
     });
 
   } catch (err) {
