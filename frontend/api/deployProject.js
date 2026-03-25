@@ -1,3 +1,10 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -26,7 +33,7 @@ export default async function handler(req, res) {
 
     console.log("Parsed repo:", `${owner}/${repo}`);
 
-    // ✅ Get repo data (IMPORTANT → repoId)
+    // ✅ Get repo data
     const githubRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}`,
       {
@@ -49,7 +56,6 @@ export default async function handler(req, res) {
 
     console.log("Repo ID:", repoId);
 
-    // 🔥 IMPORTANT: UNIQUE PROJECT NAME (fixes Next.js bug forever)
     const uniqueProjectName =
       projectName.toLowerCase().replace(/\s+/g, "-") +
       "-" +
@@ -57,7 +63,7 @@ export default async function handler(req, res) {
 
     console.log("Project name:", uniqueProjectName);
 
-    // 🚀 Create deployment (STATIC MODE)
+    // 🚀 Deploy
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
@@ -68,14 +74,11 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           name: uniqueProjectName,
-
           gitSource: {
             type: "github",
             repoId: repoId,
             ref: "main",
           },
-
-          // 🔥 FORCE STATIC DEPLOY
           projectSettings: {
             framework: null,
             buildCommand: "",
@@ -104,6 +107,15 @@ export default async function handler(req, res) {
         error: data.error?.message || "Deployment failed",
       });
     }
+
+    // 🔥 ✅ ADD THIS (SAVE DEPLOYMENT)
+    await supabase.from("deployments").insert({
+      deployment_id: data.id,
+      status: "BUILDING",
+      logs: null,
+      environment: "preview",
+      triggered_by: "user",
+    });
 
     return res.status(200).json({
       deploymentId: data.id,

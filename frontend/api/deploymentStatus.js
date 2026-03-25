@@ -1,6 +1,12 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 export default async function handler(req, res) {
   try {
-    // ✅ Only allow GET
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -13,7 +19,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🚀 Fetch deployment from Vercel
     const vercelRes = await fetch(
       `https://api.vercel.com/v13/deployments/${id}`,
       {
@@ -43,11 +48,16 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Normalize status (IMPORTANT FOR FRONTEND)
     let status = "BUILDING";
 
     if (data.readyState === "READY") status = "READY";
     else if (data.readyState === "ERROR") status = "ERROR";
+
+    // 🔥 ✅ ADD THIS (UPDATE STATUS IN DB)
+    await supabase
+      .from("deployments")
+      .update({ status })
+      .eq("deployment_id", id);
 
     return res.status(200).json({
       status,
