@@ -39,17 +39,37 @@ export default function Projects() {
   };
 
   // 🔄 Poll deployment status
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      setDeployments((prev) => {
-        // ⚠️ DO NOT make this async
-        fetchStatuses(prev);
-        return prev;
-      });
-    }, 3000);
+    useEffect(() => {
+  // ✅ LOAD FROM DATABASE ON START
+  const loadDeployments = async () => {
+    try {
+      const res = await fetch("/api/getDeployments");
+      const data = await res.json();
 
-    return () => clearInterval(interval);
-  }, []);
+      const formatted = data.deployments.map((d) => ({
+        id: d.deployment_id,
+        status: d.status,
+        url: null,
+      }));
+
+      setDeployments(formatted);
+    } catch (err) {
+      console.error("Failed to load deployments");
+    }
+  };
+
+  loadDeployments();
+
+  // 🔄 KEEP YOUR POLLING (UNCHANGED)
+  const interval = setInterval(() => {
+    setDeployments((prev) => {
+      fetchStatuses(prev);
+      return prev;
+    });
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const fetchStatuses = async (deploymentsList) => {
     const updated = await Promise.all(
