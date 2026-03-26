@@ -19,7 +19,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Parse GitHub URL
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
@@ -31,9 +30,6 @@ export default async function handler(req, res) {
     const owner = match[1];
     const repo = match[2].replace(".git", "");
 
-    console.log("Parsed repo:", `${owner}/${repo}`);
-
-    // ✅ Get repo data
     const githubRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}`,
       {
@@ -46,7 +42,6 @@ export default async function handler(req, res) {
     const githubData = await githubRes.json();
 
     if (!githubRes.ok) {
-      console.error("GitHub error:", githubData);
       return res.status(404).json({
         error: "GitHub repo not found or no access",
       });
@@ -54,16 +49,11 @@ export default async function handler(req, res) {
 
     const repoId = githubData.id;
 
-    console.log("Repo ID:", repoId);
-
     const uniqueProjectName =
       projectName.toLowerCase().replace(/\s+/g, "-") +
       "-" +
       Date.now();
 
-    console.log("Project name:", uniqueProjectName);
-
-    // 🚀 Deploy
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments",
       {
@@ -89,33 +79,27 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await vercelRes.text();
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Vercel NON-JSON:", text);
-      return res.status(500).json({
-        error: "Invalid Vercel response",
-      });
-    }
+    const data = await vercelRes.json();
 
     if (!vercelRes.ok) {
-      console.error("Vercel error:", data);
       return res.status(500).json({
         error: data.error?.message || "Deployment failed",
       });
     }
 
-    // 🔥 ✅ ADD THIS (SAVE DEPLOYMENT)
-    await supabase.from("deployments").insert({
+    // ✅ FIXED INSERT (WITH ERROR LOGGING)
+    const { error } = await supabase.from("deployments").insert({
       deployment_id: data.id,
+      project_id: uniqueProjectName, // 🔥 REQUIRED FIX
       status: "BUILDING",
       logs: null,
       environment: "preview",
       triggered_by: "user",
     });
+
+    if (error) {
+      console.error("❌ Supabase insert error:", error);
+    }
 
     return res.status(200).json({
       deploymentId: data.id,
