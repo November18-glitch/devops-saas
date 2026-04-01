@@ -41,10 +41,32 @@ export default async function handler(req, res) {
     if (data.readyState === "READY") status = "READY";
     else if (data.readyState === "ERROR") status = "ERROR";
 
-    // ✅ FIXED UPDATE (WITH ERROR LOGGING)
+    // 🔥 GET EXISTING LOGS
+    const { data: existing } = await supabase
+      .from("deployments")
+      .select("logs")
+      .eq("deployment_id", id)
+      .single();
+
+    let newLog = "";
+
+    if (status === "BUILDING") newLog = "⚙️ Still building...";
+    if (status === "READY") newLog = "✅ Deployment ready!";
+    if (status === "ERROR") newLog = "❌ Deployment failed";
+
+    // 🔥 APPEND LOGS (SAFE)
+    const updatedLogs =
+      (existing?.logs || "") +
+      (existing?.logs ? "\n" : "") +
+      newLog;
+
+    // ✅ UPDATE STATUS + LOGS (ONLY ADDITION, NOTHING BROKEN)
     const { error } = await supabase
       .from("deployments")
-      .update({ status })
+      .update({
+        status,
+        logs: updatedLogs,
+      })
       .eq("deployment_id", id);
 
     if (error) {

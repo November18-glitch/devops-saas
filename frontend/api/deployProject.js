@@ -88,18 +88,18 @@ export default async function handler(req, res) {
     }
 
     // ✅ FIXED INSERT (WITH ERROR LOGGING)
+    // 🔥 ✅ SAVE DEPLOYMENT + INITIAL LOG
     const { error } = await supabase.from("deployments").insert({
-      deployment_id: data.id,
-      project_id: uniqueProjectName, // 🔥 REQUIRED FIX
-      status: "BUILDING",
-      logs: null,
-      environment: "preview",
-      triggered_by: "user",
-    });
+       deployment_id: data.id,
+       status: "BUILDING",
+       logs: "🚀 Deployment started...",
+       environment: "preview",
+       triggered_by: "user",
+});
 
     if (error) {
-      console.error("❌ Supabase insert error:", error);
-    }
+     console.error("❌ Supabase insert error:", error);
+}
 
     return res.status(200).json({
       deploymentId: data.id,

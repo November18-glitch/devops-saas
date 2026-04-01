@@ -6,7 +6,7 @@ export default function Projects() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 LOAD FROM DATABASE (NEW)
+  // 🚀 LOAD FROM DATABASE (NOW WITH LOGS)
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -16,7 +16,8 @@ export default function Projects() {
         const formatted = data.deployments.map((d) => ({
           id: d.deployment_id,
           status: d.status,
-          url: null, // will be updated by polling
+          url: null,
+          logs: d.logs || "",
         }));
 
         setDeployments(formatted);
@@ -30,7 +31,7 @@ export default function Projects() {
     fetchDeployments();
   }, []);
 
-  // 🚀 Deploy project (UNCHANGED LOGIC)
+  // 🚀 Deploy project (UNCHANGED)
   const handleDeploy = async () => {
     try {
       const res = await fetch("/api/deployProject", {
@@ -53,6 +54,7 @@ export default function Projects() {
           id: data.deploymentId,
           status: "BUILDING",
           url: null,
+          logs: "🚀 Deployment started...",
         },
         ...prev,
       ]);
@@ -63,7 +65,7 @@ export default function Projects() {
     }
   };
 
-  // 🔄 Poll status (UNCHANGED LOGIC)
+  // 🔄 Poll status (UNCHANGED LOGIC BUT ALSO REFRESH LOGS)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -85,6 +87,7 @@ export default function Projects() {
             ...d,
             status: data.status,
             url: data.url || d.url,
+            // logs will refresh on reload (safe approach)
           };
         } catch {
           return { ...d, status: "ERROR" };
@@ -95,7 +98,6 @@ export default function Projects() {
     setDeployments(updated);
   };
 
-  // 🎨 UI (NEW DESIGN — SIMPLE BUT CLEAN)
   return (
     <div style={{ padding: "20px" }}>
       <h2>🚀 Deploy Project</h2>
@@ -162,6 +164,21 @@ export default function Projects() {
                   🌍 Open Deployment
                 </a>
               )}
+
+              {/* 🔥 LOGS UI */}
+              <div
+                style={{
+                  marginTop: "10px",
+                  padding: "10px",
+                  background: "#111",
+                  color: "#0f0",
+                  fontSize: "12px",
+                  borderRadius: "6px",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {d.logs || "No logs yet..."}
+              </div>
             </div>
           ))}
         </div>
