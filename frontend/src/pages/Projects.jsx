@@ -4,8 +4,33 @@ export default function Projects() {
   const [repoUrl, setRepoUrl] = useState("");
   const [projectName, setProjectName] = useState("");
   const [deployments, setDeployments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🚀 Deploy project
+  // 🚀 LOAD FROM DATABASE (NEW)
+  useEffect(() => {
+    const fetchDeployments = async () => {
+      try {
+        const res = await fetch("/api/getDeployments");
+        const data = await res.json();
+
+        const formatted = data.deployments.map((d) => ({
+          id: d.deployment_id,
+          status: d.status,
+          url: null, // will be updated by polling
+        }));
+
+        setDeployments(formatted);
+      } catch (err) {
+        console.error("Failed to load deployments", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeployments();
+  }, []);
+
+  // 🚀 Deploy project (UNCHANGED LOGIC)
   const handleDeploy = async () => {
     try {
       const res = await fetch("/api/deployProject", {
@@ -38,38 +63,14 @@ export default function Projects() {
     }
   };
 
-  // 🔄 Poll deployment status
-    useEffect(() => {
-  // ✅ LOAD FROM DATABASE ON START
-  const loadDeployments = async () => {
-    try {
-      const res = await fetch("/api/getDeployments");
-      const data = await res.json();
+  // 🔄 Poll status (UNCHANGED LOGIC)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStatuses(deployments);
+    }, 3000);
 
-      const formatted = data.deployments.map((d) => ({
-        id: d.deployment_id,
-        status: d.status,
-        url: null,
-      }));
-
-      setDeployments(formatted);
-    } catch (err) {
-      console.error("Failed to load deployments");
-    }
-  };
-
-  loadDeployments();
-
-  // 🔄 KEEP YOUR POLLING (UNCHANGED)
-  const interval = setInterval(() => {
-    setDeployments((prev) => {
-      fetchStatuses(prev);
-      return prev;
-    });
-  }, 3000);
-
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, [deployments]);
 
   const fetchStatuses = async (deploymentsList) => {
     const updated = await Promise.all(
@@ -94,38 +95,77 @@ export default function Projects() {
     setDeployments(updated);
   };
 
+  // 🎨 UI (NEW DESIGN — SIMPLE BUT CLEAN)
   return (
-    <div>
-      <h2>Deploy Project</h2>
+    <div style={{ padding: "20px" }}>
+      <h2>🚀 Deploy Project</h2>
 
-      <input
-        placeholder="Repo URL"
-        value={repoUrl}
-        onChange={(e) => setRepoUrl(e.target.value)}
-      />
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          placeholder="GitHub Repo URL"
+          value={repoUrl}
+          onChange={(e) => setRepoUrl(e.target.value)}
+          style={{ marginRight: "10px", padding: "8px", width: "300px" }}
+        />
 
-      <input
-        placeholder="Project Name"
-        value={projectName}
-        onChange={(e) => setProjectName(e.target.value)}
-      />
+        <input
+          placeholder="Project Name"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          style={{ marginRight: "10px", padding: "8px" }}
+        />
 
-      <button onClick={handleDeploy}>Deploy</button>
+        <button onClick={handleDeploy} style={{ padding: "8px 16px" }}>
+          Deploy
+        </button>
+      </div>
 
-      <h3>Deployments</h3>
+      <h3>📦 Deployments</h3>
 
-      {deployments.map((d) => (
-        <div key={d.id}>
-          <p>ID: {d.id}</p>
-          <p>Status: {d.status}</p>
+      {loading ? (
+        <p>Loading...</p>
+      ) : deployments.length === 0 ? (
+        <p>No deployments yet</p>
+      ) : (
+        <div>
+          {deployments.map((d) => (
+            <div
+              key={d.id}
+              style={{
+                border: "1px solid #ddd",
+                padding: "12px",
+                marginBottom: "10px",
+                borderRadius: "8px",
+                background: "#fafafa",
+              }}
+            >
+              <p><strong>ID:</strong> {d.id}</p>
 
-          {d.url && (
-            <a href={`https://${d.url}`} target="_blank">
-              Open
-            </a>
-          )}
+              <p>
+                <strong>Status:</strong>{" "}
+                <span
+                  style={{
+                    color:
+                      d.status === "READY"
+                        ? "green"
+                        : d.status === "ERROR"
+                        ? "red"
+                        : "orange",
+                  }}
+                >
+                  {d.status}
+                </span>
+              </p>
+
+              {d.url && (
+                <a href={`https://${d.url}`} target="_blank">
+                  🌍 Open Deployment
+                </a>
+              )}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
