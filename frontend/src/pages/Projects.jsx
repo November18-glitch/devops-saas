@@ -6,7 +6,7 @@ export default function Projects() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 LOAD FROM DATABASE (NOW WITH LOGS)
+  // 🚀 LOAD FROM DATABASE
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -31,7 +31,7 @@ export default function Projects() {
     fetchDeployments();
   }, []);
 
-  // 🚀 Deploy project (UNCHANGED)
+  // 🚀 Deploy project
   const handleDeploy = async () => {
     try {
       const res = await fetch("/api/deployProject", {
@@ -58,14 +58,13 @@ export default function Projects() {
         },
         ...prev,
       ]);
-
     } catch (err) {
       console.error(err);
       alert("Deploy failed");
     }
   };
 
-  // 🔄 Poll status (UNCHANGED LOGIC BUT ALSO REFRESH LOGS)
+  // 🔄 Poll status
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -87,7 +86,6 @@ export default function Projects() {
             ...d,
             status: data.status,
             url: data.url || d.url,
-            // logs will refresh on reload (safe approach)
           };
         } catch {
           return { ...d, status: "ERROR" };
@@ -98,90 +96,149 @@ export default function Projects() {
     setDeployments(updated);
   };
 
+  // 🎨 PREMIUM UI
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>🚀 Deploy Project</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0f172a",
+        color: "white",
+        padding: "40px",
+        fontFamily: "system-ui",
+      }}
+    >
+      <h1 style={{ fontSize: "28px", marginBottom: "20px" }}>
+        🚀 Deploy Dashboard
+      </h1>
 
-      <div style={{ marginBottom: "20px" }}>
+      {/* INPUT SECTION */}
+      <div
+        style={{
+          background: "#1e293b",
+          padding: "20px",
+          borderRadius: "12px",
+          marginBottom: "30px",
+        }}
+      >
+        <h3 style={{ marginBottom: "15px" }}>New Deployment</h3>
+
         <input
           placeholder="GitHub Repo URL"
           value={repoUrl}
           onChange={(e) => setRepoUrl(e.target.value)}
-          style={{ marginRight: "10px", padding: "8px", width: "300px" }}
+          style={{
+            width: "100%",
+            marginBottom: "10px",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "none",
+            background: "#0f172a",
+            color: "white",
+          }}
         />
 
         <input
           placeholder="Project Name"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
-          style={{ marginRight: "10px", padding: "8px" }}
+          style={{
+            width: "100%",
+            marginBottom: "10px",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "none",
+            background: "#0f172a",
+            color: "white",
+          }}
         />
 
-        <button onClick={handleDeploy} style={{ padding: "8px 16px" }}>
+        <button
+          onClick={handleDeploy}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "8px",
+            border: "none",
+            background: "#3b82f6",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
           Deploy
         </button>
       </div>
 
-      <h3>📦 Deployments</h3>
+      {/* DEPLOYMENTS */}
+      <h3 style={{ marginBottom: "15px" }}>Deployments</h3>
 
       {loading ? (
         <p>Loading...</p>
       ) : deployments.length === 0 ? (
         <p>No deployments yet</p>
       ) : (
-        <div>
-          {deployments.map((d) => (
-            <div
-              key={d.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "12px",
-                marginBottom: "10px",
-                borderRadius: "8px",
-                background: "#fafafa",
-              }}
-            >
-              <p><strong>ID:</strong> {d.id}</p>
+        deployments.map((d) => (
+          <div
+            key={d.id}
+            style={{
+              background: "#1e293b",
+              padding: "20px",
+              borderRadius: "12px",
+              marginBottom: "20px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            }}
+          >
+            <p style={{ fontSize: "12px", opacity: 0.7 }}>
+              {d.id}
+            </p>
 
-              <p>
-                <strong>Status:</strong>{" "}
-                <span
-                  style={{
-                    color:
-                      d.status === "READY"
-                        ? "green"
-                        : d.status === "ERROR"
-                        ? "red"
-                        : "orange",
-                  }}
-                >
-                  {d.status}
-                </span>
-              </p>
-
-              {d.url && (
-                <a href={`https://${d.url}`} target="_blank">
-                  🌍 Open Deployment
-                </a>
-              )}
-
-              {/* 🔥 LOGS UI */}
-              <div
+            <p style={{ marginTop: "5px" }}>
+              Status:{" "}
+              <span
                 style={{
-                  marginTop: "10px",
-                  padding: "10px",
-                  background: "#111",
-                  color: "#0f0",
-                  fontSize: "12px",
-                  borderRadius: "6px",
-                  whiteSpace: "pre-wrap",
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  background:
+                    d.status === "READY"
+                      ? "#16a34a"
+                      : d.status === "ERROR"
+                      ? "#dc2626"
+                      : "#f59e0b",
                 }}
               >
-                {d.logs || "No logs yet..."}
-              </div>
+                {d.status}
+              </span>
+            </p>
+
+            {d.url && (
+              <a
+                href={`https://${d.url}`}
+                target="_blank"
+                style={{
+                  display: "inline-block",
+                  marginTop: "10px",
+                  color: "#3b82f6",
+                }}
+              >
+                🌍 Open Deployment
+              </a>
+            )}
+
+            {/* LOGS */}
+            <div
+              style={{
+                marginTop: "15px",
+                background: "#020617",
+                padding: "12px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                color: "#22c55e",
+              }}
+            >
+              {d.logs || "No logs yet..."}
             </div>
-          ))}
-        </div>
+          </div>
+        ))
       )}
     </div>
   );
