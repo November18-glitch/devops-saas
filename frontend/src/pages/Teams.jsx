@@ -1,132 +1,54 @@
-import { useState, useEffect } from "react"
-import { supabase } from "../supabaseClient";
+import { useState } from "react";
 
 export default function Teams() {
+const [teamName, setTeamName] = useState("");
 
-  const [teamMembers, setTeamMembers] = useState([])
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [loading, setLoading] = useState(false)
+const handleCreateTeam = async () => {
+try {
+const res = await fetch("/api/createTeam", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+},
+body: JSON.stringify({
+  name: teamName,
+  userId: "user",
+  email: "test@example.com"
+}),
+});
 
-  useEffect(() => {
-    loadTeamMembers()
-  }, [])
 
-  async function loadTeamMembers() {
-    const { data, error } = await supabase
-      .from("team_members")
-      .select("*")
+  const data = await res.json();
 
-    if (!error) {
-      setTeamMembers(data)
-    }
+  if (!res.ok) {
+    alert(data.error);
+    return;
   }
 
-  async function inviteUser() {
+  alert("Team created 🚀");
 
-    if (!inviteEmail) {
-      alert("Enter an email")
-      return
-    }
+} catch (err) {
+  console.error(err);
+  alert("Failed to create team");
+}
 
-    setLoading(true)
+};
 
-    try {
+return (
+<div style={{ padding: "20px" }}> <h2>👥 Teams</h2>
 
-      // generate invite token
-      const token = crypto.randomUUID()
+```
+  <input
+    placeholder="Team name"
+    value={teamName}
+    onChange={(e) => setTeamName(e.target.value)}
+    style={{ marginRight: "10px", padding: "8px" }}
+  />
 
-      // store invite in Supabase
-      const { error } = await supabase
-        .from("team_invites")
-        .insert([
-          {
-            email: inviteEmail,
-            token: token,
-            status: "pending"
-          }
-        ])
+  <button onClick={handleCreateTeam}>
+    Create Team
+  </button>
+</div>
 
-      if (error) {
-       console.error("SUPABASE ERROR:", error)
-       alert(error.message)
-       setLoading(false)
-       return
-      }
-
-      // call Vercel API to send email
-      await fetch("/api/sendInviteEmail", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: inviteEmail,
-          token: token
-        })
-      })
-
-      alert("Invite sent!")
-
-      setInviteEmail("")
-
-    } catch (err) {
-      console.error(err)
-      alert("Something went wrong")
-    }
-
-    setLoading(false)
-  }
-
-  return (
-    <div style={{ padding: "40px" }}>
-      <h1>Team Members</h1>
-
-      <div style={{ marginTop: "20px" }}>
-
-        <input
-          type="email"
-          placeholder="Enter email to invite"
-          value={inviteEmail}
-          onChange={(e) => setInviteEmail(e.target.value)}
-          style={{
-            padding: "10px",
-            width: "250px",
-            marginRight: "10px"
-          }}
-        />
-
-        <button
-          onClick={inviteUser}
-          disabled={loading}
-          style={{
-            padding: "10px 20px"
-          }}
-        >
-          {loading ? "Sending..." : "Invite"}
-        </button>
-
-      </div>
-
-      <div style={{ marginTop: "40px" }}>
-        <h2>Current Team</h2>
-
-        {teamMembers.length === 0 && (
-          <p>No team members yet</p>
-        )}
-
-        {teamMembers.map((member) => (
-          <div
-            key={member.id}
-            style={{
-              padding: "10px",
-              borderBottom: "1px solid #ddd"
-            }}
-          >
-            {member.email}
-          </div>
-        ))}
-      </div>
-
-    </div>
-  )
+);
 }
