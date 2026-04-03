@@ -12,7 +12,7 @@ headers: {
 },
 body: JSON.stringify({
   name: teamName,
-  userId: "user",
+  userId: "123",
   email: "test@example.com"
 }),
 });
