@@ -90,11 +90,12 @@ export default async function handler(req, res) {
     // ✅ FIXED INSERT (WITH ERROR LOGGING)
     // 🔥 ✅ SAVE DEPLOYMENT + INITIAL LOG
     const { error } = await supabase.from("deployments").insert({
-       deployment_id: data.id,
-       status: "BUILDING",
-       logs: "🚀 Deployment started...",
-       environment: "preview",
-       triggered_by: "user",
+      deployment_id: data.id,
+      status: "BUILDING",
+      logs: "🚀 Deployment started...",
+      environment: "preview",
+      triggered_by: "user",
+      team_id: teamId || null, // ✅ THIS LINE
 });
 
     if (error) {

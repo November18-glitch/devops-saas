@@ -6,7 +6,11 @@ export default function Projects() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 LOAD FROM DATABASE
+  // ✅ ADDED
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState("");
+
+  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -31,7 +35,22 @@ export default function Projects() {
     fetchDeployments();
   }, []);
 
-  // 🚀 Deploy project
+  // ✅ LOAD TEAMS
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await fetch("/api/getTeams");
+        const data = await res.json();
+        setTeams(data.teams || []);
+      } catch (err) {
+        console.error("Failed to fetch teams", err);
+      }
+    };
+
+    fetchTeams();
+  }, []);
+
+  // 🚀 DEPLOY
   const handleDeploy = async () => {
     try {
       const res = await fetch("/api/deployProject", {
@@ -39,7 +58,12 @@ export default function Projects() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ repoUrl, projectName }),
+        // ✅ FIXED
+        body: JSON.stringify({
+          repoUrl,
+          projectName,
+          teamId: selectedTeam,
+        }),
       });
 
       const data = await res.json();
@@ -64,7 +88,7 @@ export default function Projects() {
     }
   };
 
-  // 🔄 Poll status
+  // 🔄 POLL STATUS
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -96,147 +120,61 @@ export default function Projects() {
     setDeployments(updated);
   };
 
-  // 🎨 PREMIUM UI
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0f172a",
-        color: "white",
-        padding: "40px",
-        fontFamily: "system-ui",
-      }}
-    >
-      <h1 style={{ fontSize: "28px", marginBottom: "20px" }}>
-        🚀 Deploy Dashboard
-      </h1>
+    <div style={{ minHeight: "100vh", background: "#0f172a", color: "white", padding: "40px" }}>
+      <h1>🚀 Deploy Dashboard</h1>
 
-      {/* INPUT SECTION */}
-      <div
-        style={{
-          background: "#1e293b",
-          padding: "20px",
-          borderRadius: "12px",
-          marginBottom: "30px",
-        }}
-      >
-        <h3 style={{ marginBottom: "15px" }}>New Deployment</h3>
+      <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "30px" }}>
+        <h3>New Deployment</h3>
 
         <input
           placeholder="GitHub Repo URL"
           value={repoUrl}
           onChange={(e) => setRepoUrl(e.target.value)}
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "none",
-            background: "#0f172a",
-            color: "white",
-          }}
+          style={{ width: "100%", marginBottom: "10px", padding: "10px" }}
         />
 
         <input
           placeholder="Project Name"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "none",
-            background: "#0f172a",
-            color: "white",
-          }}
+          style={{ width: "100%", marginBottom: "10px", padding: "10px" }}
         />
 
-        <button
-          onClick={handleDeploy}
-          style={{
-            padding: "10px 20px",
-            borderRadius: "8px",
-            border: "none",
-            background: "#3b82f6",
-            color: "white",
-            cursor: "pointer",
-          }}
+        {/* ✅ TEAM DROPDOWN */}
+        <select
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+          style={{ marginBottom: "10px", padding: "10px", width: "100%" }}
         >
-          Deploy
-        </button>
+          <option value="">Select Team</option>
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+
+        <button onClick={handleDeploy}>Deploy</button>
       </div>
 
-      {/* DEPLOYMENTS */}
-      <h3 style={{ marginBottom: "15px" }}>Deployments</h3>
+      <h3>Deployments</h3>
 
       {loading ? (
         <p>Loading...</p>
-      ) : deployments.length === 0 ? (
-        <p>No deployments yet</p>
       ) : (
         deployments.map((d) => (
-          <div
-            key={d.id}
-            style={{
-              background: "#1e293b",
-              padding: "20px",
-              borderRadius: "12px",
-              marginBottom: "20px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-            }}
-          >
-            <p style={{ fontSize: "12px", opacity: 0.7 }}>
-              {d.id}
-            </p>
-
-            <p style={{ marginTop: "5px" }}>
-              Status:{" "}
-              <span
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  background:
-                    d.status === "READY"
-                      ? "#16a34a"
-                      : d.status === "ERROR"
-                      ? "#dc2626"
-                      : "#f59e0b",
-                }}
-              >
-                {d.status}
-              </span>
-            </p>
+          <div key={d.id} style={{ background: "#1e293b", padding: "20px", marginBottom: "20px" }}>
+            <p>{d.id}</p>
+            <p>Status: {d.status}</p>
 
             {d.url && (
-              <a
-                href={`https://${d.url}`}
-                target="_blank"
-                style={{
-                  display: "inline-block",
-                  marginTop: "10px",
-                  color: "#3b82f6",
-                }}
-              >
-                🌍 Open Deployment
+              <a href={`https://${d.url}`} target="_blank">
+                Open
               </a>
             )}
 
-            {/* LOGS */}
-            <div
-              style={{
-                marginTop: "15px",
-                background: "#020617",
-                padding: "12px",
-                borderRadius: "8px",
-                fontSize: "12px",
-                fontFamily: "monospace",
-                whiteSpace: "pre-wrap",
-                color: "#22c55e",
-              }}
-            >
-              {d.logs || "No logs yet..."}
-            </div>
+            <div>{d.logs}</div>
           </div>
         ))
       )}
