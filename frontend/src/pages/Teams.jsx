@@ -1,54 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Teams() {
-const [teamName, setTeamName] = useState("");
+  const [teamName, setTeamName] = useState("");
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const handleCreateTeam = async () => {
-try {
-const res = await fetch("/api/createTeam", {
-method: "POST",
-headers: {
-"Content-Type": "application/json",
-},
-body: JSON.stringify({
-  name: teamName,
-  userId: "11111111-1111-1111-1111-111111111111",
-  email: "test@example.com"
-}),
-});
+  // 🔥 LOAD TEAMS FROM DB
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await fetch("/api/getTeams");
+        const data = await res.json();
 
+        setTeams(data.teams || []);
+      } catch (err) {
+        console.error("Failed to fetch teams", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const data = await res.json();
+    fetchTeams();
+  }, []);
 
-  if (!res.ok) {
-    alert(data.error);
-    return;
-  }
+  // 🚀 CREATE TEAM (YOUR EXISTING LOGIC + UI UPDATE)
+  const handleCreateTeam = async () => {
+    try {
+      const res = await fetch("/api/createTeam", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: teamName,
+          userId: "11111111-1111-1111-1111-111111111111", // keep your current setup
+          email: "test@example.com",
+        }),
+      });
 
-  alert("Team created 🚀");
+      const data = await res.json();
 
-} catch (err) {
-  console.error(err);
-  alert("Failed to create team");
-}
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
 
-};
+      // ✅ ADD NEW TEAM TO UI INSTANTLY
+      setTeams((prev) => [data.team, ...prev]);
 
-return (
-<div style={{ padding: "20px" }}> <h2>👥 Teams</h2>
+      setTeamName("");
 
-```
-  <input
-    placeholder="Team name"
-    value={teamName}
-    onChange={(e) => setTeamName(e.target.value)}
-    style={{ marginRight: "10px", padding: "8px" }}
-  />
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create team");
+    }
+  };
 
-  <button onClick={handleCreateTeam}>
-    Create Team
-  </button>
-</div>
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>👥 Teams</h2>
 
-);
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          placeholder="Team name"
+          value={teamName}
+          onChange={(e) => setTeamName(e.target.value)}
+          style={{ marginRight: "10px", padding: "8px" }}
+        />
+
+        <button onClick={handleCreateTeam}>
+          Create Team
+        </button>
+      </div>
+
+      <h3>Your Teams</h3>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : teams.length === 0 ? (
+        <p>No teams yet</p>
+      ) : (
+        <div>
+          {teams.map((team) => (
+            <div
+              key={team.id}
+              style={{
+                border: "1px solid #ddd",
+                padding: "12px",
+                marginBottom: "10px",
+                borderRadius: "8px",
+                background: "#fafafa",
+              }}
+            >
+              <p><strong>{team.name}</strong></p>
+              <p>ID: {team.id}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
