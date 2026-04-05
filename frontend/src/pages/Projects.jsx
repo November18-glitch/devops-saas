@@ -10,11 +10,13 @@ export default function Projects() {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
-  // 🚀 LOAD DEPLOYMENTS
+  // 🚀 LOAD DEPLOYMENTS (NOW TEAM-AWARE)
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
-        const res = await fetch("/api/getDeployments");
+        const res = await fetch(
+          `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+        );
         const data = await res.json();
 
         const formatted = data.deployments.map((d) => ({
@@ -50,6 +52,31 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
+  // 🔥 NEW: RELOAD DEPLOYMENTS WHEN TEAM CHANGES
+  useEffect(() => {
+    const fetchDeployments = async () => {
+      try {
+        const res = await fetch(
+          `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+        );
+        const data = await res.json();
+
+        const formatted = data.deployments.map((d) => ({
+          id: d.deployment_id,
+          status: d.status,
+          url: null,
+          logs: d.logs || "",
+        }));
+
+        setDeployments(formatted);
+      } catch (err) {
+        console.error("Failed to load deployments", err);
+      }
+    };
+
+    fetchDeployments();
+  }, [selectedTeam]);
+
   // 🚀 DEPLOY
   const handleDeploy = async () => {
     try {
@@ -58,7 +85,6 @@ export default function Projects() {
         headers: {
           "Content-Type": "application/json",
         },
-        // ✅ FIXED
         body: JSON.stringify({
           repoUrl,
           projectName,

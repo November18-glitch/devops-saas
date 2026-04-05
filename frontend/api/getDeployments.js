@@ -11,17 +11,25 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { data, error } = await supabase
-      .from("deployments")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { teamId } = req.query;
 
-    if (error) {
+     let query = supabase
+     .from("deployments")
+     .select("*")
+     .order("created_at", { ascending: false });
+
+      if (teamId) {
+      query = query.eq("team_id", teamId);
+  }
+
+     const { data, error } = await query;
+
+     if (error) {
       console.error("Supabase fetch error:", error);
       return res.status(500).json({ error: "Failed to fetch deployments" });
     }
 
-    return res.status(200).json({ deployments: data });
+     return res.status(200).json({ deployments: data });
 
   } catch (err) {
     console.error("GET DEPLOYMENTS CRASH:", err);
