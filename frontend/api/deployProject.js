@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName } = req.body;
+    const { repoUrl, projectName, teamId } = req.body;
 
     if (!repoUrl || !projectName) {
       return res.status(400).json({
