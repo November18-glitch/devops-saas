@@ -6,11 +6,15 @@ export default function Projects() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ ADDED
+  // ✅ TEAMS
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
-  // 🚀 LOAD DEPLOYMENTS (NOW TEAM-AWARE)
+  // ✅ PROJECTS (🔥 THIS WAS MISSING)
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
+
+  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -52,7 +56,24 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 🔥 NEW: RELOAD DEPLOYMENTS WHEN TEAM CHANGES
+  // 🔥 LOAD PROJECTS WHEN TEAM CHANGES
+  useEffect(() => {
+    if (!selectedTeam) return;
+
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch(`/api/getProjects?teamId=${selectedTeam}`);
+        const data = await res.json();
+        setProjects(data.projects || []);
+      } catch (err) {
+        console.error("Failed to fetch projects", err);
+      }
+    };
+
+    fetchProjects();
+  }, [selectedTeam]);
+
+  // 🔥 RELOAD DEPLOYMENTS WHEN TEAM CHANGES
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -89,6 +110,7 @@ export default function Projects() {
           repoUrl,
           projectName,
           teamId: selectedTeam,
+          projectId: selectedProject, // ✅ NOW EXISTS
         }),
       });
 
@@ -167,7 +189,7 @@ export default function Projects() {
           style={{ width: "100%", marginBottom: "10px", padding: "10px" }}
         />
 
-        {/* ✅ TEAM DROPDOWN */}
+        {/* ✅ TEAM */}
         <select
           value={selectedTeam}
           onChange={(e) => setSelectedTeam(e.target.value)}
@@ -177,6 +199,20 @@ export default function Projects() {
           {teams.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}
+            </option>
+          ))}
+        </select>
+
+        {/* ✅ PROJECT (🔥 NEW) */}
+        <select
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+          style={{ marginBottom: "10px", padding: "10px", width: "100%" }}
+        >
+          <option value="">Select Project</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
           ))}
         </select>

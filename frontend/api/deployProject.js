@@ -96,6 +96,7 @@ export default async function handler(req, res) {
       environment: "preview",
       triggered_by: "user",
       team_id: teamId || null, // ✅ THIS LINE
+      project_id: projectId || null,
 });
 
     if (error) {
