@@ -100,41 +100,50 @@ export default function Projects() {
 
   // 🚀 DEPLOY
   const handleDeploy = async () => {
-    try {
-      const res = await fetch("/api/deployProject", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          repoUrl,
-          projectName,
-          teamId: selectedTeam,
-          projectId: selectedProject, // ✅ NOW EXISTS
-        }),
-      });
+  try {
+    const selectedProjectData = projects.find(
+      (p) => p.id === selectedProject
+    );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
-
-      setDeployments((prev) => [
-        {
-          id: data.deploymentId,
-          status: "BUILDING",
-          url: null,
-          logs: "🚀 Deployment started...",
-        },
-        ...prev,
-      ]);
-    } catch (err) {
-      console.error(err);
-      alert("Deploy failed");
+    if (!selectedProjectData) {
+      alert("Please select a project");
+      return;
     }
-  };
+
+    const res = await fetch("/api/deployProject", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        repoUrl: selectedProjectData.repo_url,
+        projectName: selectedProjectData.name,
+        teamId: selectedTeam,
+        projectId: selectedProject,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
+    }
+
+    setDeployments((prev) => [
+      {
+        id: data.deploymentId,
+        status: "BUILDING",
+        url: null,
+        logs: "🚀 Deployment started...",
+      },
+      ...prev,
+    ]);
+  } catch (err) {
+    console.error(err);
+    alert("Deploy failed");
+  }
+};
 
   // 🔄 POLL STATUS
   useEffect(() => {
