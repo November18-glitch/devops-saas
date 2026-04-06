@@ -184,20 +184,6 @@ export default function Projects() {
       <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "30px" }}>
         <h3>New Deployment</h3>
 
-        <input
-          placeholder="GitHub Repo URL"
-          value={repoUrl}
-          onChange={(e) => setRepoUrl(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px", padding: "10px" }}
-        />
-
-        <input
-          placeholder="Project Name"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px", padding: "10px" }}
-        />
-
         {/* ✅ TEAM */}
         <select
           value={selectedTeam}
@@ -225,6 +211,11 @@ export default function Projects() {
             </option>
           ))}
         </select>
+        {selectedProject && (
+         <p style={{ fontSize: "12px", opacity: 0.7, marginBottom: "10px" }}>
+         Repo: {projects.find(p => p.id === selectedProject)?.repo_url}
+         </p>
+        )}
 
         <button onClick={handleDeploy}>Deploy</button>
       </div>
