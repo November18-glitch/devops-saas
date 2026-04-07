@@ -12,7 +12,7 @@ export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
 
-  // ✅ CREATE PROJECT INPUTS (🔥 NEW)
+  // ✅ CREATE PROJECT INPUTS
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
@@ -26,9 +26,13 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 🚀 LOAD PROJECTS
+  // 🚀 LOAD PROJECTS WHEN TEAM CHANGES
   useEffect(() => {
-    if (!selectedTeam) return;
+    if (!selectedTeam) {
+      setProjects([]);
+      setSelectedProject("");
+      return;
+    }
 
     const fetchProjects = async () => {
       const res = await fetch(`/api/getProjects?teamId=${selectedTeam}`);
@@ -37,31 +41,38 @@ export default function Projects() {
     };
 
     fetchProjects();
+
+    // 🔥 reset selected project when team changes
+    setSelectedProject("");
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS
+  // 🚀 LOAD DEPLOYMENTS (🔥 THIS WAS MISSING)
   useEffect(() => {
     const fetchDeployments = async () => {
-      const res = await fetch(
-        `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
-      );
-      const data = await res.json();
+      try {
+        const res = await fetch(
+          `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+        );
+        const data = await res.json();
 
-      const formatted = data.deployments.map((d) => ({
-        id: d.deployment_id,
-        status: d.status,
-        url: null,
-        logs: d.logs || "",
-      }));
+        const formatted = data.deployments.map((d) => ({
+          id: d.deployment_id,
+          status: d.status,
+          url: null,
+          logs: d.logs || "",
+        }));
 
-      setDeployments(formatted);
-      setLoading(false);
+        setDeployments(formatted);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to load deployments", err);
+      }
     };
 
     fetchDeployments();
   }, [selectedTeam]);
 
-  // 🚀 CREATE PROJECT (🔥 THIS WAS MISSING)
+  // 🚀 CREATE PROJECT
   const handleCreateProject = async () => {
     if (!newProjectName || !newRepoUrl || !selectedTeam) {
       alert("Fill all fields");
@@ -88,10 +99,9 @@ export default function Projects() {
         return;
       }
 
-      // ✅ add instantly to UI
+      // ✅ instant UI update
       setProjects((prev) => [data.project, ...prev]);
 
-      // ✅ reset inputs
       setNewProjectName("");
       setNewRepoUrl("");
 
@@ -133,6 +143,7 @@ export default function Projects() {
       return;
     }
 
+    // ✅ add instantly
     setDeployments((prev) => [
       {
         id: data.deploymentId,
@@ -142,9 +153,24 @@ export default function Projects() {
       },
       ...prev,
     ]);
+
+    // 🔥 ALSO REFETCH (important)
+    const resReload = await fetch(
+      `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+    );
+    const dataReload = await resReload.json();
+
+    setDeployments(
+      dataReload.deployments.map((d) => ({
+        id: d.deployment_id,
+        status: d.status,
+        url: null,
+        logs: d.logs || "",
+      }))
+    );
   };
 
-  // 🔄 POLL STATUS
+  // 🔄 POLL STATUS (UNCHANGED)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -193,7 +219,6 @@ export default function Projects() {
           ))}
         </select>
 
-        {/* CREATE PROJECT INPUTS */}
         <input
           placeholder="Project Name"
           value={newProjectName}
@@ -208,15 +233,12 @@ export default function Projects() {
           style={{ width: "100%", marginBottom: "10px" }}
         />
 
-        <button onClick={handleCreateProject}>
-          ➕ Create Project
-        </button>
+        <button onClick={handleCreateProject}>➕ Create Project</button>
 
         <hr style={{ margin: "20px 0" }} />
 
         <h3>Deploy</h3>
 
-        {/* PROJECT SELECT */}
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
@@ -238,6 +260,20 @@ export default function Projects() {
 
         <button onClick={handleDeploy}>🚀 Deploy</button>
       </div>
+
+      <h3 style={{ marginTop: "30px" }}>Deployments</h3>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        deployments.map((d) => (
+          <div key={d.id} style={{ background: "#1e293b", padding: "15px", marginTop: "10px" }}>
+            <p>{d.id}</p>
+            <p>Status: {d.status}</p>
+            <div>{d.logs}</div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
