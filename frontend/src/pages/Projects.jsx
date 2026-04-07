@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 
 export default function Projects() {
-  const [repoUrl, setRepoUrl] = useState("");
-  const [projectName, setProjectName] = useState("");
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -10,38 +8,11 @@ export default function Projects() {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
-  // ✅ PROJECTS (🔥 THIS WAS MISSING)
+  // ✅ PROJECTS
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
 
-  // 🚀 LOAD DEPLOYMENTS
-  useEffect(() => {
-    const fetchDeployments = async () => {
-      try {
-        const res = await fetch(
-          `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
-        );
-        const data = await res.json();
-
-        const formatted = data.deployments.map((d) => ({
-          id: d.deployment_id,
-          status: d.status,
-          url: null,
-          logs: d.logs || "",
-        }));
-
-        setDeployments(formatted);
-      } catch (err) {
-        console.error("Failed to load deployments", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDeployments();
-  }, []);
-
-  // ✅ LOAD TEAMS
+  // 🚀 LOAD TEAMS
   useEffect(() => {
     const fetchTeams = async () => {
       try {
@@ -56,9 +27,13 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 🔥 LOAD PROJECTS WHEN TEAM CHANGES
+  // 🚀 LOAD PROJECTS (WHEN TEAM CHANGES)
   useEffect(() => {
-    if (!selectedTeam) return;
+    if (!selectedTeam) {
+      setProjects([]);
+      setSelectedProject("");
+      return;
+    }
 
     const fetchProjects = async () => {
       try {
@@ -73,7 +48,7 @@ export default function Projects() {
     fetchProjects();
   }, [selectedTeam]);
 
-  // 🔥 RELOAD DEPLOYMENTS WHEN TEAM CHANGES
+  // 🚀 LOAD DEPLOYMENTS (WHEN TEAM CHANGES)
   useEffect(() => {
     const fetchDeployments = async () => {
       try {
@@ -82,16 +57,18 @@ export default function Projects() {
         );
         const data = await res.json();
 
-        const formatted = data.deployments.map((d) => ({
+        const formatted = (data.deployments || []).map((d) => ({
           id: d.deployment_id,
           status: d.status,
-          url: null,
+          url: d.url || null,
           logs: d.logs || "",
         }));
 
         setDeployments(formatted);
       } catch (err) {
         console.error("Failed to load deployments", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -100,50 +77,51 @@ export default function Projects() {
 
   // 🚀 DEPLOY
   const handleDeploy = async () => {
-  try {
-    const selectedProjectData = projects.find(
-      (p) => p.id === selectedProject
-    );
+    try {
+      const selectedProjectData = projects.find(
+        (p) => p.id === selectedProject
+      );
 
-    if (!selectedProjectData) {
-      alert("Please select a project");
-      return;
+      if (!selectedProjectData) {
+        alert("Please select a project");
+        return;
+      }
+
+      const res = await fetch("/api/deployProject", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repoUrl: selectedProjectData.repo_url,
+          projectName: selectedProjectData.name,
+          teamId: selectedTeam,
+          projectId: selectedProject,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+
+      // ✅ optimistic UI update
+      setDeployments((prev) => [
+        {
+          id: data.deploymentId,
+          status: "BUILDING",
+          url: null,
+          logs: "🚀 Deployment started...",
+        },
+        ...prev,
+      ]);
+    } catch (err) {
+      console.error(err);
+      alert("Deploy failed");
     }
-
-    const res = await fetch("/api/deployProject", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        repoUrl: selectedProjectData.repo_url,
-        projectName: selectedProjectData.name,
-        teamId: selectedTeam,
-        projectId: selectedProject,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.error);
-      return;
-    }
-
-    setDeployments((prev) => [
-      {
-        id: data.deploymentId,
-        status: "BUILDING",
-        url: null,
-        logs: "🚀 Deployment started...",
-      },
-      ...prev,
-    ]);
-  } catch (err) {
-    console.error(err);
-    alert("Deploy failed");
-  }
-};
+  };
 
   // 🔄 POLL STATUS
   useEffect(() => {
@@ -198,7 +176,7 @@ export default function Projects() {
           ))}
         </select>
 
-        {/* ✅ PROJECT (🔥 NEW) */}
+        {/* ✅ PROJECT */}
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
@@ -211,10 +189,12 @@ export default function Projects() {
             </option>
           ))}
         </select>
+
+        {/* ✅ SHOW REPO */}
         {selectedProject && (
-         <p style={{ fontSize: "12px", opacity: 0.7, marginBottom: "10px" }}>
-         Repo: {projects.find(p => p.id === selectedProject)?.repo_url}
-         </p>
+          <p style={{ fontSize: "12px", opacity: 0.7, marginBottom: "10px" }}>
+            Repo: {projects.find((p) => p.id === selectedProject)?.repo_url}
+          </p>
         )}
 
         <button onClick={handleDeploy}>Deploy</button>
@@ -224,6 +204,8 @@ export default function Projects() {
 
       {loading ? (
         <p>Loading...</p>
+      ) : deployments.length === 0 ? (
+        <p>No deployments yet</p>
       ) : (
         deployments.map((d) => (
           <div key={d.id} style={{ background: "#1e293b", padding: "20px", marginBottom: "20px" }}>
