@@ -11,7 +11,6 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // ✅ FIX: GET BOTH PARAMS
     const { teamId, projectId } = req.query;
 
     let query = supabase
@@ -19,13 +18,9 @@ export default async function handler(req, res) {
       .select("*")
       .order("created_at", { ascending: false });
 
-    // ✅ FILTER BY PROJECT (priority)
     if (projectId) {
       query = query.eq("project_id", projectId);
-    }
-
-    // ✅ ELSE FILTER BY TEAM
-    else if (teamId) {
+    } else if (teamId) {
       query = query.eq("team_id", teamId);
     }
 

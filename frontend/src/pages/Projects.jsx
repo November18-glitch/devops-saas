@@ -42,26 +42,27 @@ export default function Projects() {
 
     fetchProjects();
 
-    // 🔥 reset selected project when team changes
     setSelectedProject("");
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS (🔥 THIS WAS MISSING)
+  // 🚀 LOAD DEPLOYMENTS (🔥 FIXED DEPENDENCY)
   useEffect(() => {
     setLoading(true);
+
     const fetchDeployments = async () => {
       try {
         const res = await fetch(
           selectedProject
-           ? `/api/getDeployments?projectId=${selectedProject}`
-           : `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+            ? `/api/getDeployments?projectId=${selectedProject}`
+            : `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
         );
+
         const data = await res.json();
 
         const formatted = data.deployments.map((d) => ({
           id: d.deployment_id,
           status: d.status,
-          url: null,
+          url: d.url || null, // ✅ small upgrade
           logs: d.logs || "",
         }));
 
@@ -73,7 +74,8 @@ export default function Projects() {
     };
 
     fetchDeployments();
-  }, [selectedTeam]);
+
+  }, [selectedTeam, selectedProject]); // ✅ FIXED HERE
 
   // 🚀 CREATE PROJECT
   const handleCreateProject = async () => {
@@ -102,7 +104,6 @@ export default function Projects() {
         return;
       }
 
-      // ✅ instant UI update
       setProjects((prev) => [data.project, ...prev]);
 
       setNewProjectName("");
@@ -146,7 +147,6 @@ export default function Projects() {
       return;
     }
 
-    // ✅ add instantly
     setDeployments((prev) => [
       {
         id: data.deploymentId,
@@ -157,9 +157,9 @@ export default function Projects() {
       ...prev,
     ]);
 
-    // 🔥 ALSO REFETCH (important)
+    // 🔥 REFETCH (already good)
     const resReload = await fetch(
-     `/api/getDeployments?projectId=${selectedProject}`
+      `/api/getDeployments?projectId=${selectedProject}`
     );
     const dataReload = await resReload.json();
 
@@ -167,13 +167,13 @@ export default function Projects() {
       dataReload.deployments.map((d) => ({
         id: d.deployment_id,
         status: d.status,
-        url: null,
+        url: d.url || null,
         logs: d.logs || "",
       }))
     );
   };
 
-  // 🔄 POLL STATUS (UNCHANGED)
+  // 🔄 POLL STATUS
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -261,6 +261,20 @@ export default function Projects() {
           </p>
         )}
 
+        {/* 🔥 NEW: OPEN PROJECT PAGE */}
+        <button
+          onClick={() => {
+            if (!selectedProject) {
+              alert("Select a project first");
+              return;
+            }
+            window.location.href = `/project/${selectedProject}`;
+          }}
+          style={{ marginBottom: "10px" }}
+        >
+          📂 Open Project Page
+        </button>
+
         <button onClick={handleDeploy}>🚀 Deploy</button>
       </div>
 
@@ -273,6 +287,14 @@ export default function Projects() {
           <div key={d.id} style={{ background: "#1e293b", padding: "15px", marginTop: "10px" }}>
             <p>{d.id}</p>
             <p>Status: {d.status}</p>
+
+            {/* 🔥 NEW: URL */}
+            {d.url && (
+              <a href={`https://${d.url}`} target="_blank">
+                🔗 Open
+              </a>
+            )}
+
             <div>{d.logs}</div>
           </div>
         ))

@@ -1,40 +1,47 @@
-import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { useParams } from "react-router-dom";
 
 export default function Project() {
   const { id } = useParams();
-  const [project, setProject] = useState(null);
+
+  const [deployments, setDeployments] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("id", id)
-        .single();
+    const fetchDeployments = async () => {
+      const res = await fetch(`/api/getDeployments?projectId=${id}`);
+      const data = await res.json();
 
-      setProject(data);
+      setDeployments(data.deployments || []);
     };
 
-    load();
+    fetchDeployments();
   }, [id]);
 
-  if (!project) return <p>Loading…</p>;
-
   return (
-    <div style={{ padding: 32 }}>
-      <h1>{project.name}</h1>
+    <div style={{ padding: "40px", background: "#0f172a", color: "white" }}>
+      <h1>📦 Project Deployments</h1>
 
-      <p>
-        Repo: {project.repo_type} <br />
-        Branch: {project.default_branch}
-      </p>
+      {deployments.length === 0 ? (
+        <p>No deployments yet</p>
+      ) : (
+        deployments.map((d) => (
+          <div key={d.deployment_id} style={{
+            background: "#1e293b",
+            padding: "20px",
+            marginTop: "10px"
+          }}>
+            <p><strong>ID:</strong> {d.deployment_id}</p>
+            <p><strong>Status:</strong> {d.status}</p>
+            <p>{d.logs}</p>
 
-      <div style={{ marginTop: 24 }}>
-        <button>Deploy</button>
-        <button style={{ marginLeft: 8 }}>Settings</button>
-      </div>
+            {d.url && (
+              <a href={`https://${d.url}`} target="_blank">
+                🔗 Open Deployment
+              </a>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 }
