@@ -5,38 +5,67 @@ export default function Project() {
   const { id } = useParams();
 
   const [deployments, setDeployments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDeployments = async () => {
-      const res = await fetch(`/api/getDeployments?projectId=${id}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/getDeployments?projectId=${id}`);
+        const data = await res.json();
 
-      setDeployments(data.deployments || []);
+        setDeployments(
+          data.deployments.map((d) => ({
+            id: d.deployment_id,
+            status: d.status,
+            url: d.url || null,
+            logs: d.logs || "",
+          }))
+        );
+
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     fetchDeployments();
   }, [id]);
 
   return (
-    <div style={{ padding: "40px", background: "#0f172a", color: "white" }}>
-      <h1>📦 Project Deployments</h1>
+    <div style={{ padding: "40px" }}>
+      <h1>📦 Project</h1>
 
-      {deployments.length === 0 ? (
-        <p>No deployments yet</p>
+      {loading ? (
+        <p>Loading...</p>
       ) : (
         deployments.map((d) => (
-          <div key={d.deployment_id} style={{
-            background: "#1e293b",
-            padding: "20px",
-            marginTop: "10px"
-          }}>
-            <p><strong>ID:</strong> {d.deployment_id}</p>
-            <p><strong>Status:</strong> {d.status}</p>
-            <p>{d.logs}</p>
+          <div
+            key={d.id}
+            style={{
+              background: "#1e293b",
+              color: "white",
+              padding: "15px",
+              marginTop: "10px",
+              borderRadius: "10px",
+            }}
+          >
+            <p>{d.id}</p>
+            <p>Status: {d.status}</p>
+
+            <div
+              style={{
+                background: "#020617",
+                padding: "10px",
+                marginTop: "10px",
+                fontSize: "12px",
+              }}
+            >
+              {d.logs}
+            </div>
 
             {d.url && (
               <a href={`https://${d.url}`} target="_blank">
-                🔗 Open Deployment
+                🌍 Open
               </a>
             )}
           </div>

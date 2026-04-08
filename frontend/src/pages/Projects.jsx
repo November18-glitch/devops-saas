@@ -26,7 +26,7 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 🚀 LOAD PROJECTS WHEN TEAM CHANGES
+  // 🚀 LOAD PROJECTS
   useEffect(() => {
     if (!selectedTeam) {
       setProjects([]);
@@ -41,11 +41,10 @@ export default function Projects() {
     };
 
     fetchProjects();
-
     setSelectedProject("");
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS (🔥 FIXED DEPENDENCY)
+  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     setLoading(true);
 
@@ -62,7 +61,7 @@ export default function Projects() {
         const formatted = data.deployments.map((d) => ({
           id: d.deployment_id,
           status: d.status,
-          url: d.url || null, // ✅ small upgrade
+          url: d.url || null,
           logs: d.logs || "",
         }));
 
@@ -74,8 +73,7 @@ export default function Projects() {
     };
 
     fetchDeployments();
-
-  }, [selectedTeam, selectedProject]); // ✅ FIXED HERE
+  }, [selectedTeam, selectedProject]);
 
   // 🚀 CREATE PROJECT
   const handleCreateProject = async () => {
@@ -157,7 +155,7 @@ export default function Projects() {
       ...prev,
     ]);
 
-    // 🔥 REFETCH (already good)
+    // refetch
     const resReload = await fetch(
       `/api/getDeployments?projectId=${selectedProject}`
     );
@@ -194,6 +192,7 @@ export default function Projects() {
           ...d,
           status: data.status,
           url: data.url || d.url,
+          logs: data.logs || d.logs,
         };
       })
     );
@@ -208,7 +207,6 @@ export default function Projects() {
       <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px" }}>
         <h3>Create Project</h3>
 
-        {/* TEAM */}
         <select
           value={selectedTeam}
           onChange={(e) => setSelectedTeam(e.target.value)}
@@ -261,7 +259,6 @@ export default function Projects() {
           </p>
         )}
 
-        {/* 🔥 NEW: OPEN PROJECT PAGE */}
         <button
           onClick={() => {
             if (!selectedProject) {
@@ -284,18 +281,54 @@ export default function Projects() {
         <p>Loading...</p>
       ) : (
         deployments.map((d) => (
-          <div key={d.id} style={{ background: "#1e293b", padding: "15px", marginTop: "10px" }}>
-            <p>{d.id}</p>
-            <p>Status: {d.status}</p>
+          <div
+            key={d.id}
+            style={{
+              background: "#1e293b",
+              padding: "15px",
+              marginTop: "10px",
+              borderRadius: "10px",
+            }}
+          >
+            <p style={{ fontWeight: "bold" }}>{d.id}</p>
 
-            {/* 🔥 NEW: URL */}
+            <p>
+              Status:{" "}
+              <span
+                style={{
+                  color:
+                    d.status === "READY"
+                      ? "#22c55e"
+                      : d.status === "ERROR"
+                      ? "#ef4444"
+                      : "#facc15",
+                }}
+              >
+                {d.status}
+              </span>
+            </p>
+
+            <div
+              style={{
+                background: "#020617",
+                padding: "10px",
+                marginTop: "10px",
+                fontSize: "12px",
+                borderRadius: "6px",
+              }}
+            >
+              {d.logs}
+            </div>
+
             {d.url && (
-              <a href={`https://${d.url}`} target="_blank">
-                🔗 Open
+              <a
+                href={`https://${d.url}`}
+                target="_blank"
+                style={{ display: "block", marginTop: "10px", color: "#38bdf8" }}
+              >
+                🌍 Open Deployment
               </a>
             )}
-
-            <div>{d.logs}</div>
           </div>
         ))
       )}
