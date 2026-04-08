@@ -48,10 +48,13 @@ export default function Projects() {
 
   // 🚀 LOAD DEPLOYMENTS (🔥 THIS WAS MISSING)
   useEffect(() => {
+    setLoading(true);
     const fetchDeployments = async () => {
       try {
         const res = await fetch(
-          `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+          selectedProject
+           ? `/api/getDeployments?projectId=${selectedProject}`
+           : `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
         );
         const data = await res.json();
 
@@ -156,7 +159,7 @@ export default function Projects() {
 
     // 🔥 ALSO REFETCH (important)
     const resReload = await fetch(
-      `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+     `/api/getDeployments?projectId=${selectedProject}`
     );
     const dataReload = await resReload.json();
 

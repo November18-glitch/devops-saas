@@ -11,16 +11,18 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { teamId } = req.query;
-
-     let query = supabase
+    let query = supabase
      .from("deployments")
      .select("*")
      .order("created_at", { ascending: false });
 
-      if (teamId) {
+     if (teamId) {
       query = query.eq("team_id", teamId);
-  }
+    }
+
+     if (projectId) {
+      query = query.eq("project_id", projectId);
+    }
 
      const { data, error } = await query;
 
