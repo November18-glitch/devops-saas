@@ -33,3 +33,4 @@ export default function ProjectPage() {
     </div>
   );
 }
+console.log("ProjectPage loaded");
