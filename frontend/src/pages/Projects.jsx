@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import {useNavigate} from "react-router-dom";
 
 export default function Projects() {
+  const navigate = useNavigate();
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -265,7 +267,7 @@ export default function Projects() {
               alert("Select a project first");
               return;
             }
-            window.location.href = `/project/${selectedProject}`;
+            navigate(`/projects/${selectedProject}`);
           }}
           style={{ marginBottom: "10px" }}
         >
