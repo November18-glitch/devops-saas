@@ -69,7 +69,9 @@ export default function ProjectPage() {
   return (
     <div style={{ padding: "40px", background: "#0f172a", color: "white", minHeight: "100vh" }}>
       <h1>📂 Project</h1>
-
+      <h2>Project Name</h2>
+       <p>Repo URL</p>
+       <button>Redeploy</button>
       <p style={{ opacity: 0.7, marginBottom: "20px" }}>
         Project ID: {projectId}
       </p>
