@@ -4,36 +4,78 @@ import { useParams } from "react-router-dom";
 export default function ProjectPage() {
   const { projectId } = useParams();
 
+  const [project, setProject] = useState(null);
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 LOAD DEPLOYMENTS FOR THIS PROJECT
+  // 🚀 LOAD PROJECT INFO
   useEffect(() => {
-    if (!projectId) return;
+    const fetchProject = async () => {
+      const res = await fetch(`/api/getProjectById?id=${projectId}`);
+      const data = await res.json();
+      setProject(data.project);
+    };
 
+    fetchProject();
+  }, [projectId]);
+
+  // 🚀 LOAD DEPLOYMENTS
+  useEffect(() => {
     const fetchDeployments = async () => {
-      try {
-        const res = await fetch(`/api/getDeployments?projectId=${projectId}`);
-        const data = await res.json();
+      const res = await fetch(`/api/getDeployments?projectId=${projectId}`);
+      const data = await res.json();
 
-        const formatted = (data.deployments || []).map((d) => ({
-          id: d.deployment_id,
-          status: d.status,
-          url: d.url || null,
-          logs: d.logs || "",
-        }));
+      const formatted = data.deployments.map((d) => ({
+        id: d.deployment_id,
+        status: d.status,
+        url: d.url || null,
+        logs: d.logs || "",
+      }));
 
-        setDeployments(formatted);
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to load deployments", err);
-      }
+      setDeployments(formatted);
+      setLoading(false);
     };
 
     fetchDeployments();
   }, [projectId]);
 
-  // 🔄 POLL STATUS + LOGS (same as Projects.jsx)
+  // 🚀 REDEPLOY
+  const handleRedeploy = async () => {
+    if (!project) return;
+
+    const res = await fetch("/api/deployProject", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        repoUrl: project.repo_url,
+        projectName: project.name,
+        teamId: project.team_id,
+        projectId: projectId,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
+    }
+
+    // instant UI update
+    setDeployments((prev) => [
+      {
+        id: data.deploymentId,
+        status: "BUILDING",
+        url: null,
+        logs: "🚀 Deployment started...",
+      },
+      ...prev,
+    ]);
+  };
+
+  // 🔄 POLL STATUS (LIVE)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -42,41 +84,79 @@ export default function ProjectPage() {
     return () => clearInterval(interval);
   }, [deployments]);
 
-  const fetchStatuses = async (deploymentsList) => {
+  const fetchStatuses = async (list) => {
     const updated = await Promise.all(
-      deploymentsList.map(async (d) => {
+      list.map(async (d) => {
         if (d.status === "READY" || d.status === "ERROR") return d;
 
-        try {
-          const res = await fetch(`/api/deploymentStatus?id=${d.id}`);
-          const data = await res.json();
+        const res = await fetch(`/api/deploymentStatus?id=${d.id}`);
+        const data = await res.json();
 
-          return {
-            ...d,
-            status: data.status,
-            url: data.url || d.url,
-            logs: data.logs || d.logs,
-          };
-        } catch {
-          return { ...d, status: "ERROR" };
-        }
+        return {
+          ...d,
+          status: data.status,
+          url: data.url || d.url,
+          logs: data.logs || d.logs,
+        };
       })
     );
 
     setDeployments(updated);
   };
 
+  if (!project) {
+    return <p style={{ color: "white", padding: 40 }}>Loading project...</p>;
+  }
+
   return (
     <div style={{ padding: "40px", background: "#0f172a", color: "white", minHeight: "100vh" }}>
-      <h1>📂 Project</h1>
-      <h2>Project Name</h2>
-       <p>Repo URL</p>
-       <button>Redeploy</button>
-      <p style={{ opacity: 0.7, marginBottom: "20px" }}>
-        Project ID: {projectId}
-      </p>
+      
+      {/* 🔥 HEADER */}
+      <div style={{ marginBottom: "30px" }}>
+        <h1 style={{ fontSize: "28px" }}>📁 {project.name}</h1>
 
-      <h3>Deployments</h3>
+        <p style={{ opacity: 0.7 }}>
+          Repo:{" "}
+          <a href={project.repo_url} target="_blank" style={{ color: "#38bdf8" }}>
+            {project.repo_url}
+          </a>
+        </p>
+
+        {/* 🌍 PRODUCTION URL */}
+        {deployments.find(d => d.status === "READY")?.url && (
+          <p style={{ marginTop: "10px" }}>
+            🌍 Live:{" "}
+            <a
+              href={`https://${deployments.find(d => d.status === "READY").url}`}
+              target="_blank"
+              style={{ color: "#22c55e" }}
+            >
+              {deployments.find(d => d.status === "READY").url}
+            </a>
+          </p>
+        )}
+      </div>
+
+      {/* 🚀 ACTIONS */}
+      <div style={{ marginBottom: "30px" }}>
+        <button
+          onClick={handleRedeploy}
+          style={{
+            background: "#22c55e",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            color: "black",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          🚀 Redeploy
+        </button>
+      </div>
+
+      {/* 📦 DEPLOYMENTS */}
+      <h2 style={{ marginBottom: "10px" }}>Deployments</h2>
 
       {loading ? (
         <p>Loading...</p>
@@ -125,7 +205,7 @@ export default function ProjectPage() {
               {d.logs}
             </div>
 
-            {/* 🌍 OPEN DEPLOYMENT */}
+            {/* 🌍 OPEN */}
             {d.url && (
               <a
                 href={`https://${d.url}`}
