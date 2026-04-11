@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient"; // 🔥 ADDED
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -17,6 +18,17 @@ export default function Projects() {
   // ✅ CREATE PROJECT INPUTS
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
+
+  const [user, setUser] = useState(null);
+
+  // 🔥 LOAD USER (FIXES user.id)
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    loadUser();
+  }, []);
 
   // 🚀 LOAD TEAMS
   useEffect(() => {
@@ -84,6 +96,12 @@ export default function Projects() {
       return;
     }
 
+    // 🔥 SAFETY CHECK
+    if (!user) {
+      alert("User not loaded yet");
+      return;
+    }
+
     try {
       const res = await fetch("/api/createProject", {
         method: "POST",
@@ -94,6 +112,7 @@ export default function Projects() {
           name: newProjectName,
           repoUrl: newRepoUrl,
           teamId: selectedTeam,
+          userId: user.id, // 🔥 ADDED
         }),
       });
 
@@ -127,6 +146,11 @@ export default function Projects() {
       return;
     }
 
+    if (!user) {
+      alert("User not loaded yet");
+      return;
+    }
+
     const res = await fetch("/api/deployProject", {
       method: "POST",
       headers: {
@@ -137,6 +161,7 @@ export default function Projects() {
         projectName: selectedProjectData.name,
         teamId: selectedTeam,
         projectId: selectedProject,
+        userId: user.id,
       }),
     });
 
@@ -157,7 +182,6 @@ export default function Projects() {
       ...prev,
     ]);
 
-    // refetch
     const resReload = await fetch(
       `/api/getDeployments?projectId=${selectedProject}`
     );

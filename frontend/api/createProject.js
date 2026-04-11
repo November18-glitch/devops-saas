@@ -11,13 +11,33 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { name, repoUrl, teamId } = req.body;
+    const { name, repoUrl, teamId, userId } = req.body;
 
-    if (!name || !repoUrl || !teamId) {
+    if (!name || !repoUrl || !teamId || !userId) {
       return res.status(400).json({
-        error: "Missing name, repoUrl or teamId",
+        error: "Missing required fields",
       });
     }
+    // before creating project
+
+const { data: user } = await supabase
+  .from("users")
+  .select("plan")
+  .eq("id", userId)
+  .single();
+
+if (user.plan === "FREE") {
+  const { count } = await supabase
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("team_id", teamId);
+
+  if (count >= 1) {
+    return res.status(403).json({
+      error: "Free plan allows only 1 project. Upgrade to Pro.",
+    });
+  }
+}
 
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
