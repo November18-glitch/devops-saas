@@ -1,39 +1,29 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export default async function handler(req, res) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
-    const { userId, email } = req.body;
-
-    if (!userId || !email) {
-      return res.status(400).json({ error: "Missing user data" });
-    }
-
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
       payment_method_types: ["card"],
-      customer_email: email,
-
+      mode: "subscription",
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID,
           quantity: 1,
         },
       ],
-
-      success_url: "http://localhost:5173/dashboard?success=true",
-      cancel_url: "http://localhost:5173/dashboard?canceled=true",
-
-      metadata: {
-        userId,
-      },
+      success_url: `${process.env.VITE_FRONTEND_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.VITE_FRONTEND_URL}/dashboard?canceled=true`,
     });
 
     res.status(200).json({ url: session.url });
-
   } catch (err) {
-    console.error("STRIPE ERROR:", err);
-    res.status(500).json({ error: "Stripe failed" });
+    console.error(err);
+    res.status(500).json({ error: "Stripe error" });
   }
 }

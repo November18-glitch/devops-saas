@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Dashboard() {
+  const location = useLocation();
+  const isPro = location.search.includes("success=true");
+
   const [team, setTeam] = useState(null);
   const [projects, setProjects] = useState([]);
   const [deployments, setDeployments] = useState([]);
@@ -55,7 +59,7 @@ export default function Dashboard() {
     setMembersCount(membersData?.length || 0);
 
     if (projectsData?.length) {
-      const projectIds = projectsData.map(p => p.id);
+      const projectIds = projectsData.map((p) => p.id);
 
       const { data: deployData } = await supabase
         .from("deployments")
@@ -84,10 +88,44 @@ export default function Dashboard() {
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ marginBottom: 6 }}>
           Welcome back 👋
+          {isPro && (
+            <span
+              style={{
+                background: "gold",
+                padding: "4px 10px",
+                borderRadius: "8px",
+                marginLeft: 10,
+                fontSize: 14,
+              }}
+            >
+              PRO
+            </span>
+          )}
         </h1>
-        <div style={{ opacity: 0.7 }}>
+
+        <div style={{ opacity: 0.7, marginBottom: 10 }}>
           Team: <b>{team?.name || "—"}</b>
         </div>
+
+        <p style={{ maxWidth: 600, opacity: 0.8 }}>
+          DeployAlly lets you manage deployments, monitor projects, and
+          collaborate with your team — all in one place.
+        </p>
+
+        {/* PRO SUCCESS MESSAGE */}
+        {isPro && (
+          <div
+            style={{
+              background: "#d1fae5",
+              padding: "12px",
+              borderRadius: "10px",
+              marginTop: 16,
+              fontWeight: 500,
+            }}
+          >
+            🔥 You are now PRO! Enjoy unlimited deployments.
+          </div>
+        )}
       </div>
 
       {/* STATS */}
@@ -112,69 +150,55 @@ export default function Dashboard() {
           gap: 24,
         }}
       >
-        {/* RECENT DEPLOYMENTS */}
+        {/* DEPLOYMENTS */}
         <div style={cardStyle}>
           <h3 style={{ marginBottom: 16 }}>Recent Deployments</h3>
 
           {deployments.length === 0 && (
             <div style={{ opacity: 0.6 }}>
-              No deployments yet
+              No deployments yet — deploy your first project 🚀
             </div>
           )}
 
-          {deployments.map(d => (
-            <div
-              key={d.id}
-              style={{
-                padding: 12,
-                borderRadius: 8,
-                background: "#f9fafb",
-                marginBottom: 10,
-                border: "1px solid #e5e7eb",
-              }}
-            >
+          {deployments.map((d) => (
+            <div key={d.id} style={itemStyle}>
               <div style={{ fontWeight: 600 }}>
                 {d.status.toUpperCase()}
               </div>
+
               <div style={{ fontSize: 13, opacity: 0.7 }}>
                 {new Date(d.created_at).toLocaleString()}
               </div>
+
               <div style={{ fontSize: 14, marginTop: 4 }}>
-                {d.logs}
+                {d.logs || "No logs"}
               </div>
             </div>
           ))}
         </div>
 
-        {/* PROJECTS OVERVIEW */}
+        {/* PROJECTS */}
         <div style={cardStyle}>
           <h3 style={{ marginBottom: 16 }}>Projects</h3>
 
           {projects.length === 0 && (
             <div style={{ opacity: 0.6 }}>
-              No projects created yet
+              No projects yet — create one to get started 🚀
             </div>
           )}
 
-          {projects.map(p => (
-            <div
-              key={p.id}
-              style={{
-                padding: 12,
-                borderRadius: 8,
-                background: "#f9fafb",
-                marginBottom: 10,
-                border: "1px solid #e5e7eb",
-              }}
-            >
+          {projects.map((p) => (
+            <div key={p.id} style={itemStyle}>
               <div style={{ fontWeight: 600 }}>{p.name}</div>
+
               <div style={{ fontSize: 13, opacity: 0.7 }}>
                 Branch: {p.default_branch || "main"}
               </div>
+
               <div style={{ fontSize: 13 }}>
                 Repo:{" "}
                 {p.repo_url ? (
-                  <span style={{ color: "#6366f1" }}>connected</span>
+                  <span style={{ color: "#10b981" }}>connected</span>
                 ) : (
                   <span style={{ color: "#ef4444" }}>not connected</span>
                 )}
@@ -210,5 +234,13 @@ const cardStyle = {
   background: "#ffffff",
   padding: 20,
   borderRadius: 14,
+  border: "1px solid #e5e7eb",
+};
+
+const itemStyle = {
+  padding: 12,
+  borderRadius: 8,
+  background: "#f9fafb",
+  marginBottom: 10,
   border: "1px solid #e5e7eb",
 };
