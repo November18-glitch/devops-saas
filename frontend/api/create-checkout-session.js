@@ -17,13 +17,13 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.VITE_FRONTEND_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.VITE_FRONTEND_URL}/dashboard?canceled=true`,
+      success_url: `${process.env.FRONTEND_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard?canceled=true`,
     });
 
     res.status(200).json({ url: session.url });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Stripe error" });
+    console.error("STRIPE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 }
