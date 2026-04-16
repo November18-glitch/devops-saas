@@ -12,33 +12,43 @@ export default function Dashboard() {
   const [membersCount, setMembersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ----------------------------------
-  // LOAD DASHBOARD DATA
-  // ----------------------------------
-
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  // ----------------------------------
+  // LOAD DATA
+  // ----------------------------------
 
   const loadDashboard = async () => {
     setLoading(true);
 
     const { data: auth } = await supabase.auth.getUser();
-    if (!auth?.user) return;
+    const user = auth?.user;
 
-    // Get team
-    const { data: tm } = await supabase
-      .from("team_members")
-      .select("team_id")
-      .eq("user_id", auth.user.id)
-      .single();
+    console.log("USER:", user);
 
-    if (!tm) {
+    if (!user) {
       setLoading(false);
       return;
     }
 
-    const teamId = tm.team_id;
+    // 🔥 IMPORTANT: REMOVE .single() (this was breaking you)
+    const { data: tmList, error: tmError } = await supabase
+      .from("team_members")
+      .select("*")
+      .eq("user_id", user.id);
+
+    console.log("TEAM MEMBERS:", tmList, tmError);
+
+    if (!tmList || tmList.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    const teamId = tmList[0].team_id;
+
+    console.log("TEAM ID:", teamId);
 
     const [{ data: teamData }, { data: projectsData }, { data: membersData }] =
       await Promise.all([
@@ -54,6 +64,9 @@ export default function Dashboard() {
           .eq("team_id", teamId),
       ]);
 
+    console.log("TEAM:", teamData);
+    console.log("PROJECTS:", projectsData);
+
     setTeam(teamData);
     setProjects(projectsData || []);
     setMembersCount(membersData?.length || 0);
@@ -68,10 +81,25 @@ export default function Dashboard() {
         .order("created_at", { ascending: false })
         .limit(5);
 
+      console.log("DEPLOYMENTS:", deployData);
+
       setDeployments(deployData || []);
     }
 
     setLoading(false);
+  };
+
+  // ----------------------------------
+  // STRIPE
+  // ----------------------------------
+
+  const handleCheckout = async () => {
+    const res = await fetch("/api/create-checkout-session", {
+      method: "POST",
+    });
+
+    const data = await res.json();
+    window.location.href = data.url;
   };
 
   // ----------------------------------
@@ -86,7 +114,7 @@ export default function Dashboard() {
     <div style={{ padding: 32 }}>
       {/* HEADER */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ marginBottom: 6 }}>
+        <h1>
           Welcome back 👋
           {isPro && (
             <span
@@ -112,7 +140,26 @@ export default function Dashboard() {
           collaborate with your team — all in one place.
         </p>
 
-        {/* PRO SUCCESS MESSAGE */}
+        {/* 🔥 UPGRADE BUTTON */}
+        {!isPro && (
+          <button
+            onClick={handleCheckout}
+            style={{
+              marginTop: 16,
+              padding: "10px 16px",
+              borderRadius: 8,
+              background: "#6366f1",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            🚀 Upgrade to Pro
+          </button>
+        )}
+
+        {/* SUCCESS */}
         {isPro && (
           <div
             style={{
@@ -123,7 +170,7 @@ export default function Dashboard() {
               fontWeight: 500,
             }}
           >
-            🔥 You are now PRO! Enjoy unlimited deployments.
+            🔥 You are now PRO!
           </div>
         )}
       </div>
@@ -142,7 +189,7 @@ export default function Dashboard() {
         <StatCard label="Team Members" value={membersCount} />
       </div>
 
-      {/* MAIN GRID */}
+      {/* GRID */}
       <div
         style={{
           display: "grid",
@@ -152,57 +199,30 @@ export default function Dashboard() {
       >
         {/* DEPLOYMENTS */}
         <div style={cardStyle}>
-          <h3 style={{ marginBottom: 16 }}>Recent Deployments</h3>
+          <h3>Recent Deployments</h3>
 
           {deployments.length === 0 && (
-            <div style={{ opacity: 0.6 }}>
-              No deployments yet — deploy your first project 🚀
-            </div>
+            <div>No deployments yet 🚀</div>
           )}
 
           {deployments.map((d) => (
             <div key={d.id} style={itemStyle}>
-              <div style={{ fontWeight: 600 }}>
-                {d.status.toUpperCase()}
-              </div>
-
-              <div style={{ fontSize: 13, opacity: 0.7 }}>
-                {new Date(d.created_at).toLocaleString()}
-              </div>
-
-              <div style={{ fontSize: 14, marginTop: 4 }}>
-                {d.logs || "No logs"}
-              </div>
+              <div>{d.status}</div>
+              <div>{new Date(d.created_at).toLocaleString()}</div>
             </div>
           ))}
         </div>
 
         {/* PROJECTS */}
         <div style={cardStyle}>
-          <h3 style={{ marginBottom: 16 }}>Projects</h3>
+          <h3>Projects</h3>
 
-          {projects.length === 0 && (
-            <div style={{ opacity: 0.6 }}>
-              No projects yet — create one to get started 🚀
-            </div>
-          )}
+          {projects.length === 0 && <div>No projects yet 🚀</div>}
 
           {projects.map((p) => (
             <div key={p.id} style={itemStyle}>
-              <div style={{ fontWeight: 600 }}>{p.name}</div>
-
-              <div style={{ fontSize: 13, opacity: 0.7 }}>
-                Branch: {p.default_branch || "main"}
-              </div>
-
-              <div style={{ fontSize: 13 }}>
-                Repo:{" "}
-                {p.repo_url ? (
-                  <span style={{ color: "#10b981" }}>connected</span>
-                ) : (
-                  <span style={{ color: "#ef4444" }}>not connected</span>
-                )}
-              </div>
+              <div>{p.name}</div>
+              <div>{p.default_branch || "main"}</div>
             </div>
           ))}
         </div>
@@ -211,8 +231,6 @@ export default function Dashboard() {
   );
 }
 
-// ----------------------------------
-// COMPONENTS
 // ----------------------------------
 
 function StatCard({ label, value }) {
@@ -224,23 +242,20 @@ function StatCard({ label, value }) {
         borderRadius: 14,
       }}
     >
-      <div style={{ fontSize: 14, opacity: 0.7 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700 }}>{value}</div>
+      <div>{label}</div>
+      <div style={{ fontSize: 28 }}>{value}</div>
     </div>
   );
 }
 
 const cardStyle = {
-  background: "#ffffff",
+  background: "#fff",
   padding: 20,
   borderRadius: 14,
   border: "1px solid #e5e7eb",
 };
 
 const itemStyle = {
-  padding: 12,
-  borderRadius: 8,
-  background: "#f9fafb",
-  marginBottom: 10,
-  border: "1px solid #e5e7eb",
+  padding: 10,
+  borderBottom: "1px solid #eee",
 };
