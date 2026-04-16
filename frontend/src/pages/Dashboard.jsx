@@ -6,7 +6,7 @@ export default function Dashboard() {
   const location = useLocation();
   const isPro = location.search.includes("success=true");
 
-  const [team, setTeam] = useState(null);
+  const [team, setTeam] = useState([]);
   const [projects, setProjects] = useState([]);
   const [deployments, setDeployments] = useState([]);
   const [membersCount, setMembersCount] = useState(0);
@@ -16,58 +16,46 @@ export default function Dashboard() {
     loadDashboard();
   }, []);
 
-  // ----------------------------------
-  // LOAD DATA
-  // ----------------------------------
-
   const loadDashboard = async () => {
     setLoading(true);
 
     const { data: auth } = await supabase.auth.getUser();
     const user = auth?.user;
 
-    console.log("USER:", user);
-
     if (!user) {
       setLoading(false);
       return;
     }
 
-    // 🔥 IMPORTANT: REMOVE .single() (this was breaking you)
-    const { data: tmList, error: tmError } = await supabase
+    const { data: tmList } = await supabase
       .from("team_members")
       .select("*")
       .eq("user_id", user.id);
-
-    console.log("TEAM MEMBERS:", tmList, tmError);
 
     if (!tmList || tmList.length === 0) {
       setLoading(false);
       return;
     }
 
-    const teamId = tmList[0].team_id;
+    const teamIds = tmList.map((t) => t.team_id);
 
-    console.log("TEAM ID:", teamId);
+    const { data: teamsData } = await supabase
+      .from("teams")
+      .select("*")
+      .in("id", teamIds);
 
-    const [{ data: teamData }, { data: projectsData }, { data: membersData }] =
-      await Promise.all([
-        supabase.from("teams").select("*").eq("id", teamId).single(),
-        supabase
-          .from("projects")
-          .select("*")
-          .eq("team_id", teamId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("team_members")
-          .select("id")
-          .eq("team_id", teamId),
-      ]);
+    const { data: projectsData } = await supabase
+      .from("projects")
+      .select("*")
+      .in("team_id", teamIds)
+      .order("created_at", { ascending: false });
 
-    console.log("TEAM:", teamData);
-    console.log("PROJECTS:", projectsData);
+    const { data: membersData } = await supabase
+      .from("team_members")
+      .select("id")
+      .in("team_id", teamIds);
 
-    setTeam(teamData);
+    setTeam(teamsData || []);
     setProjects(projectsData || []);
     setMembersCount(membersData?.length || 0);
 
@@ -81,18 +69,13 @@ export default function Dashboard() {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      console.log("DEPLOYMENTS:", deployData);
-
       setDeployments(deployData || []);
     }
 
     setLoading(false);
   };
 
-  // ----------------------------------
-  // STRIPE
-  // ----------------------------------
-
+  // ✅ FIXED endpoint name here
   const handleCheckout = async () => {
     const res = await fetch("/api/create-checkout-session", {
       method: "POST",
@@ -102,160 +85,41 @@ export default function Dashboard() {
     window.location.href = data.url;
   };
 
-  // ----------------------------------
-  // UI
-  // ----------------------------------
-
   if (loading) {
     return <div style={{ padding: 40 }}>Loading dashboard...</div>;
   }
 
   return (
     <div style={{ padding: 32 }}>
-      {/* HEADER */}
-      <div style={{ marginBottom: 32 }}>
-        <h1>
-          Welcome back 👋
-          {isPro && (
-            <span
-              style={{
-                background: "gold",
-                padding: "4px 10px",
-                borderRadius: "8px",
-                marginLeft: 10,
-                fontSize: 14,
-              }}
-            >
-              PRO
-            </span>
-          )}
-        </h1>
-
-        <div style={{ opacity: 0.7, marginBottom: 10 }}>
-          Team: <b>{team?.name || "—"}</b>
-        </div>
-
-        <p style={{ maxWidth: 600, opacity: 0.8 }}>
-          DeployAlly lets you manage deployments, monitor projects, and
-          collaborate with your team — all in one place.
-        </p>
-
-        {/* 🔥 UPGRADE BUTTON */}
-        {!isPro && (
-          <button
-            onClick={handleCheckout}
-            style={{
-              marginTop: 16,
-              padding: "10px 16px",
-              borderRadius: 8,
-              background: "#6366f1",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
-          >
-            🚀 Upgrade to Pro
-          </button>
-        )}
-
-        {/* SUCCESS */}
+      <h1>
+        Welcome back 👋
         {isPro && (
-          <div
-            style={{
-              background: "#d1fae5",
-              padding: "12px",
-              borderRadius: "10px",
-              marginTop: 16,
-              fontWeight: 500,
-            }}
-          >
-            🔥 You are now PRO!
-          </div>
+          <span style={{ marginLeft: 10, background: "gold", padding: 5 }}>
+            PRO
+          </span>
         )}
+      </h1>
+
+      {/* ✅ FIXED MULTI TEAM */}
+      <div>
+        Team: <b>{team.map((t) => t.name).join(", ") || "—"}</b>
       </div>
 
-      {/* STATS */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 20,
-          marginBottom: 32,
-        }}
-      >
-        <StatCard label="Projects" value={projects.length} />
-        <StatCard label="Deployments" value={deployments.length} />
-        <StatCard label="Team Members" value={membersCount} />
-      </div>
+      <p>
+        DeployAlly lets you manage deployments, monitor projects, and collaborate.
+      </p>
 
-      {/* GRID */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: 24,
-        }}
-      >
-        {/* DEPLOYMENTS */}
-        <div style={cardStyle}>
-          <h3>Recent Deployments</h3>
+      {!isPro && (
+        <button onClick={handleCheckout}>
+          🚀 Upgrade to Pro
+        </button>
+      )}
 
-          {deployments.length === 0 && (
-            <div>No deployments yet 🚀</div>
-          )}
+      {isPro && <div>🔥 You are now PRO!</div>}
 
-          {deployments.map((d) => (
-            <div key={d.id} style={itemStyle}>
-              <div>{d.status}</div>
-              <div>{new Date(d.created_at).toLocaleString()}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* PROJECTS */}
-        <div style={cardStyle}>
-          <h3>Projects</h3>
-
-          {projects.length === 0 && <div>No projects yet 🚀</div>}
-
-          {projects.map((p) => (
-            <div key={p.id} style={itemStyle}>
-              <div>{p.name}</div>
-              <div>{p.default_branch || "main"}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <h3>Projects: {projects.length}</h3>
+      <h3>Deployments: {deployments.length}</h3>
+      <h3>Members: {membersCount}</h3>
     </div>
   );
 }
-
-// ----------------------------------
-
-function StatCard({ label, value }) {
-  return (
-    <div
-      style={{
-        background: "#f4f6fb",
-        padding: 20,
-        borderRadius: 14,
-      }}
-    >
-      <div>{label}</div>
-      <div style={{ fontSize: 28 }}>{value}</div>
-    </div>
-  );
-}
-
-const cardStyle = {
-  background: "#fff",
-  padding: 20,
-  borderRadius: 14,
-  border: "1px solid #e5e7eb",
-};
-
-const itemStyle = {
-  padding: 10,
-  borderBottom: "1px solid #eee",
-};
