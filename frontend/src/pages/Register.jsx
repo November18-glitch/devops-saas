@@ -44,7 +44,7 @@ export default function Register() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>SaaS Logo + Name</h2>
+        <h2 style={styles.title}>DeployAlly</h2>
 
         <form onSubmit={handleRegister} style={styles.form}>
           <label style={styles.label}>Username</label>
