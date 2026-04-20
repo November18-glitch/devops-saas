@@ -227,10 +227,10 @@ export default function Projects() {
   };
 
   return (
-    <div style={{ padding: "40px", background: "#0f172a", color: "white" }}>
+    <div style={{ padding: "40px", background: "#ffffff", color: "white" }}>
       <h1>🚀 Deploy Dashboard</h1>
 
-      <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px" }}>
+      <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px" }}>
         <h3>Create Project</h3>
 
         <select
@@ -310,7 +310,7 @@ export default function Projects() {
           <div
             key={d.id}
             style={{
-              background: "#1e293b",
+              background: "#dadbdb",
               padding: "15px",
               marginTop: "10px",
               borderRadius: "10px",
@@ -336,7 +336,7 @@ export default function Projects() {
 
             <div
               style={{
-                background: "#020617",
+                background: "#f3f3f3",
                 padding: "10px",
                 marginTop: "10px",
                 fontSize: "12px",
