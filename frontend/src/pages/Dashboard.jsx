@@ -89,23 +89,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Inter, sans-serif" }}>
-      
-      {/* SIDEBAR */}
-      <div style={sidebar}>
-        <h2 style={{ marginBottom: 30 }}>🚀 DeployAlly</h2>
-
-        <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <span style={navItem}>Dashboard</span>
-          <span style={navItem}>Teams</span>
-          <span style={navItem}>Projects</span>
-          <span style={navItem}>Settings</span>
-        </nav>
-
-        <div style={{ marginTop: "auto", fontSize: 12, opacity: 0.6 }}>
-          DevOps SaaS Platform
-        </div>
-      </div>
+    <div style={{ padding: 40, fontFamily: "Inter, sans-serif", background: "#f8fafc", minHeight: "100vh" }}>
 
       {/* MAIN */}
       <div style={main}>
