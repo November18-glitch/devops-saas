@@ -1,27 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient"; // 🔥 ADDED
+import { supabase } from "../supabaseClient";
 
 export default function Projects() {
   const navigate = useNavigate();
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ TEAMS
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
-  // ✅ PROJECTS
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
 
-  // ✅ CREATE PROJECT INPUTS
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
   const [user, setUser] = useState(null);
 
-  // 🔥 LOAD USER (FIXES user.id)
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -30,7 +26,6 @@ export default function Projects() {
     loadUser();
   }, []);
 
-  // 🚀 LOAD TEAMS
   useEffect(() => {
     const fetchTeams = async () => {
       const res = await fetch("/api/getTeams");
@@ -40,7 +35,6 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 🚀 LOAD PROJECTS
   useEffect(() => {
     if (!selectedTeam) {
       setProjects([]);
@@ -58,7 +52,6 @@ export default function Projects() {
     setSelectedProject("");
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     setLoading(true);
 
@@ -89,14 +82,12 @@ export default function Projects() {
     fetchDeployments();
   }, [selectedTeam, selectedProject]);
 
-  // 🚀 CREATE PROJECT
   const handleCreateProject = async () => {
     if (!newProjectName || !newRepoUrl || !selectedTeam) {
       alert("Fill all fields");
       return;
     }
 
-    // 🔥 SAFETY CHECK
     if (!user) {
       alert("User not loaded yet");
       return;
@@ -112,7 +103,7 @@ export default function Projects() {
           name: newProjectName,
           repoUrl: newRepoUrl,
           teamId: selectedTeam,
-          userId: user.id, // 🔥 ADDED
+          userId: user.id,
         }),
       });
 
@@ -135,7 +126,6 @@ export default function Projects() {
     }
   };
 
-  // 🚀 DEPLOY
   const handleDeploy = async () => {
     const selectedProjectData = projects.find(
       (p) => p.id === selectedProject
@@ -197,7 +187,6 @@ export default function Projects() {
     );
   };
 
-  // 🔄 POLL STATUS
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -227,22 +216,17 @@ export default function Projects() {
   };
 
   return (
-    <div style={{ padding: "40px", background: "#ffffff", color: "white" }}>
-      <h1>🚀 Deploy Dashboard</h1>
+    <div style={container}>
+      <h1 style={title}>🚀 Projects & Deployments</h1>
 
-      <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px" }}>
+      {/* CREATE + DEPLOY CARD */}
+      <div style={card}>
         <h3>Create Project</h3>
 
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        >
+        <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={input}>
           <option value="">Select Team</option>
           {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
+            <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
 
@@ -250,108 +234,63 @@ export default function Projects() {
           placeholder="Project Name"
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
+          style={input}
         />
 
         <input
           placeholder="GitHub Repo URL"
           value={newRepoUrl}
           onChange={(e) => setNewRepoUrl(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
+          style={input}
         />
 
-        <button onClick={handleCreateProject}>➕ Create Project</button>
+        <button onClick={handleCreateProject} style={primaryBtn}>
+          ➕ Create Project
+        </button>
 
-        <hr style={{ margin: "20px 0" }} />
+        <hr style={{ margin: "25px 0" }} />
 
         <h3>Deploy</h3>
 
-        <select
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        >
+        <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} style={input}>
           <option value="">Select Project</option>
           {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
 
         {selectedProject && (
-          <p style={{ fontSize: "12px", opacity: 0.7 }}>
+          <p style={{ fontSize: 12, color: "#64748b" }}>
             Repo: {projects.find(p => p.id === selectedProject)?.repo_url}
           </p>
         )}
 
-        <button
-          onClick={() => {
-            if (!selectedProject) {
-              alert("Select a project first");
-              return;
-            }
-            navigate(`/projects/${selectedProject}`);
-          }}
-          style={{ marginBottom: "10px" }}
-        >
+        <button onClick={() => navigate(`/projects/${selectedProject}`)} style={secondaryBtn}>
           📂 Open Project Page
         </button>
 
-        <button onClick={handleDeploy}>🚀 Deploy</button>
+        <button onClick={handleDeploy} style={primaryBtn}>
+          🚀 Deploy
+        </button>
       </div>
 
-      <h3 style={{ marginTop: "30px" }}>Deployments</h3>
+      {/* DEPLOYMENTS */}
+      <h3 style={{ marginTop: 40 }}>Deployments</h3>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         deployments.map((d) => (
-          <div
-            key={d.id}
-            style={{
-              background: "#dadbdb",
-              padding: "15px",
-              marginTop: "10px",
-              borderRadius: "10px",
-            }}
-          >
-            <p style={{ fontWeight: "bold" }}>{d.id}</p>
-
-            <p>
-              Status:{" "}
-              <span
-                style={{
-                  color:
-                    d.status === "READY"
-                      ? "#22c55e"
-                      : d.status === "ERROR"
-                      ? "#ef4444"
-                      : "#facc15",
-                }}
-              >
-                {d.status}
-              </span>
-            </p>
-
-            <div
-              style={{
-                background: "#f3f3f3",
-                padding: "10px",
-                marginTop: "10px",
-                fontSize: "12px",
-                borderRadius: "6px",
-              }}
-            >
-              {d.logs}
+          <div key={d.id} style={deployCard}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <strong>{d.id}</strong>
+              <span style={statusBadge(d.status)}>{d.status}</span>
             </div>
 
+            <div style={logBox}>{d.logs}</div>
+
             {d.url && (
-              <a
-                href={`https://${d.url}`}
-                target="_blank"
-                style={{ display: "block", marginTop: "10px", color: "#38bdf8" }}
-              >
+              <a href={`https://${d.url}`} target="_blank" style={link}>
                 🌍 Open Deployment
               </a>
             )}
@@ -361,3 +300,90 @@ export default function Projects() {
     </div>
   );
 }
+
+/* 🎨 STYLES */
+
+const container = {
+  padding: 40,
+  background: "#f8fafc",
+  minHeight: "100vh",
+  fontFamily: "Inter, sans-serif",
+};
+
+const title = {
+  fontSize: 28,
+  marginBottom: 20,
+};
+
+const card = {
+  background: "#fff",
+  padding: 25,
+  borderRadius: 14,
+  border: "1px solid #e5e7eb",
+  maxWidth: 600,
+};
+
+const input = {
+  width: "100%",
+  padding: 10,
+  marginBottom: 10,
+  borderRadius: 8,
+  border: "1px solid #e5e7eb",
+};
+
+const primaryBtn = {
+  width: "100%",
+  padding: 12,
+  background: "#6366f1",
+  color: "white",
+  border: "none",
+  borderRadius: 10,
+  marginTop: 10,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const secondaryBtn = {
+  ...primaryBtn,
+  background: "#e2e8f0",
+  color: "#0f172a",
+};
+
+const deployCard = {
+  background: "#fff",
+  padding: 15,
+  marginTop: 10,
+  borderRadius: 12,
+  border: "1px solid #e5e7eb",
+};
+
+const logBox = {
+  background: "#0f172a",
+  color: "#e2e8f0",
+  padding: 10,
+  marginTop: 10,
+  borderRadius: 8,
+  fontSize: 12,
+  fontFamily: "monospace",
+};
+
+const link = {
+  display: "block",
+  marginTop: 10,
+  color: "#6366f1",
+  fontWeight: 500,
+};
+
+const statusBadge = (status) => ({
+  padding: "4px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 600,
+  color: "white",
+  background:
+    status === "READY"
+      ? "#22c55e"
+      : status === "ERROR"
+      ? "#ef4444"
+      : "#f59e0b",
+});
