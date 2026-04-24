@@ -1,23 +1,27 @@
 import { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabaseClient"; // 🔥 ADDED
 
 export default function Projects() {
   const navigate = useNavigate();
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ TEAMS
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
+  // ✅ PROJECTS
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
 
+  // ✅ CREATE PROJECT INPUTS
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
   const [user, setUser] = useState(null);
 
+  // 🔥 LOAD USER (FIXES user.id)
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -26,6 +30,7 @@ export default function Projects() {
     loadUser();
   }, []);
 
+  // 🚀 LOAD TEAMS
   useEffect(() => {
     const fetchTeams = async () => {
       const res = await fetch("/api/getTeams");
@@ -35,6 +40,7 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
+  // 🚀 LOAD PROJECTS
   useEffect(() => {
     if (!selectedTeam) {
       setProjects([]);
@@ -52,6 +58,7 @@ export default function Projects() {
     setSelectedProject("");
   }, [selectedTeam]);
 
+  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     setLoading(true);
 
@@ -82,12 +89,14 @@ export default function Projects() {
     fetchDeployments();
   }, [selectedTeam, selectedProject]);
 
+  // 🚀 CREATE PROJECT
   const handleCreateProject = async () => {
     if (!newProjectName || !newRepoUrl || !selectedTeam) {
       alert("Fill all fields");
       return;
     }
 
+    // 🔥 SAFETY CHECK
     if (!user) {
       alert("User not loaded yet");
       return;
@@ -103,7 +112,7 @@ export default function Projects() {
           name: newProjectName,
           repoUrl: newRepoUrl,
           teamId: selectedTeam,
-          userId: user.id,
+          userId: user.id, // 🔥 ADDED
         }),
       });
 
@@ -115,6 +124,7 @@ export default function Projects() {
       }
 
       setProjects((prev) => [data.project, ...prev]);
+
       setNewProjectName("");
       setNewRepoUrl("");
 
@@ -125,6 +135,7 @@ export default function Projects() {
     }
   };
 
+  // 🚀 DEPLOY
   const handleDeploy = async () => {
     const selectedProjectData = projects.find(
       (p) => p.id === selectedProject
@@ -186,6 +197,7 @@ export default function Projects() {
     );
   };
 
+  // 🔄 POLL STATUS
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStatuses(deployments);
@@ -215,84 +227,131 @@ export default function Projects() {
   };
 
   return (
-    <div style={{ padding: "40px", background: "#f8fafc", minHeight: "100vh", color: "#0f172a" }}>
-      
-      <h1 style={{ fontSize: 28, marginBottom: 20 }}>🚀 Projects & Deployments</h1>
+    <div style={{ padding: "40px", background: "#ffffff", color: "white" }}>
+      <h1>🚀 Deploy Dashboard</h1>
 
-      {/* CARD */}
-      <div style={card}>
+      <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px" }}>
         <h3>Create Project</h3>
 
-        <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={input}>
+        <select
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        >
           <option value="">Select Team</option>
           {teams.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
 
-        <input placeholder="Project Name" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)} style={input} />
-        <input placeholder="GitHub Repo URL" value={newRepoUrl} onChange={(e) => setNewRepoUrl(e.target.value)} style={input} />
+        <input
+          placeholder="Project Name"
+          value={newProjectName}
+          onChange={(e) => setNewProjectName(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
 
-        <button onClick={handleCreateProject} style={primaryBtn}>➕ Create Project</button>
+        <input
+          placeholder="GitHub Repo URL"
+          value={newRepoUrl}
+          onChange={(e) => setNewRepoUrl(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        />
 
-        <hr style={{ margin: "25px 0" }} />
+        <button onClick={handleCreateProject}>➕ Create Project</button>
+
+        <hr style={{ margin: "20px 0" }} />
 
         <h3>Deploy</h3>
 
-        <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} style={input}>
+        <select
+          value={selectedProject}
+          onChange={(e) => setSelectedProject(e.target.value)}
+          style={{ width: "100%", marginBottom: "10px" }}
+        >
           <option value="">Select Project</option>
           {projects.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </select>
 
         {selectedProject && (
-          <p style={{ fontSize: 12, color: "#64748b" }}>
+          <p style={{ fontSize: "12px", opacity: 0.7 }}>
             Repo: {projects.find(p => p.id === selectedProject)?.repo_url}
           </p>
         )}
 
-        <button onClick={() => {
-          if (!selectedProject) return alert("Select a project first");
-          navigate(`/projects/${selectedProject}`);
-        }} style={secondaryBtn}>
+        <button
+          onClick={() => {
+            if (!selectedProject) {
+              alert("Select a project first");
+              return;
+            }
+            navigate(`/projects/${selectedProject}`);
+          }}
+          style={{ marginBottom: "10px" }}
+        >
           📂 Open Project Page
         </button>
 
-        <button onClick={handleDeploy} style={primaryBtn}>
-          🚀 Deploy
-        </button>
+        <button onClick={handleDeploy}>🚀 Deploy</button>
       </div>
 
-      {/* DEPLOYMENTS */}
-      <h3 style={{ marginTop: 40 }}>Deployments</h3>
+      <h3 style={{ marginTop: "30px" }}>Deployments</h3>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         deployments.map((d) => (
-          <div key={d.id} style={deployCard}>
+          <div
+            key={d.id}
+            style={{
+              background: "#dadbdb",
+              padding: "15px",
+              marginTop: "10px",
+              borderRadius: "10px",
+            }}
+          >
             <p style={{ fontWeight: "bold" }}>{d.id}</p>
 
             <p>
               Status:{" "}
-              <span style={{
-                color:
-                  d.status === "READY"
-                    ? "#22c55e"
-                    : d.status === "ERROR"
-                    ? "#ef4444"
-                    : "#facc15",
-                fontWeight: "bold"
-              }}>
+              <span
+                style={{
+                  color:
+                    d.status === "READY"
+                      ? "#22c55e"
+                      : d.status === "ERROR"
+                      ? "#ef4444"
+                      : "#facc15",
+                }}
+              >
                 {d.status}
               </span>
             </p>
 
-            <div style={logBox}>{d.logs}</div>
+            <div
+              style={{
+                background: "#f3f3f3",
+                padding: "10px",
+                marginTop: "10px",
+                fontSize: "12px",
+                borderRadius: "6px",
+              }}
+            >
+              {d.logs}
+            </div>
 
             {d.url && (
-              <a href={`https://${d.url}`} target="_blank" style={{ color: "#6366f1", marginTop: 10, display: "block" }}>
+              <a
+                href={`https://${d.url}`}
+                target="_blank"
+                style={{ display: "block", marginTop: "10px", color: "#38bdf8" }}
+              >
                 🌍 Open Deployment
               </a>
             )}
@@ -302,61 +361,3 @@ export default function Projects() {
     </div>
   );
 }
-
-/* STYLES */
-
-const card = {
-  background: "white",
-  padding: 24,
-  borderRadius: 16,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
-  maxWidth: 600
-};
-
-const input = {
-  width: "100%",
-  padding: 12,
-  marginBottom: 12,
-  borderRadius: 10,
-  border: "1px solid #e2e8f0"
-};
-
-const primaryBtn = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 10,
-  border: "none",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  color: "white",
-  fontWeight: "bold",
-  cursor: "pointer",
-  marginTop: 10
-};
-
-const secondaryBtn = {
-  width: "100%",
-  padding: 10,
-  borderRadius: 10,
-  border: "1px solid #cbd5f5",
-  background: "#eef2ff",
-  cursor: "pointer",
-  marginTop: 10
-};
-
-const deployCard = {
-  background: "white",
-  padding: 16,
-  marginTop: 12,
-  borderRadius: 12,
-  boxShadow: "0 6px 20px rgba(0,0,0,0.04)"
-};
-
-const logBox = {
-  background: "#f1f5f9",
-  padding: 10,
-  marginTop: 10,
-  fontSize: 12,
-  borderRadius: 6,
-  maxHeight: 120,
-  overflow: "auto"
-};
