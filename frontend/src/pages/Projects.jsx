@@ -1,46 +1,38 @@
-import { useState, useEffect } from "react"; 
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient"; // 🔥 ADDED
+import { supabase } from "../supabaseClient";
 
 export default function Projects() {
   const navigate = useNavigate();
-  const [deployments, setDeployments] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  // ✅ TEAMS
+  const [deployments, setDeployments] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
 
-  // ✅ PROJECTS
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
 
-  // ✅ CREATE PROJECT INPUTS
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
   const [user, setUser] = useState(null);
 
-  // 🔥 LOAD USER (FIXES user.id)
+  // 👤 LOAD USER
   useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-    loadUser();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
 
-  // 🚀 LOAD TEAMS
+  // 👥 LOAD TEAMS
   useEffect(() => {
-    const fetchTeams = async () => {
-      const res = await fetch("/api/getTeams");
-      const data = await res.json();
-      setTeams(data.teams || []);
-    };
-    fetchTeams();
+    fetch("/api/getTeams")
+      .then(res => res.json())
+      .then(data => setTeams(data.teams || []))
+      .catch(() => setTeams([]));
   }, []);
 
-  // 🚀 LOAD PROJECTS
+  // 📦 LOAD PROJECTS
   useEffect(() => {
     if (!selectedTeam) {
       setProjects([]);
@@ -48,117 +40,86 @@ export default function Projects() {
       return;
     }
 
-    const fetchProjects = async () => {
-      const res = await fetch(`/api/getProjects?teamId=${selectedTeam}`);
-      const data = await res.json();
-      setProjects(data.projects || []);
-    };
+    fetch(`/api/getProjects?teamId=${selectedTeam}`)
+      .then(res => res.json())
+      .then(data => setProjects(data.projects || []))
+      .catch(() => setProjects([]));
 
-    fetchProjects();
     setSelectedProject("");
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS
+  // 🚀 LOAD DEPLOYMENTS (ONLY WHEN PROJECT SELECTED)
   useEffect(() => {
+    if (!selectedProject) {
+      setDeployments([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
-    const fetchDeployments = async () => {
-      try {
-        const res = await fetch(
-          selectedProject
-            ? `/api/getDeployments?projectId=${selectedProject}`
-            : `/api/getDeployments${selectedTeam ? `?teamId=${selectedTeam}` : ""}`
+    fetch(`/api/getDeployments?projectId=${selectedProject}`)
+      .then(res => res.json())
+      .then(data => {
+        const safe = data.deployments || []; // ✅ FIX CRASH
+
+        setDeployments(
+          safe.map(d => ({
+            id: d.deployment_id,
+            status: d.status,
+            url: d.url || null,
+            logs: d.logs || "",
+          }))
         );
-
-        const data = await res.json();
-
-        const formatted = data.deployments.map((d) => ({
-          id: d.deployment_id,
-          status: d.status,
-          url: d.url || null,
-          logs: d.logs || "",
-        }));
-
-        setDeployments(formatted);
         setLoading(false);
-      } catch (err) {
-        console.error("Failed to load deployments", err);
-      }
-    };
+      })
+      .catch(() => {
+        setDeployments([]);
+        setLoading(false);
+      });
+  }, [selectedProject]);
 
-    fetchDeployments();
-  }, [selectedTeam, selectedProject]);
-
-  // 🚀 CREATE PROJECT
+  // ➕ CREATE PROJECT
   const handleCreateProject = async () => {
     if (!newProjectName || !newRepoUrl || !selectedTeam) {
-      alert("Fill all fields");
-      return;
+      return alert("Fill all fields");
     }
 
-    // 🔥 SAFETY CHECK
-    if (!user) {
-      alert("User not loaded yet");
-      return;
-    }
+    if (!user) return alert("User not loaded");
 
-    try {
-      const res = await fetch("/api/createProject", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newProjectName,
-          repoUrl: newRepoUrl,
-          teamId: selectedTeam,
-          userId: user.id, // 🔥 ADDED
-        }),
-      });
+    const res = await fetch("/api/createProject", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newProjectName,
+        repoUrl: newRepoUrl,
+        teamId: selectedTeam,
+        userId: user.id,
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
+    if (!res.ok) return alert(data.error);
 
-      setProjects((prev) => [data.project, ...prev]);
+    setProjects(prev => [data.project, ...prev]);
+    setNewProjectName("");
+    setNewRepoUrl("");
 
-      setNewProjectName("");
-      setNewRepoUrl("");
-
-      alert("✅ Project created!");
-    } catch (err) {
-      console.error(err);
-      alert("Create project failed");
-    }
+    alert("✅ Project created!");
   };
 
   // 🚀 DEPLOY
   const handleDeploy = async () => {
-    const selectedProjectData = projects.find(
-      (p) => p.id === selectedProject
-    );
-
-    if (!selectedProjectData) {
-      alert("Select a project");
-      return;
-    }
-
-    if (!user) {
-      alert("User not loaded yet");
-      return;
-    }
+    const p = projects.find(x => x.id === selectedProject);
+    if (!p) return alert("Select project");
 
     const res = await fetch("/api/deployProject", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        repoUrl: selectedProjectData.repo_url,
-        projectName: selectedProjectData.name,
+        repoUrl: p.repo_url,
+        projectName: p.name,
         teamId: selectedTeam,
         projectId: selectedProject,
         userId: user.id,
@@ -166,50 +127,31 @@ export default function Projects() {
     });
 
     const data = await res.json();
+    if (!res.ok) return alert(data.error);
 
-    if (!res.ok) {
-      alert(data.error);
-      return;
-    }
-
-    setDeployments((prev) => [
-      {
-        id: data.deploymentId,
-        status: "BUILDING",
-        url: null,
-        logs: "🚀 Deployment started...",
-      },
-      ...prev,
-    ]);
-
-    const resReload = await fetch(
-      `/api/getDeployments?projectId=${selectedProject}`
-    );
-    const dataReload = await resReload.json();
-
-    setDeployments(
-      dataReload.deployments.map((d) => ({
-        id: d.deployment_id,
-        status: d.status,
-        url: d.url || null,
-        logs: d.logs || "",
-      }))
-    );
+    setDeployments(prev => [{
+      id: data.deploymentId,
+      status: "BUILDING",
+      logs: "🚀 Starting...",
+      url: null
+    }, ...prev]);
   };
 
-  // 🔄 POLL STATUS
+  // 🔄 POLLING
   useEffect(() => {
+    if (!deployments.length) return;
+
     const interval = setInterval(() => {
-      fetchStatuses(deployments);
+      fetchStatuses();
     }, 3000);
 
     return () => clearInterval(interval);
   }, [deployments]);
 
-  const fetchStatuses = async (deploymentsList) => {
+  const fetchStatuses = async () => {
     const updated = await Promise.all(
-      deploymentsList.map(async (d) => {
-        if (d.status === "READY" || d.status === "ERROR") return d;
+      deployments.map(async d => {
+        if (["READY","ERROR"].includes(d.status)) return d;
 
         const res = await fetch(`/api/deploymentStatus?id=${d.id}`);
         const data = await res.json();
@@ -227,133 +169,121 @@ export default function Projects() {
   };
 
   return (
-    <div style={{ padding: "40px", background: "#ffffff", color: "white" }}>
-      <h1>🚀 Deploy Dashboard</h1>
+    <div style={container}>
+      <h1 style={title}>🚀 Projects</h1>
 
-      <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px" }}>
+      <div style={card}>
         <h3>Create Project</h3>
 
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        >
+        <select style={input} value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value)}>
           <option value="">Select Team</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
+          {teams.map(t=>(
+            <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
 
-        <input
-          placeholder="Project Name"
-          value={newProjectName}
-          onChange={(e) => setNewProjectName(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+        <input style={input} placeholder="Project Name" value={newProjectName} onChange={e=>setNewProjectName(e.target.value)} />
+        <input style={input} placeholder="GitHub URL" value={newRepoUrl} onChange={e=>setNewRepoUrl(e.target.value)} />
 
-        <input
-          placeholder="GitHub Repo URL"
-          value={newRepoUrl}
-          onChange={(e) => setNewRepoUrl(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+        <button style={primary} onClick={handleCreateProject}>
+          ➕ Create Project
+        </button>
 
-        <button onClick={handleCreateProject}>➕ Create Project</button>
-
-        <hr style={{ margin: "20px 0" }} />
+        <hr style={{margin:"20px 0"}}/>
 
         <h3>Deploy</h3>
 
-        <select
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          style={{ width: "100%", marginBottom: "10px" }}
-        >
+        <select style={input} value={selectedProject} onChange={e=>setSelectedProject(e.target.value)}>
           <option value="">Select Project</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
+          {projects.map(p=>(
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
 
-        {selectedProject && (
-          <p style={{ fontSize: "12px", opacity: 0.7 }}>
-            Repo: {projects.find(p => p.id === selectedProject)?.repo_url}
-          </p>
-        )}
+        <button style={secondary} onClick={()=>navigate(`/projects/${selectedProject}`)}>
+          📂 Open Project
+        </button>
 
-      <button
-        onClick={() => {
-          if (!selectedProject) return alert("Select a project first");
-          navigate(`/projects/${selectedProject}`);
-        }}
-        style={secondaryBtn}
-      >
-        📂 Open Project Page
-      </button>
-
-        <button onClick={handleDeploy}>🚀 Deploy</button>
+        <button style={primary} onClick={handleDeploy}>
+          🚀 Deploy
+        </button>
       </div>
 
-      <h3 style={{ marginTop: "30px" }}>Deployments</h3>
+      <h3 style={{marginTop:40}}>Deployments</h3>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        deployments.map((d) => (
-          <div
-            key={d.id}
-            style={{
-              background: "#dadbdb",
-              padding: "15px",
-              marginTop: "10px",
-              borderRadius: "10px",
-            }}
-          >
-            <p style={{ fontWeight: "bold" }}>{d.id}</p>
+      {!selectedProject && <p>Select a project to see deployments</p>}
 
-          <p>
-            Status:{" "}
-            <span style={{
-              color:
-                d.status === "READY"
-                  ? "#22c55e"
-                  : d.status === "ERROR"
-                  ? "#ef4444"
-                  : "#facc15",
-              fontWeight: "bold"
-            }}>
-              {d.status}
-            </span>
-          </p>
-
-            <div
-              style={{
-                background: "#f3f3f3",
-                padding: "10px",
-                marginTop: "10px",
-                fontSize: "12px",
-                borderRadius: "6px",
-              }}
-            >
-              {d.logs}
-            </div>
-
-            {d.url && (
-              <a
-                href={`https://${d.url}`}
-                target="_blank"
-                style={{ display: "block", marginTop: "10px", color: "#38bdf8" }}
-              >
-                🌍 Open Deployment
-              </a>
-            )}
-          </div>
-        ))
-      )}
+      {loading ? <p>Loading...</p> : deployments.map(d=>(
+        <div key={d.id} style={deployCard}>
+          <b>{d.id}</b>
+          <p>Status: <span style={{fontWeight:"bold"}}>{d.status}</span></p>
+          <div style={logs}>{d.logs}</div>
+        </div>
+      ))}
     </div>
   );
 }
+
+/* UI */
+
+const container = {
+  padding:40,
+  background:"#f1f5f9",
+  minHeight:"100vh"
+};
+
+const title = {
+  fontSize:28,
+  marginBottom:20
+};
+
+const card = {
+  background:"white",
+  padding:24,
+  borderRadius:16,
+  boxShadow:"0 10px 30px rgba(0,0,0,0.08)",
+  maxWidth:600
+};
+
+const input = {
+  width:"100%",
+  padding:12,
+  marginBottom:12,
+  borderRadius:10,
+  border:"1px solid #ddd"
+};
+
+const primary = {
+  width:"100%",
+  padding:12,
+  borderRadius:10,
+  background:"linear-gradient(135deg,#6366f1,#8b5cf6)",
+  color:"white",
+  border:"none",
+  marginTop:10,
+  cursor:"pointer"
+};
+
+const secondary = {
+  width:"100%",
+  padding:10,
+  borderRadius:10,
+  background:"#eef2ff",
+  border:"1px solid #c7d2fe",
+  marginTop:10
+};
+
+const deployCard = {
+  background:"white",
+  padding:16,
+  marginTop:12,
+  borderRadius:12
+};
+
+const logs = {
+  background:"#f1f5f9",
+  padding:10,
+  marginTop:10,
+  fontSize:12,
+  borderRadius:6
+};
