@@ -8,12 +8,12 @@ export default function ProjectPage() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚀 LOAD PROJECT INFO
+  // 🚀 LOAD PROJECT
   useEffect(() => {
     const fetchProject = async () => {
       const res = await fetch(`/api/getProjectById?id=${projectId}`);
       const data = await res.json();
-      setProject(data.project);
+      setProject(data.project || null);
     };
 
     fetchProject();
@@ -25,14 +25,17 @@ export default function ProjectPage() {
       const res = await fetch(`/api/getDeployments?projectId=${projectId}`);
       const data = await res.json();
 
-      const formatted = data.deployments.map((d) => ({
-        id: d.deployment_id,
-        status: d.status,
-        url: d.url || null,
-        logs: d.logs || "",
-      }));
+      const safe = data.deployments || []; // ✅ FIX
 
-      setDeployments(formatted);
+      setDeployments(
+        safe.map((d) => ({
+          id: d.deployment_id,
+          status: d.status,
+          url: d.url || null,
+          logs: d.logs || "",
+        }))
+      );
+
       setLoading(false);
     };
 
@@ -58,12 +61,8 @@ export default function ProjectPage() {
 
     const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.error);
-      return;
-    }
+    if (!res.ok) return alert(data.error);
 
-    // instant UI update
     setDeployments((prev) => [
       {
         id: data.deploymentId,
@@ -75,8 +74,10 @@ export default function ProjectPage() {
     ]);
   };
 
-  // 🔄 POLL STATUS (LIVE)
+  // 🔄 POLLING
   useEffect(() => {
+    if (!deployments.length) return;
+
     const interval = setInterval(() => {
       fetchStatuses(deployments);
     }, 3000);
@@ -105,116 +106,84 @@ export default function ProjectPage() {
   };
 
   if (!project) {
-    return <p style={{ color: "white", padding: 40 }}>Loading project...</p>;
+    return (
+      <div style={container}>
+        <p>Loading project...</p>
+      </div>
+    );
   }
 
-  return (
-    <div style={{ padding: "40px", background: "#0f172a", color: "white", minHeight: "100vh" }}>
-      
-      {/* 🔥 HEADER */}
-      <div style={{ marginBottom: "30px" }}>
-        <h1 style={{ fontSize: "28px" }}>📁 {project.name}</h1>
+  const liveDeployment = deployments.find((d) => d.status === "READY");
 
-        <p style={{ opacity: 0.7 }}>
+  return (
+    <div style={container}>
+      
+      {/* HEADER */}
+      <div style={header}>
+        <h1 style={{ fontSize: 28 }}>📁 {project.name}</h1>
+
+        <p style={{ color: "#64748b" }}>
           Repo:{" "}
-          <a href={project.repo_url} target="_blank" style={{ color: "#38bdf8" }}>
+          <a href={project.repo_url} target="_blank" style={link}>
             {project.repo_url}
           </a>
         </p>
 
-        {/* 🌍 PRODUCTION URL */}
-        {deployments.find(d => d.status === "READY")?.url && (
-          <p style={{ marginTop: "10px" }}>
+        {liveDeployment?.url && (
+          <p style={{ marginTop: 10 }}>
             🌍 Live:{" "}
             <a
-              href={`https://${deployments.find(d => d.status === "READY").url}`}
+              href={`https://${liveDeployment.url}`}
               target="_blank"
-              style={{ color: "#22c55e" }}
+              style={{ color: "#22c55e", fontWeight: "bold" }}
             >
-              {deployments.find(d => d.status === "READY").url}
+              {liveDeployment.url}
             </a>
           </p>
         )}
       </div>
 
-      {/* 🚀 ACTIONS */}
-      <div style={{ marginBottom: "30px" }}>
-        <button
-          onClick={handleRedeploy}
-          style={{
-            background: "#22c55e",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            color: "black",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
+      {/* ACTIONS */}
+      <div style={{ marginBottom: 30 }}>
+        <button style={primaryBtn} onClick={handleRedeploy}>
           🚀 Redeploy
         </button>
       </div>
 
-      {/* 📦 DEPLOYMENTS */}
-      <h2 style={{ marginBottom: "10px" }}>Deployments</h2>
+      {/* DEPLOYMENTS */}
+      <h2>Deployments</h2>
 
       {loading ? (
         <p>Loading...</p>
       ) : deployments.length === 0 ? (
-        <p>No deployments yet</p>
+        <p style={{ color: "#64748b" }}>No deployments yet</p>
       ) : (
         deployments.map((d) => (
-          <div
-            key={d.id}
-            style={{
-              background: "#1e293b",
-              padding: "15px",
-              marginTop: "10px",
-              borderRadius: "10px",
-            }}
-          >
+          <div key={d.id} style={card}>
             <p style={{ fontWeight: "bold" }}>{d.id}</p>
 
             <p>
               Status:{" "}
-              <span
-                style={{
-                  color:
-                    d.status === "READY"
-                      ? "#22c55e"
-                      : d.status === "ERROR"
-                      ? "#ef4444"
-                      : "#facc15",
-                }}
-              >
+              <span style={{
+                fontWeight: "bold",
+                color:
+                  d.status === "READY"
+                    ? "#22c55e"
+                    : d.status === "ERROR"
+                    ? "#ef4444"
+                    : "#facc15",
+              }}>
                 {d.status}
               </span>
             </p>
 
-            {/* 🔥 LOGS */}
-            <div
-              style={{
-                background: "#020617",
-                padding: "10px",
-                marginTop: "10px",
-                fontSize: "12px",
-                borderRadius: "6px",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {d.logs}
-            </div>
+            <div style={logs}>{d.logs}</div>
 
-            {/* 🌍 OPEN */}
             {d.url && (
               <a
                 href={`https://${d.url}`}
                 target="_blank"
-                style={{
-                  display: "block",
-                  marginTop: "10px",
-                  color: "#38bdf8",
-                }}
+                style={link}
               >
                 🌍 Open Deployment
               </a>
@@ -225,3 +194,50 @@ export default function ProjectPage() {
     </div>
   );
 }
+
+/* 🎨 UI */
+
+const container = {
+  padding: 40,
+  background: "#f1f5f9",
+  minHeight: "100vh",
+  color: "#0f172a",
+};
+
+const header = {
+  marginBottom: 30,
+};
+
+const card = {
+  background: "white",
+  padding: 16,
+  marginTop: 12,
+  borderRadius: 12,
+  boxShadow: "0 6px 20px rgba(0,0,0,0.05)",
+};
+
+const logs = {
+  background: "#f8fafc",
+  padding: 10,
+  marginTop: 10,
+  fontSize: 12,
+  borderRadius: 6,
+  whiteSpace: "pre-wrap",
+  maxHeight: 150,
+  overflow: "auto",
+};
+
+const primaryBtn = {
+  padding: 12,
+  borderRadius: 10,
+  border: "none",
+  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  color: "white",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
+
+const link = {
+  color: "#6366f1",
+  textDecoration: "none",
+};
