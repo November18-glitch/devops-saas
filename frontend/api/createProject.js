@@ -19,27 +19,32 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ FIX: handle missing user safely
+    // 🔥 GET USER PLAN (SAFE VERSION)
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("plan")
       .eq("id", userId)
-      .single();
+      .maybeSingle(); // ✅ THIS FIXES YOUR CRASH
 
-    if (userError || !user) {
-      console.error("User not found in DB:", userId);
-
-      return res.status(400).json({
-        error: "User not found. Make sure user exists in 'users' table.",
-      });
+    if (userError) {
+      console.error("User fetch error:", userError);
+      return res.status(500).json({ error: "User lookup failed" });
     }
 
-    // ✅ PLAN LIMIT CHECK
-    if (user.plan === "FREE") {
-      const { count } = await supabase
+    // 🔥 DEFAULT PLAN IF USER NOT FOUND
+    const userPlan = user?.plan || "FREE";
+
+    // 🔥 FREE PLAN LIMIT
+    if (userPlan === "FREE") {
+      const { count, error: countError } = await supabase
         .from("projects")
         .select("*", { count: "exact", head: true })
         .eq("team_id", teamId);
+
+      if (countError) {
+        console.error("Count error:", countError);
+        return res.status(500).json({ error: "Failed to check limits" });
+      }
 
       if (count >= 1) {
         return res.status(403).json({
@@ -48,7 +53,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ VALIDATE GITHUB URL
+    // 🔥 VALIDATE GITHUB URL
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
@@ -57,7 +62,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ CREATE PROJECT
+    // 🔥 CREATE PROJECT
     const { data, error } = await supabase
       .from("projects")
       .insert({
