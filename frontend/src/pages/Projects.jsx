@@ -285,18 +285,15 @@ export default function Projects() {
           </p>
         )}
 
-        <button
-          onClick={() => {
-            if (!selectedProject) {
-              alert("Select a project first");
-              return;
-            }
-            navigate(`/projects/${selectedProject}`);
-          }}
-          style={{ marginBottom: "10px" }}
-        >
-          📂 Open Project Page
-        </button>
+      <button
+        onClick={() => {
+          if (!selectedProject) return alert("Select a project first");
+          navigate(`/projects/${selectedProject}`);
+        }}
+        style={secondaryBtn}
+      >
+        📂 Open Project Page
+      </button>
 
         <button onClick={handleDeploy}>🚀 Deploy</button>
       </div>
@@ -318,21 +315,20 @@ export default function Projects() {
           >
             <p style={{ fontWeight: "bold" }}>{d.id}</p>
 
-            <p>
-              Status:{" "}
-              <span
-                style={{
-                  color:
-                    d.status === "READY"
-                      ? "#22c55e"
-                      : d.status === "ERROR"
-                      ? "#ef4444"
-                      : "#facc15",
-                }}
-              >
-                {d.status}
-              </span>
-            </p>
+          <p>
+            Status:{" "}
+            <span style={{
+              color:
+                d.status === "READY"
+                  ? "#22c55e"
+                  : d.status === "ERROR"
+                  ? "#ef4444"
+                  : "#facc15",
+              fontWeight: "bold"
+            }}>
+              {d.status}
+            </span>
+          </p>
 
             <div
               style={{

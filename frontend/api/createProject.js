@@ -18,27 +18,37 @@ export default async function handler(req, res) {
         error: "Missing required fields",
       });
     }
-    // before creating project
 
-const { data: user } = await supabase
-  .from("users")
-  .select("plan")
-  .eq("id", userId)
-  .single();
+    // ✅ FIX: handle missing user safely
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("plan")
+      .eq("id", userId)
+      .single();
 
-if (user.plan === "FREE") {
-  const { count } = await supabase
-    .from("projects")
-    .select("*", { count: "exact", head: true })
-    .eq("team_id", teamId);
+    if (userError || !user) {
+      console.error("User not found in DB:", userId);
 
-  if (count >= 1) {
-    return res.status(403).json({
-      error: "Free plan allows only 1 project. Upgrade to Pro.",
-    });
-  }
-}
+      return res.status(400).json({
+        error: "User not found. Make sure user exists in 'users' table.",
+      });
+    }
 
+    // ✅ PLAN LIMIT CHECK
+    if (user.plan === "FREE") {
+      const { count } = await supabase
+        .from("projects")
+        .select("*", { count: "exact", head: true })
+        .eq("team_id", teamId);
+
+      if (count >= 1) {
+        return res.status(403).json({
+          error: "Free plan allows only 1 project. Upgrade to Pro.",
+        });
+      }
+    }
+
+    // ✅ VALIDATE GITHUB URL
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
@@ -47,6 +57,7 @@ if (user.plan === "FREE") {
       });
     }
 
+    // ✅ CREATE PROJECT
     const { data, error } = await supabase
       .from("projects")
       .insert({
