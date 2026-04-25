@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ FIX: ADD created_by
+    // ✅ CLEAN INSERT (NO created_by)
     const { data, error } = await supabase
       .from("projects")
       .insert({
@@ -69,7 +69,6 @@ export default async function handler(req, res) {
         repo_type: "github",
         default_branch: "main",
         team_id: teamId,
-        created_by: userId, // 🔥 IMPORTANT
       })
       .select()
       .single();
