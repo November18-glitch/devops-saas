@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ ADDED
+import { useNavigate } from "react-router-dom"; // ✅ used
 import "./Teams.css";
 
 export default function Teams() {
-  const navigate = useNavigate(); // ✅ ADDED
+  const navigate = useNavigate();
 
   const [teamName, setTeamName] = useState("");
   const [teams, setTeams] = useState([]);
@@ -63,11 +63,9 @@ export default function Teams() {
     }
   };
 
-  // 🚀 OPEN TEAM (go to projects filtered by team)
+  // ✅ FIXED
   const handleOpenTeam = (teamId) => {
     navigate(`/projects?teamId=${teamId}`);
-    // or if you later build team page:
-    // navigate(`/teams/${teamId}`);
   };
 
   // 🚀 DELETE TEAM
@@ -77,7 +75,7 @@ export default function Teams() {
 
     try {
       const res = await fetch("/api/deleteTeam", {
-        method: "POST", // or DELETE depending on your API
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -91,7 +89,6 @@ export default function Teams() {
         return;
       }
 
-      // ✅ REMOVE FROM UI INSTANTLY
       setTeams((prev) => prev.filter((t) => t.id !== teamId));
 
     } catch (err) {
@@ -103,7 +100,6 @@ export default function Teams() {
   return (
     <div className="teams-container">
       
-      {/* HEADER */}
       <div className="teams-header">
         <h1>👥 Teams</h1>
         <p className="subtitle">
@@ -111,7 +107,6 @@ export default function Teams() {
         </p>
       </div>
 
-      {/* CREATE CARD */}
       <div className="teams-card">
         <h3>Create Team</h3>
 
@@ -128,7 +123,6 @@ export default function Teams() {
         </div>
       </div>
 
-      {/* LIST */}
       <div className="teams-section">
         <h3>Your Teams</h3>
 
