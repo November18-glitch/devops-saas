@@ -6,36 +6,38 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
-    const token = req.headers.authorization?.split("Bearer ")[1];
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser(token);
-
-    if (!user) {
-      return res.status(401).json({ error: "Unauthorized" });
+    if (req.method !== "GET") {
+      return res.status(405).json({ error: "Method not allowed" });
     }
 
-    // 🔥 ONLY TEAMS USER BELONGS TO
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
+    }
+
+    // 🔥 GET TEAMS VIA MEMBERSHIP
     const { data, error } = await supabase
       .from("team_members")
-      .select("teams(*)")
-      .eq("user_id", user.id);
+      .select(`
+        team_id,
+        teams (*)
+      `)
+      .eq("user_id", userId);
 
     if (error) {
+      console.error("❌ Supabase fetch teams error:", error);
       return res.status(500).json({ error: "Failed to fetch teams" });
     }
 
-    const teams = data.map((t) => t.teams);
+    // flatten teams
+    const teams = data.map(t => t.teams);
 
     return res.status(200).json({ teams });
 
   } catch (err) {
+    console.error("💥 GET TEAMS CRASH:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }

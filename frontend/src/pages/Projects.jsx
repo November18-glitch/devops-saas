@@ -39,29 +39,43 @@ export default function Projects() {
     }
   }, [location.search]);
 
-  // 👥 LOAD TEAMS
+  // 👥 LOAD TEAMS (✅ FIXED WITH TOKEN)
   useEffect(() => {
-    fetch("/api/getTeams")
-      .then(res => res.json())
-      .then(data => setTeams(data.teams || []))
-      .catch(() => setTeams([]));
+    const fetchTeams = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+
+        const res = await fetch("/api/getTeams", {
+          headers: {
+            Authorization: `Bearer ${session.session?.access_token}`,
+          },
+        });
+
+        const data = await res.json();
+        setTeams(data.teams || []);
+      } catch {
+        setTeams([]);
+      }
+    };
+
+    fetchTeams();
   }, []);
 
-  // 📦 LOAD PROJECTS (✅ FIXED HERE)
+  // 📦 LOAD PROJECTS
   useEffect(() => {
-    if (!selectedTeam || !user) {
+    if (!selectedTeam) {
       setProjects([]);
       setSelectedProject("");
       return;
     }
 
-    fetch(`/api/getProjects?teamId=${selectedTeam}&userId=${user.id}`)
+    fetch(`/api/getProjects?teamId=${selectedTeam}`)
       .then(res => res.json())
       .then(data => setProjects(data.projects || []))
       .catch(() => setProjects([]));
 
     setSelectedProject("");
-  }, [selectedTeam, user]); // ✅ IMPORTANT DEPENDENCY
+  }, [selectedTeam]);
 
   // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
@@ -100,9 +114,7 @@ export default function Projects() {
       return alert("Fill all fields");
     }
 
-    if (!user) {
-      return alert("User not loaded yet");
-    }
+    if (!user) return alert("User not loaded yet");
 
     const res = await fetch("/api/createProject", {
       method: "POST",
@@ -118,7 +130,6 @@ export default function Projects() {
     });
 
     const data = await res.json();
-
     if (!res.ok) return alert(data.error);
 
     setProjects(prev => [data.project, ...prev]);
@@ -162,10 +173,7 @@ export default function Projects() {
   useEffect(() => {
     if (!deployments.length) return;
 
-    const interval = setInterval(() => {
-      fetchStatuses();
-    }, 3000);
-
+    const interval = setInterval(fetchStatuses, 3000);
     return () => clearInterval(interval);
   }, [deployments]);
 
@@ -196,30 +204,15 @@ export default function Projects() {
       <div style={card}>
         <h3>Create Project</h3>
 
-        <select
-          style={input}
-          value={selectedTeam}
-          onChange={e=>setSelectedTeam(e.target.value)}
-        >
+        <select style={input} value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value)}>
           <option value="">Select Team</option>
           {teams.map(t=>(
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
 
-        <input
-          style={input}
-          placeholder="Project Name"
-          value={newProjectName}
-          onChange={e=>setNewProjectName(e.target.value)}
-        />
-
-        <input
-          style={input}
-          placeholder="GitHub URL"
-          value={newRepoUrl}
-          onChange={e=>setNewRepoUrl(e.target.value)}
-        />
+        <input style={input} placeholder="Project Name" value={newProjectName} onChange={e=>setNewProjectName(e.target.value)} />
+        <input style={input} placeholder="GitHub URL" value={newRepoUrl} onChange={e=>setNewRepoUrl(e.target.value)} />
 
         <button style={primary} onClick={handleCreateProject}>
           ➕ Create Project
@@ -229,11 +222,7 @@ export default function Projects() {
 
         <h3>Deploy</h3>
 
-        <select
-          style={input}
-          value={selectedProject}
-          onChange={e=>setSelectedProject(e.target.value)}
-        >
+        <select style={input} value={selectedProject} onChange={e=>setSelectedProject(e.target.value)}>
           <option value="">Select Project</option>
           {projects.map(p=>(
             <option key={p.id} value={p.id}>{p.name}</option>
