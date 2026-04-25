@@ -11,20 +11,30 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName, teamId, projectId } = req.body;
+    const { repoUrl, projectName, teamId, projectId, userId } = req.body;
 
-    if (!repoUrl || !projectName) {
+    if (!repoUrl || !projectName || !teamId || !userId) {
       return res.status(400).json({
-        error: "Missing repoUrl or projectName",
+        error: "Missing required fields",
       });
+    }
+
+    // 🔐 VERIFY USER IS IN TEAM
+    const { data: member } = await supabase
+      .from("team_members")
+      .select("*")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!member) {
+      return res.status(403).json({ error: "Not authorized" });
     }
 
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
-      return res.status(400).json({
-        error: "Invalid GitHub URL",
-      });
+      return res.status(400).json({ error: "Invalid GitHub URL" });
     }
 
     const owner = match[1];
@@ -43,7 +53,7 @@ export default async function handler(req, res) {
 
     if (!githubRes.ok) {
       return res.status(404).json({
-        error: "GitHub repo not found or no access",
+        error: "GitHub repo not found",
       });
     }
 
@@ -69,12 +79,6 @@ export default async function handler(req, res) {
             repoId: repoId,
             ref: "main",
           },
-          projectSettings: {
-            framework: null,
-            buildCommand: "",
-            installCommand: "",
-            outputDirectory: ".",
-          },
         }),
       }
     );
@@ -87,33 +91,21 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ FIXED INSERT (WITH ERROR LOGGING)
-    // 🔥 ✅ SAVE DEPLOYMENT + INITIAL LOG
-    const { error } = await supabase.from("deployments").insert({
+    await supabase.from("deployments").insert({
       deployment_id: data.id,
       status: "BUILDING",
       logs: "🚀 Deployment started...",
-      environment: "preview",
-      triggered_by: "user",
-      team_id: teamId || null, // ✅ THIS LINE
-      project_id: projectId || null,
-});
-
-    if (error) {
-     console.error("❌ Supabase insert error:", error);
-}
+      team_id: teamId,
+      project_id: projectId,
+    });
 
     return res.status(200).json({
       deploymentId: data.id,
       url: data.url,
-      projectName: uniqueProjectName,
     });
 
   } catch (err) {
     console.error("DEPLOY CRASH:", err);
-
-    return res.status(500).json({
-      error: "Internal server error",
-    });
+    return res.status(500).json({ error: "Internal server error" });
   }
 }

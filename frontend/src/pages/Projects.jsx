@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // ✅ ADDED useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Projects() {
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ ADDED
+  const location = useLocation();
 
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,10 +22,14 @@ export default function Projects() {
 
   // 👤 LOAD USER
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    loadUser();
   }, []);
 
-  // 🔥 READ TEAM FROM URL (THIS FIXES YOUR ISSUE)
+  // 🔥 READ TEAM FROM URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const teamIdFromUrl = params.get("teamId");
@@ -43,23 +47,23 @@ export default function Projects() {
       .catch(() => setTeams([]));
   }, []);
 
-  // 📦 LOAD PROJECTS
+  // 📦 LOAD PROJECTS (✅ FIXED HERE)
   useEffect(() => {
-    if (!selectedTeam) {
+    if (!selectedTeam || !user) {
       setProjects([]);
       setSelectedProject("");
       return;
     }
 
-    fetch(`/api/getProjects?teamId=${selectedTeam}`)
+    fetch(`/api/getProjects?teamId=${selectedTeam}&userId=${user.id}`)
       .then(res => res.json())
       .then(data => setProjects(data.projects || []))
       .catch(() => setProjects([]));
 
     setSelectedProject("");
-  }, [selectedTeam]);
+  }, [selectedTeam, user]); // ✅ IMPORTANT DEPENDENCY
 
-  // 🚀 LOAD DEPLOYMENTS (ONLY WHEN PROJECT SELECTED)
+  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     if (!selectedProject) {
       setDeployments([]);
@@ -96,11 +100,15 @@ export default function Projects() {
       return alert("Fill all fields");
     }
 
-    if (!user) return alert("User not loaded");
+    if (!user) {
+      return alert("User not loaded yet");
+    }
 
     const res = await fetch("/api/createProject", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         name: newProjectName,
         repoUrl: newRepoUrl,
@@ -122,6 +130,8 @@ export default function Projects() {
 
   // 🚀 DEPLOY
   const handleDeploy = async () => {
+    if (!user) return alert("User not loaded");
+
     const p = projects.find(x => x.id === selectedProject);
     if (!p) return alert("Select project");
 
@@ -186,15 +196,30 @@ export default function Projects() {
       <div style={card}>
         <h3>Create Project</h3>
 
-        <select style={input} value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value)}>
+        <select
+          style={input}
+          value={selectedTeam}
+          onChange={e=>setSelectedTeam(e.target.value)}
+        >
           <option value="">Select Team</option>
           {teams.map(t=>(
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
 
-        <input style={input} placeholder="Project Name" value={newProjectName} onChange={e=>setNewProjectName(e.target.value)} />
-        <input style={input} placeholder="GitHub URL" value={newRepoUrl} onChange={e=>setNewRepoUrl(e.target.value)} />
+        <input
+          style={input}
+          placeholder="Project Name"
+          value={newProjectName}
+          onChange={e=>setNewProjectName(e.target.value)}
+        />
+
+        <input
+          style={input}
+          placeholder="GitHub URL"
+          value={newRepoUrl}
+          onChange={e=>setNewRepoUrl(e.target.value)}
+        />
 
         <button style={primary} onClick={handleCreateProject}>
           ➕ Create Project
@@ -204,7 +229,11 @@ export default function Projects() {
 
         <h3>Deploy</h3>
 
-        <select style={input} value={selectedProject} onChange={e=>setSelectedProject(e.target.value)}>
+        <select
+          style={input}
+          value={selectedProject}
+          onChange={e=>setSelectedProject(e.target.value)}
+        >
           <option value="">Select Project</option>
           {projects.map(p=>(
             <option key={p.id} value={p.id}>{p.name}</option>
@@ -241,7 +270,7 @@ export default function Projects() {
   );
 }
 
-/* UI stays EXACTLY the same */
+/* UI unchanged */
 
 const container = {
   padding:40,

@@ -14,37 +14,36 @@ export default async function handler(req, res) {
     const { name, repoUrl, teamId, userId } = req.body;
 
     if (!name || !repoUrl || !teamId || !userId) {
-      return res.status(400).json({
-        error: "Missing required fields",
-      });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 🔥 GET USER PLAN (SAFE VERSION)
-    const { data: user, error: userError } = await supabase
+    // 🔐 VERIFY USER IS IN TEAM
+    const { data: member, error: memberError } = await supabase
+      .from("team_members")
+      .select("*")
+      .eq("team_id", teamId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (memberError || !member) {
+      return res.status(403).json({ error: "Not authorized for this team" });
+    }
+
+    // 🔥 GET USER PLAN
+    const { data: user } = await supabase
       .from("users")
       .select("plan")
       .eq("id", userId)
-      .maybeSingle(); // ✅ THIS FIXES YOUR CRASH
+      .maybeSingle();
 
-    if (userError) {
-      console.error("User fetch error:", userError);
-      return res.status(500).json({ error: "User lookup failed" });
-    }
-
-    // 🔥 DEFAULT PLAN IF USER NOT FOUND
     const userPlan = user?.plan || "FREE";
 
     // 🔥 FREE PLAN LIMIT
     if (userPlan === "FREE") {
-      const { count, error: countError } = await supabase
+      const { count } = await supabase
         .from("projects")
         .select("*", { count: "exact", head: true })
         .eq("team_id", teamId);
-
-      if (countError) {
-        console.error("Count error:", countError);
-        return res.status(500).json({ error: "Failed to check limits" });
-      }
 
       if (count >= 1) {
         return res.status(403).json({
@@ -57,9 +56,7 @@ export default async function handler(req, res) {
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
-      return res.status(400).json({
-        error: "Invalid GitHub URL",
-      });
+      return res.status(400).json({ error: "Invalid GitHub URL" });
     }
 
     // 🔥 CREATE PROJECT
@@ -76,7 +73,7 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      console.error("❌ Project error:", error);
+      console.error(error);
       return res.status(500).json({ error: "Failed to create project" });
     }
 
