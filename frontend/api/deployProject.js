@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       "-" +
       Date.now();
 
-    // 🔥 FIXED URL (IMPORTANT)
+    // ✅ FIX: REMOVE projectSettings completely
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
@@ -69,13 +69,7 @@ export default async function handler(req, res) {
             type: "github",
             repoId: repoId,
             ref: "main",
-          },
-          projectSettings: {
-            framework: null,
-            buildCommand: null,
-            installCommand: null,
-            outputDirectory: null,
-          },
+          }
         }),
       }
     );
