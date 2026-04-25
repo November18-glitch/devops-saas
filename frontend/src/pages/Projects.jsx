@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ✅ ADDED useLocation
 import { supabase } from "../supabaseClient";
 
 export default function Projects() {
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ ADDED
 
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,16 @@ export default function Projects() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
+
+  // 🔥 READ TEAM FROM URL (THIS FIXES YOUR ISSUE)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const teamIdFromUrl = params.get("teamId");
+
+    if (teamIdFromUrl) {
+      setSelectedTeam(teamIdFromUrl);
+    }
+  }, [location.search]);
 
   // 👥 LOAD TEAMS
   useEffect(() => {
@@ -61,7 +72,7 @@ export default function Projects() {
     fetch(`/api/getDeployments?projectId=${selectedProject}`)
       .then(res => res.json())
       .then(data => {
-        const safe = data.deployments || []; // ✅ FIX CRASH
+        const safe = data.deployments || [];
 
         setDeployments(
           safe.map(d => ({
@@ -200,7 +211,13 @@ export default function Projects() {
           ))}
         </select>
 
-        <button style={secondary} onClick={()=>navigate(`/projects/${selectedProject}`)}>
+        <button
+          style={secondary}
+          onClick={()=>{
+            if (!selectedProject) return alert("Select a project first");
+            navigate(`/projects/${selectedProject}`);
+          }}
+        >
           📂 Open Project
         </button>
 
@@ -224,7 +241,7 @@ export default function Projects() {
   );
 }
 
-/* UI */
+/* UI stays EXACTLY the same */
 
 const container = {
   padding:40,
