@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ used
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient"; // ✅ IMPORTANT
 import "./Teams.css";
 
 export default function Teams() {
@@ -10,11 +11,29 @@ export default function Teams() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
-  // 🚀 LOAD TEAMS
+  const [user, setUser] = useState(null);
+
+  // 🔥 LOAD USER
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    loadUser();
+  }, []);
+
+  // 🚀 LOAD TEAMS (WITH TOKEN)
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const res = await fetch("/api/getTeams");
+        const { data: session } = await supabase.auth.getSession();
+
+        const res = await fetch("/api/getTeams", {
+          headers: {
+            Authorization: `Bearer ${session.session?.access_token}`,
+          },
+        });
+
         const data = await res.json();
         setTeams(data.teams || []);
       } catch (err) {
@@ -30,19 +49,21 @@ export default function Teams() {
   // 🚀 CREATE TEAM
   const handleCreateTeam = async () => {
     if (!teamName) return alert("Enter a team name");
+    if (!user) return alert("User not loaded");
 
     setCreating(true);
 
     try {
+      const { data: session } = await supabase.auth.getSession();
+
       const res = await fetch("/api/createTeam", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.session?.access_token}`,
         },
         body: JSON.stringify({
           name: teamName,
-          userId: "11111111-1111-1111-1111-111111111111",
-          email: "test@example.com",
         }),
       });
 
@@ -63,34 +84,30 @@ export default function Teams() {
     }
   };
 
-  // ✅ FIXED
   const handleOpenTeam = (teamId) => {
     navigate(`/projects?teamId=${teamId}`);
   };
 
-  // 🚀 DELETE TEAM
   const handleDeleteTeam = async (teamId) => {
-    const confirmDelete = confirm("Delete this team? This cannot be undone.");
-    if (!confirmDelete) return;
+    if (!confirm("Delete this team?")) return;
 
     try {
+      const { data: session } = await supabase.auth.getSession();
+
       const res = await fetch("/api/deleteTeam", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.session?.access_token}`,
         },
         body: JSON.stringify({ teamId }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        alert(data.error);
-        return;
-      }
+      if (!res.ok) return alert(data.error);
 
       setTeams((prev) => prev.filter((t) => t.id !== teamId));
-
     } catch (err) {
       console.error(err);
       alert("Failed to delete team");
@@ -99,7 +116,6 @@ export default function Teams() {
 
   return (
     <div className="teams-container">
-      
       <div className="teams-header">
         <h1>👥 Teams</h1>
         <p className="subtitle">
@@ -129,7 +145,7 @@ export default function Teams() {
         {loading ? (
           <p className="muted">Loading teams...</p>
         ) : teams.length === 0 ? (
-          <p className="muted">No teams yet. Create your first one 🚀</p>
+          <p className="muted">No teams yet 🚀</p>
         ) : (
           <div className="teams-grid">
             {teams.map((team) => (
