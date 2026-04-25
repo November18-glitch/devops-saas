@@ -11,30 +11,20 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName, teamId, projectId, userId } = req.body;
+    const { repoUrl, projectName, teamId, projectId } = req.body;
 
-    if (!repoUrl || !projectName || !teamId || !userId) {
+    if (!repoUrl || !projectName) {
       return res.status(400).json({
-        error: "Missing required fields",
+        error: "Missing repoUrl or projectName",
       });
-    }
-
-    // 🔐 VERIFY USER IS IN TEAM
-    const { data: member } = await supabase
-      .from("team_members")
-      .select("*")
-      .eq("team_id", teamId)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!member) {
-      return res.status(403).json({ error: "Not authorized" });
     }
 
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
 
     if (!match) {
-      return res.status(400).json({ error: "Invalid GitHub URL" });
+      return res.status(400).json({
+        error: "Invalid GitHub URL",
+      });
     }
 
     const owner = match[1];
@@ -53,7 +43,7 @@ export default async function handler(req, res) {
 
     if (!githubRes.ok) {
       return res.status(404).json({
-        error: "GitHub repo not found",
+        error: "GitHub repo not found or no access",
       });
     }
 
@@ -64,8 +54,9 @@ export default async function handler(req, res) {
       "-" +
       Date.now();
 
+    // 🔥 FIXED URL (IMPORTANT)
     const vercelRes = await fetch(
-      "https://api.vercel.com/v13/deployments",
+      "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
         method: "POST",
         headers: {
@@ -79,6 +70,12 @@ export default async function handler(req, res) {
             repoId: repoId,
             ref: "main",
           },
+          projectSettings: {
+            framework: null,
+            buildCommand: null,
+            installCommand: null,
+            outputDirectory: null,
+          },
         }),
       }
     );
@@ -91,21 +88,31 @@ export default async function handler(req, res) {
       });
     }
 
-    await supabase.from("deployments").insert({
+    const { error } = await supabase.from("deployments").insert({
       deployment_id: data.id,
       status: "BUILDING",
       logs: "🚀 Deployment started...",
-      team_id: teamId,
-      project_id: projectId,
+      environment: "preview",
+      triggered_by: "user",
+      team_id: teamId || null,
+      project_id: projectId || null,
     });
+
+    if (error) {
+      console.error("❌ Supabase insert error:", error);
+    }
 
     return res.status(200).json({
       deploymentId: data.id,
       url: data.url,
+      projectName: uniqueProjectName,
     });
 
   } catch (err) {
     console.error("DEPLOY CRASH:", err);
-    return res.status(500).json({ error: "Internal server error" });
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
   }
 }
