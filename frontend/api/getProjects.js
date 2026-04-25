@@ -11,22 +11,11 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { teamId, userId } = req.query;
+    const { teamId } = req.query;
 
-    if (!teamId || !userId) {
-      return res.status(400).json({ error: "Missing params" });
-    }
-
-    // 🔐 VERIFY ACCESS
-    const { data: member } = await supabase
-      .from("team_members")
-      .select("*")
-      .eq("team_id", teamId)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!member) {
-      return res.status(403).json({ error: "Not authorized" });
+    if (!teamId) {
+      console.error("❌ Missing teamId in query");
+      return res.status(400).json({ error: "Missing teamId" });
     }
 
     const { data, error } = await supabase
@@ -36,14 +25,16 @@ export default async function handler(req, res) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
+      console.error("❌ Fetch projects error:", error);
       return res.status(500).json({ error: "Failed to fetch projects" });
     }
+
+    console.log("✅ Projects fetched:", data);
 
     return res.status(200).json({ projects: data });
 
   } catch (err) {
-    console.error("GET PROJECTS CRASH:", err);
+    console.error("💥 GET PROJECTS CRASH:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
