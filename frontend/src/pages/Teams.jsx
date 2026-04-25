@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ ADDED
 import "./Teams.css";
 
 export default function Teams() {
+  const navigate = useNavigate(); // ✅ ADDED
+
   const [teamName, setTeamName] = useState("");
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +63,43 @@ export default function Teams() {
     }
   };
 
+  // 🚀 OPEN TEAM (go to projects filtered by team)
+  const handleOpenTeam = (teamId) => {
+    navigate(`/projects?teamId=${teamId}`);
+    // or if you later build team page:
+    // navigate(`/teams/${teamId}`);
+  };
+
+  // 🚀 DELETE TEAM
+  const handleDeleteTeam = async (teamId) => {
+    const confirmDelete = confirm("Delete this team? This cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch("/api/deleteTeam", {
+        method: "POST", // or DELETE depending on your API
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ teamId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+
+      // ✅ REMOVE FROM UI INSTANTLY
+      setTeams((prev) => prev.filter((t) => t.id !== teamId));
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete team");
+    }
+  };
+
   return (
     <div className="teams-container">
       
@@ -110,8 +150,19 @@ export default function Teams() {
                 </p>
 
                 <div className="team-actions">
-                  <button className="secondary">Open</button>
-                  <button className="danger">Delete</button>
+                  <button
+                    className="secondary"
+                    onClick={() => handleOpenTeam(team.id)}
+                  >
+                    Open
+                  </button>
+
+                  <button
+                    className="danger"
+                    onClick={() => handleDeleteTeam(team.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
