@@ -26,7 +26,7 @@ export default function Layout() {
       <aside
         style={{
           width: 260,
-          background: "#fde4e4",
+          background: "#0f172a",
           padding: 24,
           boxSizing: "border-box",
         }}
