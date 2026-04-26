@@ -27,7 +27,7 @@ export default function Layout() {
       <aside
         style={{
           width: 260,
-          background: "#5972ac",
+          background: "#6366f1",
           padding: 24,
           boxSizing: "border-box",
           color: "white", // ✅ so text is visible on dark bg
