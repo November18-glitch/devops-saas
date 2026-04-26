@@ -31,7 +31,15 @@ export default function Layout() {
           boxSizing: "border-box",
         }}
       >
-        <h2 style={{ marginBottom: 30 }}>Logo + SaaS name</h2>
+        {/* 🔥 LOGO + NAME (ONLY CHANGE) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30 }}>
+          <img
+            src="C:\Users\alyse\Downloads\SaaS_logo.png" // 
+            alt="DeployAlly Logo"
+            style={{ width: 32, height: 32, objectFit: "contain" }}
+          />
+          <h2 style={{ margin: 0 }}>DeployAlly</h2>
+        </div>
 
         <p style={{ fontWeight: "bold", marginBottom: 10 }}>Main Menu</p>
 
