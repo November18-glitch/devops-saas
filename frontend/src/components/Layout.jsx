@@ -2,7 +2,8 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useEffect, useState } from "react";
 
-import Header from "./Header"; // <-- ADD THIS
+import Header from "./Header";
+import logo from "../assets/logo.png"; // ✅ IMPORT LOGO
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -29,19 +30,28 @@ export default function Layout() {
           background: "#0f172a",
           padding: 24,
           boxSizing: "border-box",
+          color: "white", // ✅ so text is visible on dark bg
         }}
       >
-        {/* 🔥 LOGO + NAME (ONLY CHANGE) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30 }}>
+        {/* 🔥 LOGO + NAME */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 30 }}>
           <img
-            src="C:\Users\alyse\Downloads\SaaS_logo.png" // 
+            src={logo}
             alt="DeployAlly Logo"
-            style={{ width: 32, height: 32, objectFit: "contain" }}
+            style={{
+              width: 36,
+              height: 36,
+              objectFit: "contain",
+            }}
           />
-          <h2 style={{ margin: 0 }}>DeployAlly</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
+            DeployAlly
+          </h2>
         </div>
 
-        <p style={{ fontWeight: "bold", marginBottom: 10 }}>Main Menu</p>
+        <p style={{ fontWeight: "bold", marginBottom: 10, opacity: 0.7 }}>
+          Main Menu
+        </p>
 
         <NavItem to="/dashboard" label="Dashboard" />
         <NavItem to="/teams" label="Teams" />
@@ -52,7 +62,7 @@ export default function Layout() {
       {/* MAIN AREA */}
       <div style={{ flex: 1, background: "#fff" }}>
         
-        {/* HEADER (REPLACES OLD TOP BAR) */}
+        {/* HEADER */}
         <Header />
 
         {/* PAGE CONTENT */}
@@ -73,9 +83,9 @@ function NavItem({ to, label }) {
         display: "block",
         padding: "12px 16px",
         marginBottom: 10,
-        background: isActive ? "#fff" : "transparent",
+        background: isActive ? "#1e293b" : "transparent", // ✅ better for dark sidebar
         textDecoration: "none",
-        color: "#000",
+        color: "white", // ✅ fix visibility
         borderRadius: 6,
       })}
     >
