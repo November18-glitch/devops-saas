@@ -61,30 +61,19 @@ export default function Dashboard() {
       setMembersCount(membersData?.length || 0);
 
       // ✅ SAFE DEPLOYMENT FETCH
-      if (projectsData && projectsData.length > 0) {
-        const projectIds = projectsData
-          .map((p) => p.id)
-          .filter(Boolean);
+      // 🚀 DEPLOYMENTS (FIXED FINAL)
+      const { data: deployData, error: deployError } = await supabase
+              .from("deployments")
+              .select("*")
+              .in("team_id", teamIds)
+              .order("created_at", { ascending: false })
+              .limit(5);
 
-        if (projectIds.length > 0) {
-          const { data: deployData, error: deployError } = await supabase
-            .from("deployments")
-            .select("*")
-            .in("team_id", teamIds)
-            .order("created_at", { ascending: false })
-            .limit(5);
-
-          if (deployError) {
-            console.error("Deployment fetch error:", deployError);
-          }
-
-          setDeployments(deployData || []);
-        } else {
-          setDeployments([]);
-        }
-      } else {
-        setDeployments([]);
+      if (deployError) {
+              console.error("Deployments error:", deployError);
       }
+
+      setDeployments(deployData || []);
 
     } catch (err) {
       console.error("Dashboard crash:", err);
