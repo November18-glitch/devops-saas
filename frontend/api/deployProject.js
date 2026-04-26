@@ -13,9 +13,10 @@ export default async function handler(req, res) {
 
     const { repoUrl, projectName, teamId, projectId } = req.body;
 
-    if (!repoUrl || !projectName) {
+    // 🔥 STRICT VALIDATION (THIS FIXES YOUR BUG)
+    if (!repoUrl || !projectName || !teamId || !projectId) {
       return res.status(400).json({
-        error: "Missing repoUrl or projectName",
+        error: "Missing repoUrl, projectName, teamId or projectId",
       });
     }
 
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
       "-" +
       Date.now();
 
-    // ✅ FIX: REMOVE projectSettings completely
+    // ✅ CORRECT VERCEL CALL
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
             type: "github",
             repoId: repoId,
             ref: "main",
-          }
+          },
         }),
       }
     );
@@ -82,14 +83,15 @@ export default async function handler(req, res) {
       });
     }
 
+    // 🔥 GUARANTEED NON-NULL INSERT
     const { error } = await supabase.from("deployments").insert({
       deployment_id: data.id,
       status: "BUILDING",
       logs: "🚀 Deployment started...",
       environment: "preview",
       triggered_by: "user",
-      team_id: teamId || null,
-      project_id: projectId || null,
+      team_id: teamId,
+      project_id: projectId,
     });
 
     if (error) {
