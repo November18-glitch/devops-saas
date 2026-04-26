@@ -12,6 +12,9 @@ export default function Dashboard() {
   const [membersCount, setMembersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // 🔥 DEBUG STATE
+  const [debug, setDebug] = useState({});
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -20,8 +23,12 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
+      console.log("🚀 DASHBOARD LOAD START");
+
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
+
+      console.log("👤 USER:", user);
 
       if (!user) {
         setLoading(false);
@@ -33,6 +40,8 @@ export default function Dashboard() {
         .select("*")
         .eq("user_id", user.id);
 
+      console.log("👥 TEAM MEMBERS:", tmList);
+
       if (!tmList || tmList.length === 0) {
         setLoading(false);
         return;
@@ -40,16 +49,22 @@ export default function Dashboard() {
 
       const teamIds = tmList.map((t) => t.team_id);
 
+      console.log("🆔 TEAM IDS:", teamIds);
+
       const { data: teamsData } = await supabase
         .from("teams")
         .select("*")
         .in("id", teamIds);
+
+      console.log("🏢 TEAMS:", teamsData);
 
       const { data: projectsData } = await supabase
         .from("projects")
         .select("*")
         .in("team_id", teamIds)
         .order("created_at", { ascending: false });
+
+      console.log("📦 PROJECTS:", projectsData);
 
       const { data: membersData } = await supabase
         .from("team_members")
@@ -60,46 +75,62 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      // 🔥 FINAL FIX: FETCH DEPLOYMENTS USING BOTH team_id + project_id
+      // 🔥 DEPLOYMENTS DEBUG
       let deployData = [];
 
       if (projectsData && projectsData.length > 0) {
         const projectIds = projectsData.map((p) => p.id);
+
+        console.log("🆔 PROJECT IDS:", projectIds);
 
         const { data: byProject, error: err1 } = await supabase
           .from("deployments")
           .select("*")
           .in("project_id", projectIds);
 
-        if (err1) console.error("Project deployments error:", err1);
+        console.log("🚀 DEPLOYMENTS BY PROJECT:", byProject);
+        if (err1) console.error("❌ Project deployments error:", err1);
 
         deployData = byProject || [];
       }
 
-      // ALSO fetch by team_id (covers edge cases)
       const { data: byTeam, error: err2 } = await supabase
         .from("deployments")
         .select("*")
         .in("team_id", teamIds);
 
-      if (err2) console.error("Team deployments error:", err2);
+      console.log("🚀 DEPLOYMENTS BY TEAM:", byTeam);
+      if (err2) console.error("❌ Team deployments error:", err2);
 
-      // ✅ MERGE + REMOVE DUPLICATES
       const merged = [...(deployData || []), ...(byTeam || [])];
+
+      console.log("🔀 MERGED:", merged);
 
       const unique = Array.from(
         new Map(merged.map((d) => [d.deployment_id, d])).values()
       );
 
-      // sort newest first
+      console.log("🧠 UNIQUE:", unique);
+
       unique.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
 
+      console.log("📊 FINAL DEPLOYMENTS:", unique);
+
       setDeployments(unique.slice(0, 5));
 
+      // 🔥 SAVE DEBUG INFO TO SCREEN
+      setDebug({
+        teamIds,
+        projectCount: projectsData?.length,
+        deploymentsByProject: deployData?.length,
+        deploymentsByTeam: byTeam?.length,
+        finalDeployments: unique?.length,
+      });
+
     } catch (err) {
-      console.error("Dashboard crash:", err);
+      console.error("💥 Dashboard crash:", err);
       setDeployments([]);
     }
 
@@ -154,6 +185,11 @@ export default function Dashboard() {
           <StatCard label="Projects" value={projects.length} />
           <StatCard label="Deployments" value={deployments.length} />
           <StatCard label="Team Members" value={membersCount} />
+        </div>
+
+        {/* 🔥 DEBUG PANEL (TEMPORARY) */}
+        <div style={{ marginTop: 40, padding: 20, background: "#111", color: "#0f0", borderRadius: 10 }}>
+          <pre>{JSON.stringify(debug, null, 2)}</pre>
         </div>
 
       </div>
