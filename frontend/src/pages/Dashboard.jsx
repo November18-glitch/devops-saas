@@ -67,12 +67,16 @@ export default function Dashboard() {
           .filter(Boolean);
 
         if (projectIds.length > 0) {
-          const { data: deployData } = await supabase
+          const { data: deployData, error: deployError } = await supabase
             .from("deployments")
             .select("*")
-            .in("project_id", projectIds)
+            .in("team_id", teamIds)
             .order("created_at", { ascending: false })
             .limit(5);
+
+          if (deployError) {
+            console.error("Deployment fetch error:", deployError);
+          }
 
           setDeployments(deployData || []);
         } else {
