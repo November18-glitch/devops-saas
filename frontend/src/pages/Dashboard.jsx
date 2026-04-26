@@ -60,20 +60,43 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      // ✅ SAFE DEPLOYMENT FETCH
-      // 🚀 DEPLOYMENTS (FIXED FINAL)
-      const { data: deployData, error: deployError } = await supabase
-              .from("deployments")
-              .select("*")
-              .in("team_id", teamIds)
-              .order("created_at", { ascending: false })
-              .limit(5);
+      // 🔥 FINAL FIX: FETCH DEPLOYMENTS USING BOTH team_id + project_id
+      let deployData = [];
 
-      if (deployError) {
-              console.error("Deployments error:", deployError);
+      if (projectsData && projectsData.length > 0) {
+        const projectIds = projectsData.map((p) => p.id);
+
+        const { data: byProject, error: err1 } = await supabase
+          .from("deployments")
+          .select("*")
+          .in("project_id", projectIds);
+
+        if (err1) console.error("Project deployments error:", err1);
+
+        deployData = byProject || [];
       }
 
-      setDeployments(deployData || []);
+      // ALSO fetch by team_id (covers edge cases)
+      const { data: byTeam, error: err2 } = await supabase
+        .from("deployments")
+        .select("*")
+        .in("team_id", teamIds);
+
+      if (err2) console.error("Team deployments error:", err2);
+
+      // ✅ MERGE + REMOVE DUPLICATES
+      const merged = [...(deployData || []), ...(byTeam || [])];
+
+      const unique = Array.from(
+        new Map(merged.map((d) => [d.deployment_id, d])).values()
+      );
+
+      // sort newest first
+      unique.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setDeployments(unique.slice(0, 5));
 
     } catch (err) {
       console.error("Dashboard crash:", err);
@@ -138,7 +161,7 @@ export default function Dashboard() {
   );
 }
 
-/* ✅ STYLES (YOU WERE MISSING THESE → CAUSED CRASH) */
+/* STYLES */
 
 const container = {
   padding: 40,
