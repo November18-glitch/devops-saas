@@ -11,12 +11,12 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { repoUrl, projectName, teamId, projectId } = req.body;
+    const { repoUrl, projectName, teamId, projectId, userId } = req.body;
 
     // 🔥 STRICT VALIDATION (THIS FIXES YOUR BUG)
-    if (!repoUrl || !projectName || !teamId || !projectId) {
+    if (!repoUrl || !projectName || !teamId || !projectId || !userId) {
       return res.status(400).json({
-        error: "Missing repoUrl, projectName, teamId or projectId",
+        error: "Missing repoUrl, projectName, teamId, projectId or userId",
       });
     }
 
@@ -92,6 +92,7 @@ export default async function handler(req, res) {
       triggered_by: "user",
       team_id: teamId,
       project_id: projectId,
+      user_id: userId,
     });
 
     if (error) {
