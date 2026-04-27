@@ -12,9 +12,6 @@ export default function Dashboard() {
   const [membersCount, setMembersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 DEBUG STATE
-  const [debug, setDebug] = useState({});
-
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -23,12 +20,8 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      console.log("🚀 DASHBOARD LOAD START");
-
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
-
-      console.log("👤 USER:", user);
 
       if (!user) {
         setLoading(false);
@@ -40,8 +33,6 @@ export default function Dashboard() {
         .select("*")
         .eq("user_id", user.id);
 
-      console.log("👥 TEAM MEMBERS:", tmList);
-
       if (!tmList || tmList.length === 0) {
         setLoading(false);
         return;
@@ -49,22 +40,16 @@ export default function Dashboard() {
 
       const teamIds = tmList.map((t) => t.team_id);
 
-      console.log("🆔 TEAM IDS:", teamIds);
-
       const { data: teamsData } = await supabase
         .from("teams")
         .select("*")
         .in("id", teamIds);
-
-      console.log("🏢 TEAMS:", teamsData);
 
       const { data: projectsData } = await supabase
         .from("projects")
         .select("*")
         .in("team_id", teamIds)
         .order("created_at", { ascending: false });
-
-      console.log("📦 PROJECTS:", projectsData);
 
       const { data: membersData } = await supabase
         .from("team_members")
@@ -75,62 +60,39 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      // 🔥 DEPLOYMENTS DEBUG
+      // ✅ DEPLOYMENTS FETCH (WORKING VERSION)
       let deployData = [];
 
       if (projectsData && projectsData.length > 0) {
         const projectIds = projectsData.map((p) => p.id);
 
-        console.log("🆔 PROJECT IDS:", projectIds);
-
-        const { data: byProject, error: err1 } = await supabase
+        const { data: byProject } = await supabase
           .from("deployments")
           .select("*")
           .in("project_id", projectIds);
 
-        console.log("🚀 DEPLOYMENTS BY PROJECT:", byProject);
-        if (err1) console.error("❌ Project deployments error:", err1);
-
         deployData = byProject || [];
       }
 
-      const { data: byTeam, error: err2 } = await supabase
+      const { data: byTeam } = await supabase
         .from("deployments")
         .select("*")
         .in("team_id", teamIds);
 
-      console.log("🚀 DEPLOYMENTS BY TEAM:", byTeam);
-      if (err2) console.error("❌ Team deployments error:", err2);
-
       const merged = [...(deployData || []), ...(byTeam || [])];
-
-      console.log("🔀 MERGED:", merged);
 
       const unique = Array.from(
         new Map(merged.map((d) => [d.deployment_id, d])).values()
       );
 
-      console.log("🧠 UNIQUE:", unique);
-
       unique.sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
 
-      console.log("📊 FINAL DEPLOYMENTS:", unique);
-
       setDeployments(unique.slice(0, 5));
 
-      // 🔥 SAVE DEBUG INFO TO SCREEN
-      setDebug({
-        teamIds,
-        projectCount: projectsData?.length,
-        deploymentsByProject: deployData?.length,
-        deploymentsByTeam: byTeam?.length,
-        finalDeployments: unique?.length,
-      });
-
     } catch (err) {
-      console.error("💥 Dashboard crash:", err);
+      console.error("Dashboard crash:", err);
       setDeployments([]);
     }
 
@@ -154,6 +116,7 @@ export default function Dashboard() {
     <div style={container}>
       <div style={main}>
         
+        {/* HEADER */}
         <div style={{ marginBottom: 30 }}>
           <h1 style={{ fontSize: 28, marginBottom: 8 }}>
             Welcome back 👋
@@ -181,19 +144,73 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* STATS */}
         <div style={grid}>
           <StatCard label="Projects" value={projects.length} />
           <StatCard label="Deployments" value={deployments.length} />
           <StatCard label="Team Members" value={membersCount} />
         </div>
 
+        {/* 🔥 NEW: RECENT DEPLOYMENTS TABLE */}
+        <div style={tableWrapper}>
+          <div style={tableHeader}>
+            <h3 style={{ margin: 0 }}>Recent Deployments</h3>
+            <span style={{ color: "#6366f1", cursor: "pointer" }}>
+              View all deployments →
+            </span>
+          </div>
+
+          {deployments.length === 0 ? (
+            <div style={{ padding: 20, color: "#64748b" }}>
+              No deployments yet.
+            </div>
+          ) : (
+            <table style={table}>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Status</th>
+                  <th>Environment</th>
+                  <th>Deployed At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deployments.map((d) => (
+                  <tr key={d.deployment_id}>
+                    <td>{d.project_name || "Unknown"}</td>
+                    <td>
+                      <span style={statusBadge(d.status)}>
+                        {d.status}
+                      </span>
+                    </td>
+                    <td>{d.environment}</td>
+                    <td>
+                      {new Date(d.created_at).toLocaleString()}
+                    </td>
+                    <td>
+                      <a
+                        href={`https://${d.deployment_id}.vercel.app`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={viewBtn}
+                      >
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
 
       </div>
     </div>
   );
 }
 
-/* STYLES */
+/* ================= STYLES ================= */
 
 const container = {
   padding: 40,
@@ -206,6 +223,13 @@ const main = {
   flex: 1,
 };
 
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+  gap: 20,
+  marginBottom: 30,
+};
+
 const upgradeBtn = {
   marginTop: 20,
   padding: "12px 18px",
@@ -215,7 +239,6 @@ const upgradeBtn = {
   borderRadius: 10,
   fontWeight: 600,
   cursor: "pointer",
-  boxShadow: "0 8px 20px rgba(99,102,241,0.3)",
 };
 
 const proBadge = {
@@ -233,25 +256,54 @@ const successBox = {
   background: "#dcfce7",
   borderRadius: 10,
   color: "#166534",
-  fontWeight: 500,
 };
 
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-  gap: 20,
+const tableWrapper = {
+  background: "white",
+  borderRadius: 12,
+  padding: 20,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
 };
+
+const tableHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: 16,
+};
+
+const table = {
+  width: "100%",
+  borderCollapse: "collapse",
+};
+
+const viewBtn = {
+  padding: "6px 10px",
+  background: "#6366f1",
+  color: "white",
+  borderRadius: 6,
+  textDecoration: "none",
+  fontSize: 12,
+};
+
+const statusBadge = (status) => ({
+  padding: "4px 8px",
+  borderRadius: 6,
+  background:
+    status === "READY" ? "#dcfce7" :
+    status === "BUILDING" ? "#fef9c3" :
+    "#e2e8f0",
+  color: "#000",
+  fontSize: 12,
+});
 
 function StatCard({ label, value }) {
   return (
-    <div
-      style={{
-        background: "white",
-        padding: 20,
-        borderRadius: 12,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-      }}
-    >
+    <div style={{
+      background: "white",
+      padding: 20,
+      borderRadius: 12,
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+    }}>
       <div style={{ color: "#64748b", fontSize: 14 }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 700 }}>{value}</div>
     </div>
