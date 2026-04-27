@@ -187,10 +187,6 @@ export default function Dashboard() {
           <StatCard label="Team Members" value={membersCount} />
         </div>
 
-        {/* 🔥 DEBUG PANEL (TEMPORARY) */}
-        <div style={{ marginTop: 40, padding: 20, background: "#111", color: "#0f0", borderRadius: 10 }}>
-          <pre>{JSON.stringify(debug, null, 2)}</pre>
-        </div>
 
       </div>
     </div>
