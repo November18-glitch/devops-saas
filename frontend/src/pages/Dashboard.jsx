@@ -190,7 +190,7 @@ export default function Dashboard() {
                     </td>
                     <td>
                       <a
-                        href={`https://${d.deployment_id}.vercel.app`}
+                        href={`https://${d.url}`}
                         target="_blank"
                         rel="noreferrer"
                         style={viewBtn}

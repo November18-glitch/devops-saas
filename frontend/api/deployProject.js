@@ -86,6 +86,8 @@ export default async function handler(req, res) {
     // 🔥 GUARANTEED NON-NULL INSERT
     const { error } = await supabase.from("deployments").insert({
       deployment_id: data.id,
+      project_name: uniqueProjectName,
+      url: data.url,
       status: "BUILDING",
       logs: "🚀 Deployment started...",
       environment: "preview",
