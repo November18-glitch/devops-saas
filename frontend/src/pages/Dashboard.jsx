@@ -178,7 +178,7 @@ export default function Dashboard() {
               <tbody>
                 {deployments.map((d) => (
                   <tr key={d.deployment_id}>
-                    <td>{d.project_name || "Unknown"}</td>
+                    <td>{projects.find((p) => p.id === d.project_id)?.name || "Unknown"}</td>
                     <td>
                       <span style={statusBadge(d.status)}>
                         {d.status}

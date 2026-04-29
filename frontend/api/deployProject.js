@@ -88,7 +88,6 @@ export default async function handler(req, res) {
       .from("deployments")
       .insert({
         deployment_id: data.id,
-        project_name: uniqueProjectName,
         url: data.url,
         status: "BUILDING",
         logs: "🚀 Deployment started...",
