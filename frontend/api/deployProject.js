@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
     const { repoUrl, projectName, teamId, projectId, userId } = req.body;
 
-    // 🔥 STRICT VALIDATION (THIS FIXES YOUR BUG)
+    // 🔥 STRICT VALIDATION
     if (!repoUrl || !projectName || !teamId || !projectId || !userId) {
       return res.status(400).json({
         error: "Missing repoUrl, projectName, teamId, projectId or userId",
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       "-" +
       Date.now();
 
-    // ✅ CORRECT VERCEL CALL
+    // ✅ VERCEL DEPLOYMENT
     const vercelRes = await fetch(
       "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
       {
@@ -83,23 +83,34 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🔥 GUARANTEED NON-NULL INSERT
-    const { error } = await supabase.from("deployments").insert({
-      deployment_id: data.id,
-      project_name: uniqueProjectName,
-      url: data.url,
-      status: "BUILDING",
-      logs: "🚀 Deployment started...",
-      environment: "preview",
-      triggered_by: "user",
-      team_id: teamId,
-      project_id: projectId,
-      user_id: userId,
-    });
+    // 🔥 INSERT DEPLOYMENT INTO SUPABASE
+    const { data: insertedDeployment, error } = await supabase
+      .from("deployments")
+      .insert({
+        deployment_id: data.id,
+        project_name: uniqueProjectName,
+        url: data.url,
+        status: "BUILDING",
+        logs: "🚀 Deployment started...",
+        environment: "preview",
+        triggered_by: "user",
+        team_id: teamId,
+        project_id: projectId,
+        user_id: userId,
+      })
+      .select();
 
     if (error) {
-      console.error("❌ Supabase insert error:", error);
+      console.error("❌ SUPABASE INSERT FAILED:");
+      console.error(error);
+
+      return res.status(500).json({
+        error: "Supabase insert failed",
+        details: error.message,
+      });
     }
+
+    console.log("✅ INSERTED DEPLOYMENT:", insertedDeployment);
 
     return res.status(200).json({
       deploymentId: data.id,
@@ -112,6 +123,7 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       error: "Internal server error",
+      details: err.message,
     });
   }
 }
