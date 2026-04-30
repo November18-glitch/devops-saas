@@ -50,6 +50,9 @@ export default function Layout() {
           color: "white",
           display: "flex",
           flexDirection: "column",
+          position: "sticky",
+          top: 0,
+          height: "100vh",
         }}
       >
         {/* LOGO + NAME */}
@@ -100,7 +103,7 @@ export default function Layout() {
         {/* 🔥 PRO CARD */}
         <div
           style={{
-            marginTop: "auto",
+            marginTop: 40,
             background: "rgba(255,255,255,0.12)",
             padding: 18,
             borderRadius: 14,

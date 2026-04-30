@@ -88,7 +88,7 @@ export default async function handler(req, res) {
       .from("deployments")
       .insert({
         deployment_id: data.id,
-        url: data.url,
+        url: `https://${data.url}`,
         status: "BUILDING",
         logs: "🚀 Deployment started...",
         environment: "preview",
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       deploymentId: data.id,
-      url: data.url,
+      url: `https://${data.url}`,
       projectName: uniqueProjectName,
     });
 
