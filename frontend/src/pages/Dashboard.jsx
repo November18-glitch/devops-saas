@@ -190,7 +190,13 @@ export default function Dashboard() {
                     </td>
                     <td>
                       <a
-                        href={d.url.startsWith("http") ? d.url : `https://${d.url}`}
+                        href={
+                          d.url
+                            ? d.url.startsWith("http")
+                              ? d.url
+                              : `https://${d.url}`
+                            : "#"
+                        }
                         target="_blank"
                         rel="noreferrer"
                         style={viewBtn}
