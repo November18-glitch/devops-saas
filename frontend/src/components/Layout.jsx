@@ -111,7 +111,6 @@ export default function Layout() {
           </div>
 
           <button
-            onClick={() => navigate("/dashboard")}
             style={{
               width: "100%",
               padding: "10px 14px",
