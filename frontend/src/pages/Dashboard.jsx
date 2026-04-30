@@ -191,11 +191,11 @@ export default function Dashboard() {
                     <td>
                       <a
                         href={
-                          d.url
-                            ? d.url.startsWith("http")
-                              ? d.url
-                              : `https://${d.url}`
-                            : "#"
+                         d.url
+                         ? d.url.startsWith("http")
+                         ? d.url
+                         : `https://${d.url.replace(/^https?:\/\//, "")}`
+                         : "#"
                         }
                         target="_blank"
                         rel="noreferrer"

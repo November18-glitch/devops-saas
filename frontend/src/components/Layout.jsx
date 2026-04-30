@@ -20,6 +20,23 @@ export default function Layout() {
     navigate("/login");
   };
 
+  // ✅ FIXED PRO BUTTON
+  const handleUpgrade = async () => {
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error("Checkout failed:", err);
+    }
+  };
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       
@@ -111,6 +128,7 @@ export default function Layout() {
           </div>
 
           <button
+            onClick={handleUpgrade}
             style={{
               width: "100%",
               padding: "10px 14px",
