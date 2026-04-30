@@ -78,18 +78,25 @@ export default async function handler(req, res) {
     const data = await vercelRes.json();
 
     if (!vercelRes.ok) {
+      console.error("❌ VERCEL ERROR:", data);
+
       return res.status(500).json({
         error: data.error?.message || "Deployment failed",
       });
     }
+
+    // ✅ FIX DEPLOYMENT URL
+    const deploymentUrl = data.url.startsWith("http")
+      ? data.url
+      : `https://${data.url}`;
 
     // 🔥 INSERT DEPLOYMENT INTO SUPABASE
     const { data: insertedDeployment, error } = await supabase
       .from("deployments")
       .insert({
         deployment_id: data.id,
-        url: `https://${data.url}`,
-        status: "BUILDING",
+        url: deploymentUrl,
+        status: data.readyState || "BUILDING",
         logs: "🚀 Deployment started...",
         environment: "preview",
         triggered_by: "user",
@@ -113,7 +120,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       deploymentId: data.id,
-      url: `https://${data.url}`,
+      url: deploymentUrl,
       projectName: uniqueProjectName,
     });
 
