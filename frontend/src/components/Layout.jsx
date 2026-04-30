@@ -118,7 +118,7 @@ export default function Layout() {
               border: "none",
               borderRadius: 10,
               background: "white",
-              color: "#6366f1",
+              color: "#1b1b1b",
               fontWeight: 700,
               cursor: "pointer",
             }}
