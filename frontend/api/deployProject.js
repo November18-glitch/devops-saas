@@ -76,6 +76,7 @@ export default async function handler(req, res) {
     );
 
     const data = await vercelRes.json();
+    console.log("VERCEL RESPONSE:", data);
 
     if (!vercelRes.ok) {
       console.error("❌ VERCEL ERROR:", data);
