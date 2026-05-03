@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -28,6 +29,7 @@ export default function Login() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <img src={logo} alt="DeployAlly" style={styles.logo} />
         <h2 style={styles.title}>DeployAlly</h2>
 
         <form onSubmit={handleLogin} style={styles.form}>
