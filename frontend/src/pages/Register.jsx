@@ -45,7 +45,11 @@ export default function Register() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <img src={logo} alt="DeployAlly" style={styles.logo} />
+        <img src={logo} alt="DeployAlly" style={{
+              width: 36,
+              height: 36,
+              objectFit: "contain",
+            }}/>
         <h2 style={styles.title}>DeployAlly</h2>
 
         <form onSubmit={handleRegister} style={styles.form}>
