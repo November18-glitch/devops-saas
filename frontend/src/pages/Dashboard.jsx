@@ -128,7 +128,11 @@ export default function Dashboard() {
           </div>
 
           <p style={{ maxWidth: 600, color: "#475569" }}>
-            Manage deployments, monitor your infrastructure, and collaborate with your team — all in one place.
+            Deploy faster. Managae everything. Skip the DevOps headaches.
+          </p>
+
+          <p style={{ maxWidth: 500, color: "#475569" }}>
+            Connect your GitHub repo, deploy in seconds, and manage projects, deployments, and collaboration from one clean dashboard.
           </p>
 
           {!isPro && (
