@@ -13,6 +13,7 @@ import Teams from "./pages/Teams";
 import AuthCallback from "./pages/AuthCallback";
 import Join from "./pages/Join";
 import User from "./pages/User";
+import Landing from "./pages/Landing";
 
 // Layout
 import Layout from "./components/Layout";
@@ -50,31 +51,72 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      {!session ? (
-        // 🔓 NOT LOGGED IN
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      ) : (
-        // 🔐 LOGGED IN
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/user" element={<User />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:projectId" element={<ProjectPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/join" element={<Join />} />
-            <Route path="/profile-settings" element={<ProfileSettings />} />
-          </Route>
+  <BrowserRouter>
+    <Routes>
 
-          <Route path="*" element={<Navigate to="/projects" replace />} />
-        </Routes>
+      {/* PUBLIC */}
+      <Route
+        path="/"
+        element={
+          session ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Landing />
+          )
+        }
+      />
+
+      <Route
+        path="/login"
+        element={
+          session ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Login />
+          )
+        }
+      />
+
+      <Route
+        path="/register"
+        element={
+          session ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Register />
+          )
+        }
+      />
+
+      {/* PROTECTED */}
+      {session && (
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/user" element={<User />} />
+          <Route path="/teams" element={<Teams />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:projectId" element={<ProjectPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/join" element={<Join />} />
+          <Route
+            path="/profile-settings"
+            element={<ProfileSettings />}
+          />
+        </Route>
       )}
-    </BrowserRouter>
+
+      {/* FALLBACK */}
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={session ? "/dashboard" : "/"}
+            replace
+          />
+        }
+      />
+
+    </Routes>
+  </BrowserRouter>
   );
 }
