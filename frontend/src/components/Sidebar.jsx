@@ -10,7 +10,7 @@ export default function Sidebar() {
         padding: 20,
       }}
     >
-      <h3>My SaaS</h3>
+      <h3>DeployAlly</h3>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "space-between" }}>
         <NavLink to="/dashboard">Dashboard</NavLink>
