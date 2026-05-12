@@ -12,9 +12,11 @@ export default function Landing() {
       <div
         style={{
           minHeight: "100vh",
-          background: "#0f172a",
+          background:
+            "radial-gradient(circle at top right, rgba(99,102,241,0.18), transparent 30%), #0f172a",
           color: "white",
           fontFamily: "Inter, sans-serif",
+          overflow: "hidden",
         }}
       >
         {/* NAVBAR */}
@@ -23,8 +25,13 @@ export default function Landing() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "24px 60px",
+            padding: "20px",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(10px)",
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            background: "rgba(15,23,42,0.75)",
           }}
         >
           {/* LOGO */}
@@ -50,6 +57,7 @@ export default function Landing() {
                 margin: 0,
                 fontSize: 24,
                 fontWeight: 700,
+                letterSpacing: -0.5,
               }}
             >
               DeployAlly
@@ -70,6 +78,7 @@ export default function Landing() {
                 color: "white",
                 textDecoration: "none",
                 opacity: 0.85,
+                transition: "0.25s ease",
               }}
             >
               Login
@@ -84,6 +93,8 @@ export default function Landing() {
                 color: "white",
                 textDecoration: "none",
                 fontWeight: 600,
+                boxShadow: "0 10px 30px rgba(99,102,241,0.35)",
+                transition: "0.25s ease",
               }}
             >
               Get Started
@@ -96,12 +107,13 @@ export default function Landing() {
           style={{
             maxWidth: 1200,
             margin: "0 auto",
-            padding: "100px 40px",
+            padding: "80px 20px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 60,
             flexWrap: "wrap",
+            position: "relative",
           }}
         >
           {/* LEFT */}
@@ -115,6 +127,7 @@ export default function Landing() {
                 borderRadius: 999,
                 fontSize: 14,
                 marginBottom: 24,
+                border: "1px solid rgba(99,102,241,0.2)",
               }}
             >
               Beginner-Friendly DevOps Platform
@@ -122,10 +135,12 @@ export default function Landing() {
 
             <h1
               style={{
-                fontSize: 64,
-                lineHeight: 1.05,
+                fontSize: "clamp(42px, 8vw, 72px)",
+                lineHeight: 1,
                 marginBottom: 24,
-                fontWeight: 800,
+                fontWeight: 900,
+                letterSpacing: -2,
+                maxWidth: 700,
               }}
             >
               Deploy and manage apps without complicated DevOps workflows.
@@ -133,8 +148,8 @@ export default function Landing() {
 
             <p
               style={{
-                fontSize: 20,
-                lineHeight: 1.7,
+                fontSize: "clamp(16px, 3vw, 20px)",
+                lineHeight: 1.8,
                 color: "#cbd5e1",
                 maxWidth: 650,
                 marginBottom: 40,
@@ -158,12 +173,14 @@ export default function Landing() {
                 to="/register"
                 style={{
                   background: "#6366f1",
-                  padding: "16px 24px",
+                  padding: "16px 26px",
                   borderRadius: 12,
                   color: "white",
                   textDecoration: "none",
                   fontWeight: 700,
                   fontSize: 16,
+                  boxShadow: "0 15px 35px rgba(99,102,241,0.35)",
+                  transition: "0.25s ease",
                 }}
               >
                 Start Free
@@ -176,14 +193,27 @@ export default function Landing() {
                   padding: "16px 24px",
                   borderRadius: 12,
                   color: "white",
-                  background: "transparent",
+                  background: "rgba(255,255,255,0.03)",
                   fontWeight: 600,
                   fontSize: 16,
                   cursor: "pointer",
+                  transition: "0.25s ease",
+                  backdropFilter: "blur(8px)",
                 }}
               >
-                Watch Demo
+                ▶ Watch Demo
               </button>
+            </div>
+
+            {/* TRUST TEXT */}
+            <div
+              style={{
+                marginTop: 30,
+                color: "#94a3b8",
+                fontSize: 15,
+              }}
+            >
+              Built for modern developers, startups and growing teams.
             </div>
           </div>
 
@@ -192,19 +222,39 @@ export default function Landing() {
             style={{
               flex: 1,
               minWidth: 320,
-              background: "#111827",
+              background: "rgba(17,24,39,0.9)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 24,
               padding: 30,
-              boxShadow: "0 20px 80px rgba(0,0,0,0.35)",
+              boxShadow:
+                "0 25px 100px rgba(0,0,0,0.45), 0 0 80px rgba(99,102,241,0.15)",
+              position: "relative",
+              overflow: "hidden",
+              backdropFilter: "blur(16px)",
             }}
           >
+            {/* GLOW */}
+            <div
+              style={{
+                position: "absolute",
+                width: 300,
+                height: 300,
+                background: "rgba(99,102,241,0.15)",
+                filter: "blur(100px)",
+                top: -120,
+                right: -120,
+                borderRadius: "50%",
+              }}
+            />
+
             {/* TOP BAR */}
             <div
               style={{
                 display: "flex",
                 gap: 8,
                 marginBottom: 24,
+                position: "relative",
+                zIndex: 2,
               }}
             >
               <div
@@ -242,6 +292,9 @@ export default function Landing() {
                 padding: 22,
                 borderRadius: 18,
                 marginBottom: 18,
+                border: "1px solid rgba(255,255,255,0.05)",
+                position: "relative",
+                zIndex: 2,
               }}
             >
               <div
@@ -275,7 +328,9 @@ export default function Landing() {
                   style={{
                     width: "82%",
                     height: "100%",
-                    background: "#6366f1",
+                    background:
+                      "linear-gradient(90deg, #6366f1, #8b5cf6)",
+                    boxShadow: "0 0 25px rgba(99,102,241,0.5)",
                   }}
                 />
               </div>
@@ -297,6 +352,8 @@ export default function Landing() {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: 16,
+                position: "relative",
+                zIndex: 2,
               }}
             >
               <StatCard title="Deployments" value="1,284" />
@@ -312,14 +369,15 @@ export default function Landing() {
           style={{
             maxWidth: 1200,
             margin: "0 auto",
-            padding: "40px",
+            padding: "40px 20px",
           }}
         >
           <h2
             style={{
-              fontSize: 42,
+              fontSize: "clamp(32px, 6vw, 48px)",
               marginBottom: 18,
               textAlign: "center",
+              fontWeight: 800,
             }}
           >
             Everything your DevOps workflow needs
@@ -329,7 +387,7 @@ export default function Landing() {
             style={{
               color: "#94a3b8",
               textAlign: "center",
-              fontSize: 18,
+              fontSize: "clamp(16px, 3vw, 18px)",
               marginBottom: 60,
             }}
           >
@@ -365,12 +423,73 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* CTA SECTION */}
+        <section
+          style={{
+            maxWidth: 1200,
+            margin: "80px auto 0",
+            padding: "60px 20px",
+          }}
+        >
+          <div
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.12))",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 30,
+              padding: "60px 30px",
+              textAlign: "center",
+              backdropFilter: "blur(14px)",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "clamp(34px, 6vw, 54px)",
+                marginBottom: 20,
+                fontWeight: 800,
+              }}
+            >
+              Ready to simplify deployments?
+            </h2>
+
+            <p
+              style={{
+                color: "#cbd5e1",
+                maxWidth: 700,
+                margin: "0 auto 35px",
+                lineHeight: 1.8,
+                fontSize: 18,
+              }}
+            >
+              Join developers building and managing applications
+              with a cleaner, more beginner-friendly DevOps workflow.
+            </p>
+
+            <Link
+              to="/register"
+              style={{
+                display: "inline-block",
+                background: "#6366f1",
+                padding: "18px 30px",
+                borderRadius: 14,
+                color: "white",
+                textDecoration: "none",
+                fontWeight: 700,
+                fontSize: 17,
+                boxShadow: "0 15px 40px rgba(99,102,241,0.35)",
+              }}
+            >
+              Create Free Account
+            </Link>
+          </div>
+        </section>
+
         {/* FOOTER */}
         <footer
           style={{
             marginTop: 80,
             borderTop: "1px solid rgba(255,255,255,0.08)",
-            padding: "30px 40px",
+            padding: "24px 20px",
             textAlign: "center",
             color: "#94a3b8",
           }}
@@ -386,12 +505,13 @@ export default function Landing() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.85)",
+            background: "rgba(0,0,0,0.9)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             zIndex: 9999,
             padding: 20,
+            backdropFilter: "blur(10px)",
           }}
         >
           <div
@@ -407,7 +527,7 @@ export default function Landing() {
               onClick={() => setShowVideo(false)}
               style={{
                 position: "absolute",
-                top: -50,
+                top: -40,
                 right: 0,
                 background: "transparent",
                 border: "none",
@@ -427,6 +547,7 @@ export default function Landing() {
                 borderRadius: 20,
                 border: "1px solid rgba(255,255,255,0.1)",
                 background: "black",
+                boxShadow: "0 30px 100px rgba(0,0,0,0.5)",
               }}
             >
               <source src={demoVideo} type="video/mp4" />
@@ -442,10 +563,12 @@ function FeatureCard({ title, text }) {
   return (
     <div
       style={{
-        background: "#111827",
+        background: "rgba(17,24,39,0.8)",
         padding: 28,
         borderRadius: 20,
         border: "1px solid rgba(255,255,255,0.08)",
+        transition: "0.25s ease",
+        backdropFilter: "blur(10px)",
       }}
     >
       <h3
@@ -453,6 +576,7 @@ function FeatureCard({ title, text }) {
           marginTop: 0,
           marginBottom: 14,
           fontSize: 22,
+          fontWeight: 700,
         }}
       >
         {title}
@@ -475,9 +599,11 @@ function StatCard({ title, value }) {
   return (
     <div
       style={{
-        background: "#111827",
+        background: "rgba(17,24,39,0.75)",
         padding: 20,
         borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.05)",
+        backdropFilter: "blur(10px)",
       }}
     >
       <div
