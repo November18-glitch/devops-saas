@@ -32,7 +32,7 @@ export default function Register() {
         },
 
         emailRedirectTo:
-          "https://devops-saas.vercel.app/login",
+          "https://devops-saas.vercel.app/auth/callback",
       },
     });
 
