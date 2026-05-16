@@ -60,6 +60,7 @@ export default function Login() {
 
           <input
             type="email"
+            autoComplete="email"
             required
             style={styles.input}
             value={email}
@@ -71,6 +72,7 @@ export default function Login() {
 
           <input
             type="password"
+            autoComplete="current-password"
             required
             style={styles.input}
             value={password}

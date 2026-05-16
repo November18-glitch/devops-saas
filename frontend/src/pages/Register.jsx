@@ -112,6 +112,7 @@ export default function Register() {
           <label style={styles.label}>Username</label>
 
           <input
+            autoComplete="username"
             required
             style={styles.input}
             value={username}
@@ -123,6 +124,7 @@ export default function Register() {
 
           <input
             type="email"
+            autoComplete="email"
             required
             style={styles.input}
             value={email}
@@ -134,6 +136,7 @@ export default function Register() {
 
           <input
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             style={styles.input}
