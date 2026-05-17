@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function Dashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const isPro = location.search.includes("success=true");
 
   const [team, setTeam] = useState([]);
@@ -33,7 +35,48 @@ export default function Dashboard() {
         .select("*")
         .eq("user_id", user.id);
 
+      // 🔥 AUTO-ONBOARDING EXPERIENCE
+      // create starter team/project automatically
       if (!tmList || tmList.length === 0) {
+        const username =
+          user.user_metadata?.username ||
+          user.email?.split("@")[0] ||
+          "My Team";
+
+        // CREATE TEAM
+        const { data: createdTeam, error: teamError } = await supabase
+          .from("teams")
+          .insert({
+            name: `${username}'s Team`,
+            owner_id: user.id,
+          })
+          .select()
+          .single();
+
+        if (!teamError && createdTeam) {
+          // ADD MEMBER
+          await supabase.from("team_members").insert({
+            team_id: createdTeam.id,
+            user_id: user.id,
+            email: user.email,
+            role: "owner",
+            status: "active",
+          });
+
+          // CREATE SAMPLE PROJECT
+          await supabase.from("projects").insert({
+            name: "Sample Next.js App",
+            repo_url: "https://github.com/vercel/nextjs-dashboard",
+            repo_type: "github",
+            default_branch: "main",
+            team_id: createdTeam.id,
+            env_vars: {},
+          });
+
+          // reload dashboard after onboarding
+          return loadDashboard();
+        }
+
         setLoading(false);
         return;
       }
@@ -60,7 +103,7 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      // ✅ DEPLOYMENTS FETCH (WORKING VERSION)
+      // ✅ DEPLOYMENTS FETCH
       let deployData = [];
 
       if (projectsData && projectsData.length > 0) {
@@ -112,10 +155,13 @@ export default function Dashboard() {
     return <div style={{ padding: 40 }}>Loading dashboard...</div>;
   }
 
+  const hasProjects = projects.length > 0;
+  const sampleProject = projects[0];
+
   return (
     <div style={container}>
       <div style={main}>
-        
+
         {/* HEADER */}
         <div style={{ marginBottom: 30 }}>
           <h1 style={{ fontSize: 28, marginBottom: 8 }}>
@@ -128,11 +174,12 @@ export default function Dashboard() {
           </div>
 
           <p style={{ maxWidth: 600, color: "#475569" }}>
-            Deploy faster. Managae everything. Skip the DevOps headaches.
+            Deploy faster. Manage everything. Skip the DevOps headaches.
           </p>
 
           <p style={{ maxWidth: 500, color: "#475569" }}>
-            Connect your GitHub repo, deploy in seconds, and manage projects, deployments, and collaboration from one clean dashboard.
+            Connect your GitHub repo, deploy in seconds, and manage projects,
+            deployments, and collaboration from one clean dashboard.
           </p>
 
           {!isPro && (
@@ -148,6 +195,42 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* 🔥 QUICK START */}
+        {hasProjects && (
+          <div style={quickStartBox}>
+            <div>
+              <h2 style={{ marginTop: 0 }}>
+                🚀 Quick Start
+              </h2>
+
+              <p style={{ color: "#475569", marginBottom: 16 }}>
+                Your workspace is ready. Start by deploying your first app or
+                opening your sample project.
+              </p>
+
+              <div style={quickButtons}>
+                <button
+                  style={primaryAction}
+                  onClick={() =>
+                    navigate(`/projects?teamId=${sampleProject.team_id}`)
+                  }
+                >
+                  Open Projects
+                </button>
+
+                <button
+                  style={secondaryAction}
+                  onClick={() =>
+                    navigate(`/projects/${sampleProject.id}`)
+                  }
+                >
+                  Open Sample App
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* STATS */}
         <div style={grid}>
           <StatCard label="Projects" value={projects.length} />
@@ -155,11 +238,15 @@ export default function Dashboard() {
           <StatCard label="Team Members" value={membersCount} />
         </div>
 
-        {/* 🔥 NEW: RECENT DEPLOYMENTS TABLE */}
+        {/* RECENT DEPLOYMENTS */}
         <div style={tableWrapper}>
           <div style={tableHeader}>
             <h3 style={{ margin: 0 }}>Recent Deployments</h3>
-            <span style={{ color: "#6366f1", cursor: "pointer" }}>
+
+            <span
+              style={{ color: "#6366f1", cursor: "pointer" }}
+              onClick={() => navigate("/projects")}
+            >
               View all deployments →
             </span>
           </div>
@@ -167,6 +254,8 @@ export default function Dashboard() {
           {deployments.length === 0 ? (
             <div style={{ padding: 20, color: "#64748b" }}>
               No deployments yet.
+              <br />
+              Open Projects and deploy your sample app 🚀
             </div>
           ) : (
             <table style={table}>
@@ -179,19 +268,27 @@ export default function Dashboard() {
                   <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {deployments.map((d) => (
                   <tr key={d.deployment_id}>
-                    <td>{projects.find((p) => p.id === d.project_id)?.name || "Unknown"}</td>
+                    <td>
+                      {projects.find((p) => p.id === d.project_id)?.name ||
+                        "Unknown"}
+                    </td>
+
                     <td>
                       <span style={statusBadge(d.status)}>
                         {d.status}
                       </span>
                     </td>
+
                     <td>{d.environment}</td>
+
                     <td>
                       {new Date(d.created_at).toLocaleString()}
                     </td>
+
                     <td>
                       <a
                         href={d.url || "#"}
@@ -262,6 +359,39 @@ const successBox = {
   color: "#166534",
 };
 
+const quickStartBox = {
+  background: "white",
+  borderRadius: 16,
+  padding: 24,
+  marginBottom: 30,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+};
+
+const quickButtons = {
+  display: "flex",
+  gap: 12,
+  flexWrap: "wrap",
+};
+
+const primaryAction = {
+  padding: "12px 18px",
+  background: "#6366f1",
+  color: "white",
+  border: "none",
+  borderRadius: 10,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const secondaryAction = {
+  padding: "12px 18px",
+  background: "#eef2ff",
+  border: "1px solid #c7d2fe",
+  borderRadius: 10,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
 const tableWrapper = {
   background: "white",
   borderRadius: 12,
@@ -293,23 +423,32 @@ const statusBadge = (status) => ({
   padding: "4px 8px",
   borderRadius: 6,
   background:
-    status === "READY" ? "#dcfce7" :
-    status === "BUILDING" ? "#fef9c3" :
-    "#e2e8f0",
+    status === "READY"
+      ? "#dcfce7"
+      : status === "BUILDING"
+      ? "#fef9c3"
+      : "#e2e8f0",
   color: "#000",
   fontSize: 12,
 });
 
 function StatCard({ label, value }) {
   return (
-    <div style={{
-      background: "white",
-      padding: 20,
-      borderRadius: 12,
-      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-    }}>
-      <div style={{ color: "#64748b", fontSize: 14 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700 }}>{value}</div>
+    <div
+      style={{
+        background: "white",
+        padding: 20,
+        borderRadius: 12,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      }}
+    >
+      <div style={{ color: "#64748b", fontSize: 14 }}>
+        {label}
+      </div>
+
+      <div style={{ fontSize: 28, fontWeight: 700 }}>
+        {value}
+      </div>
     </div>
   );
 }
