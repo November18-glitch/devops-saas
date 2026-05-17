@@ -20,7 +20,6 @@ export default function Projects() {
 
   const [user, setUser] = useState(null);
 
-  // 👤 LOAD USER
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -30,7 +29,6 @@ export default function Projects() {
     loadUser();
   }, []);
 
-  // 🔥 READ TEAM FROM URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const teamIdFromUrl = params.get("teamId");
@@ -40,7 +38,6 @@ export default function Projects() {
     }
   }, [location.search]);
 
-  // 👥 LOAD TEAMS
   useEffect(() => {
     const fetchTeams = async () => {
       try {
@@ -58,7 +55,6 @@ export default function Projects() {
 
         setTeams(loadedTeams);
 
-        // 🔥 AUTO SELECT FIRST TEAM
         if (!selectedTeam && loadedTeams.length > 0) {
           setSelectedTeam(loadedTeams[0].id);
         }
@@ -71,7 +67,6 @@ export default function Projects() {
     fetchTeams();
   }, []);
 
-  // 📦 LOAD PROJECTS
   useEffect(() => {
     if (!selectedTeam) {
       setProjects([]);
@@ -86,7 +81,6 @@ export default function Projects() {
 
         setProjects(loadedProjects);
 
-        // 🔥 AUTO SELECT FIRST PROJECT
         if (loadedProjects.length > 0) {
           setSelectedProject(loadedProjects[0].id);
         } else {
@@ -96,11 +90,9 @@ export default function Projects() {
       .catch(() => setProjects([]));
   }, [selectedTeam]);
 
-  // 🚀 LOAD DEPLOYMENTS
   useEffect(() => {
     if (!selectedProject) {
       setDeployments([]);
-      setLoading(false);
       return;
     }
 
@@ -128,7 +120,6 @@ export default function Projects() {
       });
   }, [selectedProject]);
 
-  // ➕ CREATE PROJECT
   const handleCreateProject = async () => {
     if (!newProjectName || !newRepoUrl || !selectedTeam) {
       return alert("Fill all fields");
@@ -158,13 +149,11 @@ export default function Projects() {
     setNewProjectName("");
     setNewRepoUrl("");
 
-    // 🔥 AUTO SELECT NEW PROJECT
     setSelectedProject(data.project.id);
 
     alert("✅ Project created!");
   };
 
-  // 🚀 DEPLOY
   const handleDeploy = async () => {
     if (!user) return alert("User not loaded");
 
@@ -199,7 +188,6 @@ export default function Projects() {
     ]);
   };
 
-  // 🔄 POLLING
   useEffect(() => {
     if (!deployments.length) return;
 
@@ -232,230 +220,281 @@ export default function Projects() {
 
   return (
     <div style={container}>
-      <h1 style={title}>🚀 Projects</h1>
+      <div style={content}>
 
-      {/* 🔥 ONBOARDING */}
-      <div style={onboardingCard}>
-        <h3 style={{ marginTop: 0 }}>
-          Quick Start Guide
-        </h3>
+        <h1 style={title}>🚀 Projects</h1>
 
-        <div style={steps}>
-          <div style={step}>
-            ✅ Team ready
-          </div>
+        <div style={hero}>
+          <h2 style={{ marginTop: 0 }}>
+            Deploy your app in 3 steps
+          </h2>
 
-          <div style={step}>
-            ✅ Sample project created
-          </div>
-
-          <div style={step}>
-            🚀 Deploy your app below
+          <div style={steps}>
+            <div style={step}>1️⃣ Create or select a project</div>
+            <div style={step}>2️⃣ Connect your GitHub repository</div>
+            <div style={step}>3️⃣ Click Deploy 🚀</div>
           </div>
         </div>
-      </div>
 
-      <div style={card}>
-        <h3>Create Project</h3>
+        <div style={card}>
+          <h3>Create New Project</h3>
 
-        <select
-          style={input}
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-        >
-          <option value="">Select Team</option>
+          <select
+            style={input}
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.target.value)}
+          >
+            <option value="">Select Team</option>
 
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
 
-        <input
-          style={input}
-          placeholder="Project Name"
-          value={newProjectName}
-          onChange={(e) => setNewProjectName(e.target.value)}
-        />
+          <input
+            style={input}
+            placeholder="My SaaS App"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+          />
 
-        <input
-          style={input}
-          placeholder="GitHub URL"
-          value={newRepoUrl}
-          onChange={(e) => setNewRepoUrl(e.target.value)}
-        />
+          <input
+            style={input}
+            placeholder="https://github.com/your/repository"
+            value={newRepoUrl}
+            onChange={(e) => setNewRepoUrl(e.target.value)}
+          />
 
-        <button style={primary} onClick={handleCreateProject}>
-          ➕ Create Project
-        </button>
+          <button style={primary} onClick={handleCreateProject}>
+            ➕ Create Project
+          </button>
+        </div>
 
-        <hr style={{ margin: "20px 0" }} />
+        <div style={card}>
+          <h3>Deploy Existing Project</h3>
 
-        <h3>Deploy</h3>
+          <select
+            style={input}
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+          >
+            <option value="">Select Project</option>
 
-        <select
-          style={input}
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-        >
-          <option value="">Select Project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
 
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+          <div style={buttonRow}>
+            <button
+              style={secondary}
+              onClick={() => {
+                if (!selectedProject) {
+                  return alert("Select a project first");
+                }
 
-        <button
-          style={secondary}
-          onClick={() => {
-            if (!selectedProject) {
-              return alert("Select a project first");
-            }
-
-            navigate(`/projects/${selectedProject}`);
-          }}
-        >
-          📂 Open Project
-        </button>
-
-        <button style={primary} onClick={handleDeploy}>
-          🚀 Deploy
-        </button>
-      </div>
-
-      <h3 style={{ marginTop: 40 }}>
-        Deployments
-      </h3>
-
-      {!selectedProject && (
-        <p>Select a project to see deployments</p>
-      )}
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : deployments.map((d) => (
-        <div key={d.id} style={deployCard}>
-          <b>{d.id}</b>
-
-          <p>
-            Status:{" "}
-            <span style={{ fontWeight: "bold" }}>
-              {d.status}
-            </span>
-          </p>
-
-          {d.url && (
-            <a
-              href={d.url}
-              target="_blank"
-              rel="noreferrer"
-              style={liveLink}
+                navigate(`/projects/${selectedProject}`);
+              }}
             >
-              🔗 Open Deployment
-            </a>
+              📂 Open Project
+            </button>
+
+            <button style={primary} onClick={handleDeploy}>
+              🚀 Deploy Now
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 30 }}>
+          <h2>Recent Deployments</h2>
+
+          {!selectedProject && (
+            <div style={emptyState}>
+              Select a project to see deployments
+            </div>
           )}
 
-          <div style={logs}>
-            {d.logs}
-          </div>
+          {loading ? (
+            <div style={emptyState}>Loading deployments...</div>
+          ) : (
+            deployments.map((d) => (
+              <div key={d.id} style={deployCard}>
+                <div style={deployTop}>
+                  <div>
+                    <div style={deployId}>{d.id}</div>
+
+                    <div style={status(d.status)}>
+                      {d.status}
+                    </div>
+                  </div>
+
+                  {d.url && (
+                    <a
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={liveLink}
+                    >
+                      Open Deployment
+                    </a>
+                  )}
+                </div>
+
+                <div style={logs}>
+                  {d.logs}
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      ))}
+
+      </div>
     </div>
   );
 }
 
-/* UI */
+/* STYLES */
 
 const container = {
-  padding: 40,
-  background: "#f1f5f9",
+  background: "#f8fafc",
   minHeight: "100vh",
+  padding: 32,
+};
+
+const content = {
+  maxWidth: 1000,
 };
 
 const title = {
-  fontSize: 28,
-  marginBottom: 20,
+  fontSize: 32,
+  marginBottom: 24,
 };
 
-const onboardingCard = {
+const hero = {
   background: "white",
-  padding: 20,
-  borderRadius: 16,
-  marginBottom: 20,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  maxWidth: 600,
+  padding: 24,
+  borderRadius: 18,
+  marginBottom: 24,
+  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
 };
 
 const steps = {
   display: "flex",
   flexDirection: "column",
-  gap: 10,
+  gap: 12,
+  marginTop: 18,
 };
 
 const step = {
   background: "#f8fafc",
-  padding: 12,
+  padding: 14,
   borderRadius: 10,
+  fontWeight: 500,
 };
 
 const card = {
   background: "white",
   padding: 24,
-  borderRadius: 16,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-  maxWidth: 600,
+  borderRadius: 18,
+  marginBottom: 24,
+  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
 };
 
 const input = {
   width: "100%",
-  padding: 12,
-  marginBottom: 12,
+  padding: 14,
+  marginBottom: 14,
   borderRadius: 10,
-  border: "1px solid #ddd",
+  border: "1px solid #dbeafe",
+  fontSize: 14,
+  boxSizing: "border-box",
 };
 
 const primary = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 10,
-  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-  color: "white",
+  flex: 1,
+  padding: 14,
+  borderRadius: 12,
   border: "none",
-  marginTop: 10,
   cursor: "pointer",
+  color: "white",
+  fontWeight: 700,
+  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
 };
 
 const secondary = {
-  width: "100%",
-  padding: 10,
-  borderRadius: 10,
-  background: "#eef2ff",
+  flex: 1,
+  padding: 14,
+  borderRadius: 12,
   border: "1px solid #c7d2fe",
-  marginTop: 10,
+  background: "#eef2ff",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const buttonRow = {
+  display: "flex",
+  gap: 12,
 };
 
 const deployCard = {
   background: "white",
-  padding: 16,
-  marginTop: 12,
-  borderRadius: 12,
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 16,
+  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+};
+
+const deployTop = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 14,
+};
+
+const deployId = {
+  fontWeight: 700,
+  marginBottom: 6,
 };
 
 const logs = {
-  background: "#f1f5f9",
-  padding: 10,
-  marginTop: 10,
-  fontSize: 12,
-  borderRadius: 6,
+  background: "#0f172a",
+  color: "#e2e8f0",
+  padding: 14,
+  borderRadius: 10,
+  fontSize: 13,
+  overflowX: "auto",
 };
 
 const liveLink = {
-  display: "inline-block",
-  marginTop: 10,
-  color: "#6366f1",
-  fontWeight: 600,
+  padding: "10px 14px",
+  background: "#6366f1",
+  color: "white",
+  borderRadius: 10,
   textDecoration: "none",
+  fontWeight: 600,
 };
+
+const emptyState = {
+  background: "white",
+  padding: 20,
+  borderRadius: 14,
+  color: "#64748b",
+};
+
+const status = (s) => ({
+  display: "inline-block",
+  padding: "6px 10px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 700,
+  background:
+    s === "READY"
+      ? "#dcfce7"
+      : s === "BUILDING"
+      ? "#fef3c7"
+      : "#fee2e2",
+});
