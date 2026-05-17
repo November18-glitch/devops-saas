@@ -35,6 +35,7 @@ export default function Dashboard() {
         .select("*")
         .eq("user_id", user.id);
 
+      // AUTO ONBOARDING
       if (!tmList || tmList.length === 0) {
         const username =
           user.user_metadata?.username ||
@@ -141,19 +142,24 @@ export default function Dashboard() {
     });
 
     const data = await res.json();
+
     window.location.href = data.url;
   };
 
   if (loading) {
     return (
       <div style={loadingContainer}>
-        Loading dashboard...
+        <div style={loadingCard}>
+          <div style={loadingSpinner}></div>
+          <div>Loading dashboard...</div>
+        </div>
       </div>
     );
   }
 
   const hasProjects = projects.length > 0;
   const sampleProject = projects[0];
+  const firstTeam = team[0];
 
   return (
     <div style={container}>
@@ -162,10 +168,18 @@ export default function Dashboard() {
         {/* HERO */}
         <div style={heroCard}>
           <div style={heroTop}>
-            <div>
-              <h1 style={heroTitle}>
-                Welcome back 👋
-              </h1>
+            <div style={{ flex: 1 }}>
+              <div style={welcomeRow}>
+                <h1 style={heroTitle}>
+                  Welcome back 👋
+                </h1>
+
+                {isPro && (
+                  <div style={proBadge}>
+                    PRO
+                  </div>
+                )}
+              </div>
 
               <p style={heroSubtitle}>
                 Deploy apps, manage teams, and monitor deployments from one clean dashboard.
@@ -178,16 +192,13 @@ export default function Dashboard() {
                 </b>
               </div>
             </div>
-
-            {isPro && (
-              <div style={proBadge}>
-                PRO
-              </div>
-            )}
           </div>
 
           {!isPro ? (
-            <button onClick={handleCheckout} style={upgradeBtn}>
+            <button
+              onClick={handleCheckout}
+              style={upgradeBtn}
+            >
               🚀 Upgrade to Pro
             </button>
           ) : (
@@ -197,17 +208,97 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* QUICK START */}
+        {/* SIMPLE WORKFLOW */}
+        <div style={workflowCard}>
+          <div style={workflowHeader}>
+            <h2 style={workflowTitle}>
+              How DeployAlly Works
+            </h2>
+
+            <p style={workflowSubtitle}>
+              Simple workflow from team setup to live deployment.
+            </p>
+          </div>
+
+          <div style={workflowGrid}>
+            <div style={workflowStep}>
+              <div style={stepNumber}>
+                1
+              </div>
+
+              <div style={stepContent}>
+                <h3 style={stepTitle}>
+                  Create or Join a Team
+                </h3>
+
+                <p style={stepText}>
+                  Every project belongs to a team workspace.
+                  Teams help organize deployments and collaboration.
+                </p>
+              </div>
+            </div>
+
+            <div style={workflowArrow}>
+              →
+            </div>
+
+            <div style={workflowStep}>
+              <div style={stepNumber}>
+                2
+              </div>
+
+              <div style={stepContent}>
+                <h3 style={stepTitle}>
+                  Add a Project
+                </h3>
+
+                <p style={stepText}>
+                  Connect a GitHub repository and configure your app.
+                </p>
+              </div>
+            </div>
+
+            <div style={workflowArrow}>
+              →
+            </div>
+
+            <div style={workflowStep}>
+              <div style={stepNumber}>
+                3
+              </div>
+
+              <div style={stepContent}>
+                <h3 style={stepTitle}>
+                  Deploy Instantly
+                </h3>
+
+                <p style={stepText}>
+                  Launch deployments and monitor them live from your dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {firstTeam && (
+            <div style={workspaceNotice}>
+              ✅ Your workspace has already been prepared automatically with:
+              <br />
+              <b>{firstTeam.name}</b> + sample project
+            </div>
+          )}
+        </div>
+
+        {/* QUICK ACTIONS */}
         {hasProjects && (
           <div style={quickStartBox}>
-            <div style={quickStartHeader}>
+            <div style={quickStartTop}>
               <div>
                 <h2 style={quickTitle}>
                   🚀 Quick Start
                 </h2>
 
                 <p style={quickText}>
-                  Your workspace is ready. Open projects or deploy your sample app.
+                  Jump directly into your sample workspace or manage all projects.
                 </p>
               </div>
             </div>
@@ -219,7 +310,7 @@ export default function Dashboard() {
                   navigate(`/projects?teamId=${sampleProject.team_id}`)
                 }
               >
-                Open Projects
+                Open Workspace
               </button>
 
               <button
@@ -236,16 +327,30 @@ export default function Dashboard() {
 
         {/* STATS */}
         <div style={grid}>
-          <StatCard label="Projects" value={projects.length} />
-          <StatCard label="Deployments" value={deployments.length} />
-          <StatCard label="Team Members" value={membersCount} />
+          <StatCard
+            label="Projects"
+            value={projects.length}
+            emoji="📦"
+          />
+
+          <StatCard
+            label="Deployments"
+            value={deployments.length}
+            emoji="🚀"
+          />
+
+          <StatCard
+            label="Team Members"
+            value={membersCount}
+            emoji="👥"
+          />
         </div>
 
         {/* DEPLOYMENTS */}
         <div style={tableWrapper}>
           <div style={tableHeader}>
             <div>
-              <h3 style={{ margin: 0 }}>
+              <h3 style={deploymentsTitle}>
                 Recent Deployments
               </h3>
 
@@ -264,14 +369,16 @@ export default function Dashboard() {
 
           {deployments.length === 0 ? (
             <div style={emptyState}>
-              <div style={{ fontSize: 40 }}>
+              <div style={emptyEmoji}>
                 🚀
               </div>
 
-              <h3>No deployments yet</h3>
+              <h3 style={{ marginBottom: 10 }}>
+                No deployments yet
+              </h3>
 
-              <p style={{ color: "#64748b" }}>
-                Open Projects and deploy your sample app.
+              <p style={emptyText}>
+                Open your workspace and deploy the sample project.
               </p>
 
               <button
@@ -335,9 +442,9 @@ export default function Dashboard() {
 /* ================= STYLES ================= */
 
 const container = {
-  padding: "32px",
   background: "#f8fafc",
   minHeight: "100vh",
+  padding: "32px",
   fontFamily: "Inter, sans-serif",
 };
 
@@ -347,13 +454,35 @@ const main = {
 };
 
 const loadingContainer = {
-  padding: 40,
-  fontSize: 18,
+  minHeight: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#f8fafc",
+};
+
+const loadingCard = {
+  background: "white",
+  padding: "30px 40px",
+  borderRadius: 20,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  fontWeight: 600,
+};
+
+const loadingSpinner = {
+  width: 18,
+  height: 18,
+  borderRadius: "50%",
+  border: "3px solid #c7d2fe",
+  borderTop: "3px solid #6366f1",
 };
 
 const heroCard = {
   background: "white",
-  borderRadius: 24,
+  borderRadius: 28,
   padding: 32,
   marginBottom: 28,
   boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
@@ -362,27 +491,35 @@ const heroCard = {
 const heroTop = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "flex-start",
   gap: 20,
   flexWrap: "wrap",
+};
+
+const welcomeRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: 14,
+  flexWrap: "wrap",
+  marginBottom: 10,
 };
 
 const heroTitle = {
   fontSize: 36,
   margin: 0,
-  marginBottom: 12,
+  fontWeight: 800,
 };
 
 const heroSubtitle = {
   color: "#475569",
+  lineHeight: 1.7,
+  maxWidth: 720,
   fontSize: 16,
-  maxWidth: 700,
-  lineHeight: 1.6,
   marginBottom: 14,
 };
 
 const teamText = {
   color: "#64748b",
+  fontSize: 15,
 };
 
 const proBadge = {
@@ -397,10 +534,10 @@ const proBadge = {
 const upgradeBtn = {
   marginTop: 24,
   padding: "14px 22px",
+  borderRadius: 14,
+  border: "none",
   background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
   color: "white",
-  border: "none",
-  borderRadius: 14,
   fontWeight: 700,
   cursor: "pointer",
   fontSize: 15,
@@ -410,31 +547,121 @@ const successBox = {
   marginTop: 24,
   padding: 14,
   background: "#dcfce7",
-  borderRadius: 12,
   color: "#166534",
+  borderRadius: 12,
   fontWeight: 600,
 };
 
-const quickStartBox = {
+const workflowCard = {
   background: "white",
-  borderRadius: 20,
-  padding: 28,
+  borderRadius: 24,
+  padding: 30,
   marginBottom: 28,
   boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
 };
 
-const quickStartHeader = {
-  marginBottom: 20,
+const workflowHeader = {
+  marginBottom: 26,
+};
+
+const workflowTitle = {
+  margin: 0,
+  marginBottom: 10,
+  fontSize: 26,
+};
+
+const workflowSubtitle = {
+  margin: 0,
+  color: "#64748b",
+};
+
+const workflowGrid = {
+  display: "flex",
+  alignItems: "stretch",
+  gap: 16,
+  flexWrap: "wrap",
+};
+
+const workflowStep = {
+  flex: 1,
+  minWidth: 240,
+  border: "1px solid #e2e8f0",
+  borderRadius: 20,
+  padding: 22,
+  display: "flex",
+  gap: 18,
+  background: "#fafcff",
+};
+
+const workflowArrow = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 28,
+  color: "#94a3b8",
+  fontWeight: 700,
+};
+
+const stepNumber = {
+  width: 42,
+  height: 42,
+  borderRadius: "50%",
+  background: "#6366f1",
+  color: "white",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 700,
+  flexShrink: 0,
+};
+
+const stepContent = {
+  flex: 1,
+};
+
+const stepTitle = {
+  margin: 0,
+  marginBottom: 10,
+  fontSize: 17,
+};
+
+const stepText = {
+  margin: 0,
+  color: "#64748b",
+  lineHeight: 1.6,
+};
+
+const workspaceNotice = {
+  marginTop: 24,
+  background: "#eef2ff",
+  color: "#4338ca",
+  padding: 18,
+  borderRadius: 16,
+  lineHeight: 1.7,
+};
+
+const quickStartBox = {
+  background: "white",
+  borderRadius: 24,
+  padding: 30,
+  marginBottom: 28,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+};
+
+const quickStartTop = {
+  marginBottom: 22,
 };
 
 const quickTitle = {
   margin: 0,
   marginBottom: 10,
+  fontSize: 24,
 };
 
 const quickText = {
-  color: "#64748b",
   margin: 0,
+  color: "#64748b",
+  lineHeight: 1.6,
 };
 
 const quickButtons = {
@@ -444,22 +671,25 @@ const quickButtons = {
 };
 
 const primaryAction = {
-  padding: "14px 18px",
+  padding: "14px 20px",
   background: "#6366f1",
   color: "white",
   border: "none",
   borderRadius: 12,
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 700,
+  fontSize: 14,
 };
 
 const secondaryAction = {
-  padding: "14px 18px",
+  padding: "14px 20px",
   background: "#eef2ff",
+  color: "#4338ca",
   border: "1px solid #c7d2fe",
   borderRadius: 12,
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 700,
+  fontSize: 14,
 };
 
 const grid = {
@@ -469,10 +699,38 @@ const grid = {
   marginBottom: 28,
 };
 
+const statCard = {
+  background: "white",
+  padding: 26,
+  borderRadius: 22,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+};
+
+const statTop = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  marginBottom: 16,
+};
+
+const statEmoji = {
+  fontSize: 24,
+};
+
+const statLabel = {
+  color: "#64748b",
+  fontSize: 14,
+};
+
+const statValue = {
+  fontSize: 36,
+  fontWeight: 800,
+};
+
 const tableWrapper = {
   background: "white",
-  borderRadius: 20,
-  padding: 28,
+  borderRadius: 24,
+  padding: 30,
   boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
 };
 
@@ -481,23 +739,27 @@ const tableHeader = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: 20,
-  marginBottom: 24,
   flexWrap: "wrap",
+  marginBottom: 26,
+};
+
+const deploymentsTitle = {
+  margin: 0,
+  marginBottom: 6,
 };
 
 const tableSubtext = {
+  margin: 0,
   color: "#64748b",
-  marginTop: 6,
-  marginBottom: 0,
 };
 
 const viewAllBtn = {
   padding: "12px 16px",
-  borderRadius: 10,
+  borderRadius: 12,
   border: "1px solid #dbeafe",
   background: "#f8fafc",
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
 const deploymentsList = {
@@ -508,8 +770,8 @@ const deploymentsList = {
 
 const deploymentCard = {
   border: "1px solid #e2e8f0",
-  borderRadius: 16,
-  padding: 18,
+  borderRadius: 18,
+  padding: 20,
 };
 
 const deploymentTop = {
@@ -518,11 +780,12 @@ const deploymentTop = {
   alignItems: "center",
   gap: 20,
   marginBottom: 16,
+  flexWrap: "wrap",
 };
 
 const projectName = {
   fontWeight: 700,
-  fontSize: 16,
+  fontSize: 17,
   marginBottom: 6,
 };
 
@@ -535,22 +798,32 @@ const deploymentBottom = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  gap: 20,
+  gap: 16,
   flexWrap: "wrap",
 };
 
 const environmentTag = {
   background: "#eef2ff",
   color: "#4338ca",
-  padding: "6px 12px",
+  padding: "7px 12px",
   borderRadius: 999,
   fontSize: 13,
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
 const emptyState = {
   textAlign: "center",
   padding: "50px 20px",
+};
+
+const emptyEmoji = {
+  fontSize: 44,
+  marginBottom: 14,
+};
+
+const emptyText = {
+  color: "#64748b",
+  marginBottom: 20,
 };
 
 const viewBtn = {
@@ -560,11 +833,11 @@ const viewBtn = {
   borderRadius: 10,
   textDecoration: "none",
   fontSize: 14,
-  fontWeight: 600,
+  fontWeight: 700,
 };
 
 const statusBadge = (status) => ({
-  padding: "6px 12px",
+  padding: "7px 12px",
   borderRadius: 999,
   fontWeight: 700,
   fontSize: 12,
@@ -582,11 +855,17 @@ const statusBadge = (status) => ({
       : "#991b1b",
 });
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, emoji }) {
   return (
     <div style={statCard}>
-      <div style={statLabel}>
-        {label}
+      <div style={statTop}>
+        <div style={statLabel}>
+          {label}
+        </div>
+
+        <div style={statEmoji}>
+          {emoji}
+        </div>
       </div>
 
       <div style={statValue}>
@@ -595,21 +874,3 @@ function StatCard({ label, value }) {
     </div>
   );
 }
-
-const statCard = {
-  background: "white",
-  padding: 24,
-  borderRadius: 18,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-};
-
-const statLabel = {
-  color: "#64748b",
-  fontSize: 14,
-  marginBottom: 12,
-};
-
-const statValue = {
-  fontSize: 34,
-  fontWeight: 800,
-};
