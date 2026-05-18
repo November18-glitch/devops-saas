@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import analyzeRepo from "./analyzeRepo";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -50,6 +51,17 @@ export default async function handler(req, res) {
 
     const repoId = githubData.id;
 
+    // 🔥 ANALYZE REPO BEFORE DEPLOYING
+    const analysis = await analyzeRepo(owner, repo);
+
+    console.log("✅ REPO ANALYSIS:", analysis);
+
+    if (!analysis.deployable) {
+      return res.status(400).json({
+        error: analysis.reason,
+      });
+    }
+
     const uniqueProjectName =
       projectName.toLowerCase().replace(/\s+/g, "-") +
       "-" +
@@ -66,23 +78,36 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           name: uniqueProjectName,
+
+          framework: analysis.framework,
+
+          installCommand: analysis.installCommand,
+
+          buildCommand: analysis.buildCommand,
+
+          outputDirectory: analysis.outputDirectory,
+
           gitSource: {
             type: "github",
             repoId: repoId,
-            ref: "main",
+            ref: analysis.branch || "main",
           },
         }),
       }
     );
 
     const data = await vercelRes.json();
+
     console.log("VERCEL RESPONSE:", data);
 
     if (!vercelRes.ok) {
       console.error("❌ VERCEL ERROR:", data);
 
       return res.status(500).json({
-        error: data.error?.message || "Deployment failed",
+        error:
+          data.error?.message ||
+          data.message ||
+          "Deployment failed",
       });
     }
 
@@ -98,7 +123,20 @@ export default async function handler(req, res) {
         deployment_id: data.id,
         url: deploymentUrl,
         status: data.readyState || "BUILDING",
-        logs: "🚀 Deployment started...",
+
+        logs: `
+🚀 Deployment started...
+
+Framework: ${analysis.framework}
+Build Command: ${analysis.buildCommand}
+Install Command: ${analysis.installCommand}
+Output Directory: ${analysis.outputDirectory}
+
+Detected:
+${analysis.detected.join(", ")}
+
+`.trim(),
+
         environment: "preview",
         triggered_by: "user",
         team_id: teamId,
@@ -123,6 +161,7 @@ export default async function handler(req, res) {
       deploymentId: data.id,
       url: deploymentUrl,
       projectName: uniqueProjectName,
+      analysis,
     });
 
   } catch (err) {

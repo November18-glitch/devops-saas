@@ -175,13 +175,33 @@ export default function Projects() {
 
     const data = await res.json();
 
-    if (!res.ok) return alert(data.error);
+    if (!res.ok) {
+      return alert(data.error || "Deployment failed");
+    }
 
     setDeployments((prev) => [
       {
         id: data.deploymentId,
         status: "BUILDING",
-        logs: "🚀 Starting deployment...",
+
+        logs: `
+🚀 Starting deployment...
+
+Framework: ${data.analysis?.framework || "unknown"}
+
+Build Command:
+${data.analysis?.buildCommand || "Not detected"}
+
+Install Command:
+${data.analysis?.installCommand || "Not detected"}
+
+Output Directory:
+${data.analysis?.outputDirectory || "default"}
+
+Detected:
+${data.analysis?.detected?.join(", ") || "None"}
+        `.trim(),
+
         url: null,
       },
       ...prev,
@@ -467,6 +487,8 @@ const logs = {
   borderRadius: 10,
   fontSize: 13,
   overflowX: "auto",
+  whiteSpace: "pre-wrap",
+  lineHeight: 1.6,
 };
 
 const liveLink = {

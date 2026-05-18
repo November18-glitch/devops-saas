@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import analyzeRepo from "./analyzeRepo";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -52,12 +53,12 @@ export default async function handler(req, res) {
     }
 
     // 🔥 VALIDATE GITHUB
-    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    const analysis = await analyzeRepo(repoUrl);
 
-    if (!match) {
+    if (!analysis.valid) {
       return res.status(400).json({
-        error: "Invalid GitHub URL",
-      });
+       error: analysis.reason,
+     });
     }
 
     // ✅ CLEAN INSERT (NO created_by)
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
         name,
         repo_url: repoUrl,
         repo_type: "github",
-        default_branch: "main",
+        default_branch: analysis.defaultBranch,
         team_id: teamId,
       })
       .select()
