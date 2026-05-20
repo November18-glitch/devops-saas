@@ -5,6 +5,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+async function getDeploymentLogs(id) {
+  try {
+    const logsRes = await fetch(
+      `https://api.vercel.com/v2/deployments/${id}/events`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+        },
+      }
+    );
+
+    if (!logsRes.ok) {
+      return [];
+    }
+
+    const logs = await logsRes.json();
+
+    return logs || [];
+
+  } catch {
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
   try {
     const { id } = req.query;
@@ -34,6 +58,18 @@ export default async function handler(req, res) {
       });
     }
 
+    const events = await getDeploymentLogs(id);
+
+    const buildLogs =
+      events
+        ?.slice(-20)
+        ?.map(
+          (e) =>
+            `${e.created ? new Date(e.created).toLocaleTimeString() : ""}
+${e.text || e.payload?.text || e.name || ""}`
+        )
+        .join("\n\n") || "";
+
     let status = deployment.readyState || "BUILDING";
 
     let logMessage = "";
@@ -48,18 +84,22 @@ https://${deployment.url}
 Framework:
 ${deployment.framework || "auto"}
 
-Build completed successfully.
+Recent build logs:
+
+${buildLogs || "Build completed successfully"}
       `.trim();
     }
 
-    else if (status === "ERROR") {
+    else if (
+      status === "ERROR" ||
+      status === "CANCELED"
+    ) {
 
       const reason =
         deployment.errorMessage ||
         deployment.error?.message ||
-        deployment.aliasError ||
-        deployment.inspectorUrl ||
         deployment.readyStateReason ||
+        deployment.aliasError ||
         "Unknown build failure";
 
       logMessage = `
@@ -68,16 +108,18 @@ Build completed successfully.
 Reason:
 ${reason}
 
-Possible causes:
-• Missing environment variables
-• Build command failed
-• Unsupported framework
-• Missing package.json
-• GitHub permissions issue
-• Vercel configuration issue
+Recent build logs:
 
-Deployment URL:
-https://${deployment.url}
+${buildLogs || "No build logs returned"}
+
+Possible fixes:
+
+• Check package.json
+• Verify environment variables
+• Check build command
+• Verify framework detection
+• Check GitHub access
+• Open deployment in Vercel
       `.trim();
     }
 
@@ -86,32 +128,35 @@ https://${deployment.url}
       logMessage = `
 ⚙️ Building...
 
-Current state:
+Status:
 ${status}
 
 Framework:
 ${deployment.framework || "Detecting..."}
 
-Waiting for Vercel...
+Recent activity:
+
+${buildLogs || "Waiting for build logs..."}
       `.trim();
     }
+
+    const deploymentUrl =
+      deployment.url
+        ? `https://${deployment.url}`
+        : null;
 
     await supabase
       .from("deployments")
       .update({
         status,
         logs: logMessage,
-        url: deployment.url
-          ? `https://${deployment.url}`
-          : null,
+        url: deploymentUrl,
       })
       .eq("deployment_id", id);
 
     return res.status(200).json({
       status,
-      url: deployment.url
-        ? `https://${deployment.url}`
-        : null,
+      url: deploymentUrl,
       logs: logMessage,
     });
 

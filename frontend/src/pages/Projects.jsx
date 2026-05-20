@@ -211,7 +211,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
   useEffect(() => {
     if (!deployments.length) return;
 
-    const interval = setInterval(fetchStatuses, 3000);
+    const interval = setInterval(fetchStatuses, 1500);
 
     return () => clearInterval(interval);
   }, [deployments]);
