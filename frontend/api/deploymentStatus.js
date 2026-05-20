@@ -10,7 +10,9 @@ export default async function handler(req, res) {
     const { id } = req.query;
 
     if (!id) {
-      return res.status(400).json({ error: "Missing id" });
+      return res.status(400).json({
+        error: "Missing deployment id",
+      });
     }
 
     const vercelRes = await fetch(
@@ -22,23 +24,76 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await vercelRes.json();
+    const deployment = await vercelRes.json();
 
     if (!vercelRes.ok) {
-      return res.status(500).json({ error: "Failed to fetch deployment" });
+      return res.status(500).json({
+        error:
+          deployment.error?.message ||
+          "Failed to fetch deployment",
+      });
     }
 
-    let status = "BUILDING";
-    let logMessage = "⚙️ Still building...";
+    let status = deployment.readyState || "BUILDING";
 
-    if (data.readyState === "READY") {
-      status = "READY";
-      logMessage = "✅ Deployment ready!";
+    let logMessage = "";
+
+    if (status === "READY") {
+      logMessage = `
+✅ Deployment successful
+
+URL:
+https://${deployment.url}
+
+Framework:
+${deployment.framework || "auto"}
+
+Build completed successfully.
+      `.trim();
     }
 
-    if (data.readyState === "ERROR") {
-      status = "ERROR";
-      logMessage = "❌ Deployment failed";
+    else if (status === "ERROR") {
+
+      const reason =
+        deployment.errorMessage ||
+        deployment.error?.message ||
+        deployment.aliasError ||
+        deployment.inspectorUrl ||
+        deployment.readyStateReason ||
+        "Unknown build failure";
+
+      logMessage = `
+❌ Deployment failed
+
+Reason:
+${reason}
+
+Possible causes:
+• Missing environment variables
+• Build command failed
+• Unsupported framework
+• Missing package.json
+• GitHub permissions issue
+• Vercel configuration issue
+
+Deployment URL:
+https://${deployment.url}
+      `.trim();
+    }
+
+    else {
+
+      logMessage = `
+⚙️ Building...
+
+Current state:
+${status}
+
+Framework:
+${deployment.framework || "Detecting..."}
+
+Waiting for Vercel...
+      `.trim();
     }
 
     await supabase
@@ -46,17 +101,26 @@ export default async function handler(req, res) {
       .update({
         status,
         logs: logMessage,
+        url: deployment.url
+          ? `https://${deployment.url}`
+          : null,
       })
       .eq("deployment_id", id);
 
     return res.status(200).json({
       status,
-      url: data.url,
+      url: deployment.url
+        ? `https://${deployment.url}`
+        : null,
       logs: logMessage,
     });
 
   } catch (err) {
     console.error("STATUS ERROR:", err);
-    return res.status(500).json({ error: "Internal server error" });
+
+    return res.status(500).json({
+      error: "Internal server error",
+      details: err.message,
+    });
   }
 }
