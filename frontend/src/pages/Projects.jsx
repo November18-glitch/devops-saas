@@ -217,26 +217,46 @@ ${data.analysis?.detected?.join(", ") || "None"}
   }, [deployments]);
 
   const fetchStatuses = async () => {
-    const updated = await Promise.all(
-      deployments.map(async (d) => {
-        if (["READY", "ERROR"].includes(d.status)) {
+   const updated = await Promise.all(
+    deployments.map(async (d) => {
+      try {
+        const res = await fetch(
+          `/api/deploymentStatus?id=${d.id}`
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
           return d;
         }
 
-        const res = await fetch(`/api/deploymentStatus?id=${d.id}`);
-        const data = await res.json();
-
         return {
           ...d,
-          status: data.status,
-          url: data.url || d.url,
-          logs: data.logs || d.logs,
-        };
-      })
-    );
 
-    setDeployments(updated);
-  };
+          // always update status
+          status:
+            data.status ||
+            d.status,
+
+          // keep old url if none yet
+          url:
+            data.url ??
+            d.url,
+
+          // always replace logs when backend sends them
+          logs:
+            data.logs ||
+            d.logs,
+        };
+
+      } catch {
+        return d;
+      }
+    })
+  );
+
+  setDeployments(updated);
+ };
 
   return (
     <div style={container}>
