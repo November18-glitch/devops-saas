@@ -5,30 +5,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-async function getDeploymentLogs(id) {
-  try {
-    const logsRes = await fetch(
-      `https://api.vercel.com/v2/deployments/${id}/events`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-        },
-      }
-    );
-
-    if (!logsRes.ok) {
-      return [];
-    }
-
-    const logs = await logsRes.json();
-
-    return logs || [];
-
-  } catch {
-    return [];
-  }
-}
-
 export default async function handler(req, res) {
   try {
     const { id } = req.query;
@@ -39,18 +15,19 @@ export default async function handler(req, res) {
       });
     }
 
-    const vercelRes = await fetch(
+    const headers = {
+      Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+    };
+
+    // deployment state
+    const deploymentRes = await fetch(
       `https://api.vercel.com/v13/deployments/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-        },
-      }
+      { headers }
     );
 
-    const deployment = await vercelRes.json();
+    const deployment = await deploymentRes.json();
 
-    if (!vercelRes.ok) {
+    if (!deploymentRes.ok) {
       return res.status(500).json({
         error:
           deployment.error?.message ||
@@ -58,89 +35,88 @@ export default async function handler(req, res) {
       });
     }
 
-    const events = await getDeploymentLogs(id);
+    let status =
+      deployment.readyState ||
+      "BUILDING";
 
-    const buildLogs =
-      events
-        ?.slice(-20)
-        ?.map(
-          (e) =>
-            `${e.created ? new Date(e.created).toLocaleTimeString() : ""}
-${e.text || e.payload?.text || e.name || ""}`
-        )
-        .join("\n\n") || "";
+    let logs = "";
 
-    let status = deployment.readyState || "BUILDING";
+    // fetch deployment events/logs
+    try {
+      const eventsRes = await fetch(
+        `https://api.vercel.com/v2/deployments/${id}/events`,
+        { headers }
+      );
 
-    let logMessage = "";
+      if (eventsRes.ok) {
+        const events = await eventsRes.json();
+
+        logs =
+          events
+            ?.map((e) => {
+              const text =
+                e.text ||
+                e.payload?.text ||
+                e.payload?.name ||
+                "";
+
+              return text;
+            })
+            .filter(Boolean)
+            .join("\n") || "";
+      }
+    } catch {}
 
     if (status === "READY") {
-      logMessage = `
+      logs =
+        logs ||
+        `
 ✅ Deployment successful
 
 URL:
 https://${deployment.url}
 
-Framework:
-${deployment.framework || "auto"}
-
-Recent build logs:
-
-${buildLogs || "Build completed successfully"}
-      `.trim();
+Build finished successfully.
+`.trim();
     }
 
-    else if (
-      status === "ERROR" ||
-      status === "CANCELED"
-    ) {
-
-      const reason =
-        deployment.errorMessage ||
-        deployment.error?.message ||
-        deployment.readyStateReason ||
-        deployment.aliasError ||
-        "Unknown build failure";
-
-      logMessage = `
+    if (status === "ERROR") {
+      logs = `
 ❌ Deployment failed
 
-Reason:
-${reason}
+${logs || "No Vercel logs available"}
 
-Recent build logs:
+Troubleshooting:
 
-${buildLogs || "No build logs returned"}
-
-Possible fixes:
-
-• Check package.json
-• Verify environment variables
 • Check build command
-• Verify framework detection
-• Check GitHub access
-• Open deployment in Vercel
-      `.trim();
+• Check install command
+• Check environment variables
+• Check package.json
+• Check framework detection
+• Check GitHub permissions
+
+Inspect:
+https://${deployment.url}
+`.trim();
     }
 
-    else {
-
-      logMessage = `
+    if (
+      status !== "READY" &&
+      status !== "ERROR"
+    ) {
+      logs =
+        logs ||
+        `
 ⚙️ Building...
 
-Status:
+Current state:
 ${status}
 
-Framework:
-${deployment.framework || "Detecting..."}
-
-Recent activity:
-
-${buildLogs || "Waiting for build logs..."}
-      `.trim();
+Waiting for Vercel...
+`.trim();
     }
 
-    const deploymentUrl =
+    const finalUrl =
       deployment.url
         ? `https://${deployment.url}`
         : null;
@@ -149,23 +125,25 @@ ${buildLogs || "Waiting for build logs..."}
       .from("deployments")
       .update({
         status,
-        logs: logMessage,
-        url: deploymentUrl,
+        logs,
+        url: finalUrl,
       })
-      .eq("deployment_id", id);
+      .eq(
+        "deployment_id",
+        id
+      );
 
     return res.status(200).json({
       status,
-      url: deploymentUrl,
-      logs: logMessage,
+      logs,
+      url: finalUrl,
     });
 
   } catch (err) {
-    console.error("STATUS ERROR:", err);
+    console.error(err);
 
     return res.status(500).json({
-      error: "Internal server error",
-      details: err.message,
+      error: err.message,
     });
   }
 }
