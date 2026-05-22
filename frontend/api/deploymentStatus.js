@@ -5,6 +5,39 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+async function fetchBuildLogs(id, headers) {
+  try {
+    const res = await fetch(
+      `https://api.vercel.com/v6/deployments/${id}/events`,
+      { headers }
+    );
+
+    if (!res.ok) return "";
+
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      return "";
+    }
+
+    return data
+      .map((x) => {
+        return (
+          x.payload?.text ||
+          x.text ||
+          x.payload?.name ||
+          x.name ||
+          ""
+        );
+      })
+      .filter(Boolean)
+      .join("\n");
+
+  } catch {
+    return "";
+  }
+}
+
 export default async function handler(req, res) {
   try {
     const { id } = req.query;
@@ -19,15 +52,13 @@ export default async function handler(req, res) {
       Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
     };
 
-    // Get deployment
     const deploymentRes = await fetch(
       `https://api.vercel.com/v13/deployments/${id}`,
-      {
-        headers,
-      }
+      { headers }
     );
 
-    const deployment = await deploymentRes.json();
+    const deployment =
+      await deploymentRes.json();
 
     if (!deploymentRes.ok) {
       return res.status(500).json({
@@ -41,79 +72,59 @@ export default async function handler(req, res) {
       deployment.readyState ||
       "BUILDING";
 
-    let logs = "";
+    const finalUrl =
+      deployment.url
+        ? `https://${deployment.url}`
+        : null;
 
-    // FETCH BUILD LOGS (THIS WAS THE BROKEN PART)
-    try {
-      const logsRes = await fetch(
-        `https://api.vercel.com/v2/deployments/${id}/events?limit=500`,
-        {
-          headers,
-        }
+    const inspectorUrl =
+      deployment.inspectorUrl
+        ? `https://${deployment.inspectorUrl}`
+        : null;
+
+    let logs =
+      await fetchBuildLogs(
+        id,
+        headers
       );
 
-      if (logsRes.ok) {
-        const raw = await logsRes.json();
-
-        const entries =
-          raw.events ||
-          raw ||
-          [];
-
-        logs = entries
-          .map((e) => {
-            return (
-              e.text ||
-              e.payload?.text ||
-              e.payload?.message ||
-              e.payload?.name ||
-              ""
-            );
-          })
-          .filter(Boolean)
-          .join("\n");
-      }
-    } catch (e) {
-      console.log("logs fetch failed");
-    }
-
-    // ERROR DETAILS
-    if (status === "ERROR") {
-      logs = `
-❌ Deployment failed
-
-${
-  logs ||
-  deployment.errorMessage ||
-  deployment.error?.message ||
-  "Vercel returned no build logs."
-}
-
-━━━━━━━━━━━━━━
-
-Possible causes:
-
-• Build command failed
-• package.json scripts missing
-• Environment variables missing
-• Wrong output directory
-• GitHub repo inaccessible
-• Install failed
-• Framework detection failed
-
-Deployment:
-https://${deployment.url}
-`.trim();
-    }
-
-    if (status === "READY") {
+    if (
+      status === "READY"
+    ) {
       logs =
         logs ||
         `
 ✅ Deployment successful
 
 URL:
-https://${deployment.url}
+${finalUrl}
+`.trim();
+    }
+
+    if (
+      status === "ERROR"
+    ) {
+      logs = `
+❌ Deployment failed
+
+${
+  logs ||
+  deployment.error?.message ||
+  deployment.error?.code ||
+  "No build logs returned"
+}
+
+────────────────
+
+Open Vercel Build Logs:
+${inspectorUrl || "Unavailable"}
+
+Common fixes:
+• Missing environment variables
+• next.config issue
+• package.json scripts
+• install/build command
+• GitHub access
 `.trim();
     }
 
@@ -121,22 +132,13 @@ https://${deployment.url}
       status !== "READY" &&
       status !== "ERROR"
     ) {
-      logs =
-        logs ||
-        `
+      logs = `
 ⚙️ Building...
 
 Current state:
 ${status}
-
-Waiting for Vercel...
 `.trim();
     }
-
-    const finalUrl =
-      deployment.url
-        ? `https://${deployment.url}`
-        : null;
 
     await supabase
       .from("deployments")
