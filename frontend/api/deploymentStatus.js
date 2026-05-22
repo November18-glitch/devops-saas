@@ -19,10 +19,12 @@ export default async function handler(req, res) {
       Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
     };
 
-    // deployment state
+    // Get deployment
     const deploymentRes = await fetch(
       `https://api.vercel.com/v13/deployments/${id}`,
-      { headers }
+      {
+        headers,
+      }
     );
 
     const deployment = await deploymentRes.json();
@@ -35,37 +37,74 @@ export default async function handler(req, res) {
       });
     }
 
-    let status =
+    const status =
       deployment.readyState ||
       "BUILDING";
 
     let logs = "";
 
-    // fetch deployment events/logs
+    // FETCH BUILD LOGS (THIS WAS THE BROKEN PART)
     try {
-      const eventsRes = await fetch(
-        `https://api.vercel.com/v2/deployments/${id}/events`,
-        { headers }
+      const logsRes = await fetch(
+        `https://api.vercel.com/v2/deployments/${id}/events?limit=500`,
+        {
+          headers,
+        }
       );
 
-      if (eventsRes.ok) {
-        const events = await eventsRes.json();
+      if (logsRes.ok) {
+        const raw = await logsRes.json();
 
-        logs =
-          events
-            ?.map((e) => {
-              const text =
-                e.text ||
-                e.payload?.text ||
-                e.payload?.name ||
-                "";
+        const entries =
+          raw.events ||
+          raw ||
+          [];
 
-              return text;
-            })
-            .filter(Boolean)
-            .join("\n") || "";
+        logs = entries
+          .map((e) => {
+            return (
+              e.text ||
+              e.payload?.text ||
+              e.payload?.message ||
+              e.payload?.name ||
+              ""
+            );
+          })
+          .filter(Boolean)
+          .join("\n");
       }
-    } catch {}
+    } catch (e) {
+      console.log("logs fetch failed");
+    }
+
+    // ERROR DETAILS
+    if (status === "ERROR") {
+      logs = `
+❌ Deployment failed
+
+${
+  logs ||
+  deployment.errorMessage ||
+  deployment.error?.message ||
+  "Vercel returned no build logs."
+}
+
+━━━━━━━━━━━━━━
+
+Possible causes:
+
+• Build command failed
+• package.json scripts missing
+• Environment variables missing
+• Wrong output directory
+• GitHub repo inaccessible
+• Install failed
+• Framework detection failed
+
+Deployment:
+https://${deployment.url}
+`.trim();
+    }
 
     if (status === "READY") {
       logs =
@@ -74,28 +113,6 @@ export default async function handler(req, res) {
 ✅ Deployment successful
 
 URL:
-https://${deployment.url}
-
-Build finished successfully.
-`.trim();
-    }
-
-    if (status === "ERROR") {
-      logs = `
-❌ Deployment failed
-
-${logs || "No Vercel logs available"}
-
-Troubleshooting:
-
-• Check build command
-• Check install command
-• Check environment variables
-• Check package.json
-• Check framework detection
-• Check GitHub permissions
-
-Inspect:
 https://${deployment.url}
 `.trim();
     }
