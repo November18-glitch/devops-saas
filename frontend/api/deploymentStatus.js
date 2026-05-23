@@ -29,18 +29,22 @@ async function fetchBuildLogs(id, headers) {
       return "";
     }
 
-    return events
-      .map((e) => {
-        return (
-          e.payload?.text ||
-          e.payload?.name ||
-          e.text ||
-          e.name ||
-          ""
-        );
-      })
-      .filter(Boolean)
-      .join("\n");
+    const logs =
+      events
+        .map((e) => {
+          return (
+            e.payload?.text ||
+            e.payload?.name ||
+            e.text ||
+            e.name ||
+            e.created ||
+            ""
+          );
+        })
+        .filter(Boolean)
+        .join("\n");
+
+    return logs;
 
   } catch {
     return "";
@@ -85,8 +89,7 @@ export default async function handler(
         .status(500)
         .json({
           error:
-            deployment
-              ?.error
+            deployment?.error
               ?.message ||
             "Failed to fetch deployment",
         });
@@ -112,19 +115,40 @@ export default async function handler(
         headers
       );
 
+    /*
+      IMPORTANT:
+      if failed and Vercel logs empty,
+      pull real error immediately
+    */
+
     if (
       status ===
-      "BUILDING"
+      "ERROR"
     ) {
       logs =
         logs ||
-        `
-⚙️ Building...
+        deployment.error?.message ||
+        deployment.error?.code ||
+        deployment.error?.stack ||
+        deployment.aliasError ||
+        deployment.meta?.githubCommitMessage ||
+        "Build failed but Vercel returned no logs";
+
+      logs = `
+❌ Deployment failed
+
+${logs}
+
+────────────────
+
+Build Inspector:
+${inspector || "Unavailable"}
+
+Deployment:
+${url || "Unavailable"}
 
 Status:
 ${status}
-
-Waiting for Vercel logs...
 `.trim();
     }
 
@@ -144,24 +168,17 @@ ${url}
 
     if (
       status ===
-      "ERROR"
+      "BUILDING"
     ) {
-      logs = `
-❌ Deployment failed
+      logs =
+        logs ||
+        `
+⚙️ Building...
 
-${
-logs ||
-deployment.error?.message ||
-"No build logs available"
-}
+Status:
+${status}
 
-────────────────
-
-Build Inspector:
-${inspector || "Unavailable"}
-
-Deployment:
-${url || "Unavailable"}
+Fetching live logs...
 `.trim();
     }
 
