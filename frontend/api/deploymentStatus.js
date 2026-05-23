@@ -9,24 +9,33 @@ async function fetchBuildLogs(id, headers) {
   try {
     const res = await fetch(
       `https://api.vercel.com/v6/deployments/${id}/events`,
-      { headers }
+      {
+        headers,
+      }
     );
 
-    if (!res.ok) return "";
-
-    const data = await res.json();
-
-    if (!Array.isArray(data)) {
+    if (!res.ok) {
       return "";
     }
 
-    return data
-      .map((x) => {
+    const data = await res.json();
+
+    const events =
+      data.events ||
+      data ||
+      [];
+
+    if (!Array.isArray(events)) {
+      return "";
+    }
+
+    return events
+      .map((e) => {
         return (
-          x.payload?.text ||
-          x.text ||
-          x.payload?.name ||
-          x.name ||
+          e.payload?.text ||
+          e.payload?.name ||
+          e.text ||
+          e.name ||
           ""
         );
       })
@@ -38,46 +47,61 @@ async function fetchBuildLogs(id, headers) {
   }
 }
 
-export default async function handler(req, res) {
+export default async function handler(
+  req,
+  res
+) {
   try {
-    const { id } = req.query;
+    const { id } =
+      req.query;
 
     if (!id) {
-      return res.status(400).json({
-        error: "Missing deployment id",
-      });
+      return res
+        .status(400)
+        .json({
+          error:
+            "Missing deployment id",
+        });
     }
 
     const headers = {
-      Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+      Authorization:
+        `Bearer ${process.env.VERCEL_TOKEN}`,
     };
 
-    const deploymentRes = await fetch(
-      `https://api.vercel.com/v13/deployments/${id}`,
-      { headers }
-    );
+    const depRes =
+      await fetch(
+        `https://api.vercel.com/v13/deployments/${id}`,
+        {
+          headers,
+        }
+      );
 
     const deployment =
-      await deploymentRes.json();
+      await depRes.json();
 
-    if (!deploymentRes.ok) {
-      return res.status(500).json({
-        error:
-          deployment.error?.message ||
-          "Failed to fetch deployment",
-      });
+    if (!depRes.ok) {
+      return res
+        .status(500)
+        .json({
+          error:
+            deployment
+              ?.error
+              ?.message ||
+            "Failed to fetch deployment",
+        });
     }
 
     const status =
       deployment.readyState ||
       "BUILDING";
 
-    const finalUrl =
+    const url =
       deployment.url
         ? `https://${deployment.url}`
         : null;
 
-    const inspectorUrl =
+    const inspector =
       deployment.inspectorUrl
         ? `https://${deployment.inspectorUrl}`
         : null;
@@ -89,7 +113,24 @@ export default async function handler(req, res) {
       );
 
     if (
-      status === "READY"
+      status ===
+      "BUILDING"
+    ) {
+      logs =
+        logs ||
+        `
+⚙️ Building...
+
+Status:
+${status}
+
+Waiting for Vercel logs...
+`.trim();
+    }
+
+    if (
+      status ===
+      "READY"
     ) {
       logs =
         logs ||
@@ -97,72 +138,67 @@ export default async function handler(req, res) {
 ✅ Deployment successful
 
 URL:
-${finalUrl}
+${url}
 `.trim();
     }
 
     if (
-      status === "ERROR"
+      status ===
+      "ERROR"
     ) {
       logs = `
 ❌ Deployment failed
 
 ${
-  logs ||
-  deployment.error?.message ||
-  deployment.error?.code ||
-  "No build logs returned"
+logs ||
+deployment.error?.message ||
+"No build logs available"
 }
 
 ────────────────
 
-Open Vercel Build Logs:
-${inspectorUrl || "Unavailable"}
+Build Inspector:
+${inspector || "Unavailable"}
 
-Common fixes:
-• Missing environment variables
-• next.config issue
-• package.json scripts
-• install/build command
-• GitHub access
-`.trim();
-    }
-
-    if (
-      status !== "READY" &&
-      status !== "ERROR"
-    ) {
-      logs = `
-⚙️ Building...
-
-Current state:
-${status}
+Deployment:
+${url || "Unavailable"}
 `.trim();
     }
 
     await supabase
-      .from("deployments")
+      .from(
+        "deployments"
+      )
       .update({
         status,
         logs,
-        url: finalUrl,
+        url,
       })
       .eq(
         "deployment_id",
         id
       );
 
-    return res.status(200).json({
-      status,
-      logs,
-      url: finalUrl,
-    });
+    return res
+      .status(200)
+      .json({
+        status,
+        logs,
+        url,
+      });
 
-  } catch (err) {
-    console.error(err);
+  } catch (
+    err
+  ) {
+    console.error(
+      err
+    );
 
-    return res.status(500).json({
-      error: err.message,
-    });
+    return res
+      .status(500)
+      .json({
+        error:
+          err.message,
+      });
   }
 }

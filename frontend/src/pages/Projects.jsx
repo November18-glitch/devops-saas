@@ -211,52 +211,68 @@ ${data.analysis?.detected?.join(", ") || "None"}
   useEffect(() => {
     if (!deployments.length) return;
 
-    const interval = setInterval(fetchStatuses, 1500);
+    const interval = setInterval(fetchStatuses, 5000);
 
     return () => clearInterval(interval);
   }, [deployments]);
 
-  const fetchStatuses = async () => {
-   const updated = await Promise.all(
-    deployments.map(async (d) => {
-      try {
-        const res = await fetch(
-          `/api/deploymentStatus?id=${d.id}`
-        );
+  const fetchStatuses =
+  async () => {
+  const updated =
+  await Promise.all(
+  deployments.map(
+  async (d) => {
+  if (
+  d.status ===
+  "READY" ||
+  d.status ===
+  "ERROR"
+  ) {
+  return d;
+  }
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          return d;
-        }
-
-        return {
-          ...d,
-
-          // always update status
-          status:
-            data.status ||
-            d.status,
-
-          // keep old url if none yet
-          url:
-            data.url ??
-            d.url,
-
-          // always replace logs when backend sends them
-          logs:
-            data.logs ||
-            d.logs,
-        };
-
-      } catch {
-        return d;
-      }
-    })
+  try {
+  const res =
+  await fetch(
+  `/api/deploymentStatus?id=${d.id}`
   );
 
-  setDeployments(updated);
- };
+  if (
+  !res.ok
+  ) {
+  return d;
+  }
+
+  const data =
+  await res.json();
+
+  return {
+  ...d,
+
+  status:
+  data.status ??
+  d.status,
+
+  url:
+  data.url ??
+  d.url,
+
+  logs:
+  data.logs ??
+  d.logs,
+  };
+
+  } catch {
+  return d;
+  }
+  }
+  )
+  );
+
+  setDeployments(
+  updated
+  );
+  };
 
   return (
     <div style={container}>
