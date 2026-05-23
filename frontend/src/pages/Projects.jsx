@@ -209,12 +209,33 @@ ${data.analysis?.detected?.join(", ") || "None"}
   };
 
   useEffect(() => {
-    if (!deployments.length) return;
+  const active =
+    deployments.some(
+      (d) =>
+        d.status !== "READY" &&
+        d.status !== "ERROR"
+    );
 
-    const interval = setInterval(fetchStatuses, 5000);
+  if (!active) {
+    return;
+  }
 
-    return () => clearInterval(interval);
-  }, [deployments]);
+  const interval =
+    setInterval(() => {
+      fetchStatuses();
+    }, 5000);
+
+  return () =>
+    clearInterval(interval);
+
+}, [
+  deployments
+    .map(
+      (d) =>
+        `${d.id}-${d.status}`
+    )
+    .join("|"),
+]);
 
   const fetchStatuses =
   async () => {
@@ -270,7 +291,15 @@ ${data.analysis?.detected?.join(", ") || "None"}
   );
 
   setDeployments(
-  updated
+  (prev) => {
+    const changed =
+      JSON.stringify(prev) !==
+      JSON.stringify(updated);
+
+    return changed
+      ? updated
+      : prev;
+  }
   );
   };
 
