@@ -7,18 +7,32 @@ const supabase = createClient(
 
 async function fetchBuildLogs(id, headers) {
   try {
+    console.log("[LOGS] fetching events", id);
+
     const res = await fetch(
       `https://api.vercel.com/v6/deployments/${id}/events`,
-      {
-        headers,
-      }
+      { headers }
     );
 
-    if (!res.ok) {
-      return "";
-    }
+    console.log(
+      "[LOGS] events status:",
+      res.status
+    );
 
-    const data = await res.json();
+    const raw = await res.text();
+
+    console.log(
+      "[LOGS] events raw:",
+      raw.slice(0, 3000)
+    );
+
+    let data = [];
+
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return raw;
+    }
 
     const events =
       data.events ||
@@ -26,27 +40,26 @@ async function fetchBuildLogs(id, headers) {
       [];
 
     if (!Array.isArray(events)) {
-      return "";
+      return JSON.stringify(events);
     }
 
-    const logs =
-      events
-        .map((e) => {
-          return (
-            e.payload?.text ||
-            e.payload?.name ||
-            e.text ||
-            e.name ||
-            e.created ||
-            ""
-          );
-        })
-        .filter(Boolean)
-        .join("\n");
+    return events
+      .map(
+        (e) =>
+          e.payload?.text ||
+          e.payload?.name ||
+          e.text ||
+          e.name ||
+          JSON.stringify(e)
+      )
+      .join("\n");
 
-    return logs;
+  } catch (e) {
+    console.error(
+      "[LOGS ERROR]",
+      e
+    );
 
-  } catch {
     return "";
   }
 }
@@ -56,17 +69,12 @@ export default async function handler(
   res
 ) {
   try {
-    const { id } =
-      req.query;
+    const { id } = req.query;
 
-    if (!id) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Missing deployment id",
-        });
-    }
+    console.log(
+      "[START]",
+      id
+    );
 
     const headers = {
       Authorization:
@@ -81,23 +89,37 @@ export default async function handler(
         }
       );
 
-    const deployment =
-      await depRes.json();
+    console.log(
+      "[DEPLOY STATUS]",
+      depRes.status
+    );
 
-    if (!depRes.ok) {
+    const raw =
+      await depRes.text();
+
+    console.log(
+      "[DEPLOY RAW]",
+      raw.slice(0, 3000)
+    );
+
+    let deployment;
+
+    try {
+      deployment =
+        JSON.parse(raw);
+    } catch {
       return res
         .status(500)
         .json({
           error:
-            deployment?.error
-              ?.message ||
-            "Failed to fetch deployment",
+            "Bad deployment JSON",
         });
     }
 
     const status =
       deployment.readyState ||
-      "BUILDING";
+      deployment.state ||
+      "UNKNOWN";
 
     const url =
       deployment.url
@@ -109,77 +131,27 @@ export default async function handler(
         ? `https://${deployment.inspectorUrl}`
         : null;
 
+    console.log(
+      "[READY STATE]",
+      status
+    );
+
     let logs =
       await fetchBuildLogs(
         id,
         headers
       );
 
-    /*
-      IMPORTANT:
-      if failed and Vercel logs empty,
-      pull real error immediately
-    */
-
-    if (
-      status ===
-      "ERROR"
-    ) {
+    if (!logs) {
       logs =
-        logs ||
-        deployment.error?.message ||
-        deployment.error?.code ||
-        deployment.error?.stack ||
-        deployment.aliasError ||
-        deployment.meta?.githubCommitMessage ||
-        "Build failed but Vercel returned no logs";
-
-      logs = `
-❌ Deployment failed
-
-${logs}
-
-────────────────
-
-Build Inspector:
-${inspector || "Unavailable"}
-
-Deployment:
-${url || "Unavailable"}
-
-Status:
-${status}
-`.trim();
-    }
-
-    if (
-      status ===
-      "READY"
-    ) {
-      logs =
-        logs ||
-        `
-✅ Deployment successful
-
-URL:
-${url}
-`.trim();
-    }
-
-    if (
-      status ===
-      "BUILDING"
-    ) {
-      logs =
-        logs ||
-        `
-⚙️ Building...
-
-Status:
-${status}
-
-Fetching live logs...
-`.trim();
+JSON.stringify(
+deployment,
+null,
+2
+).slice(
+0,
+6000
+);
     }
 
     await supabase
@@ -196,18 +168,22 @@ Fetching live logs...
         id
       );
 
+    console.log(
+      "[UPDATED]"
+    );
+
     return res
       .status(200)
       .json({
         status,
         logs,
         url,
+        inspector,
       });
 
-  } catch (
-    err
-  ) {
+  } catch (err) {
     console.error(
+      "[FATAL]",
       err
     );
 
