@@ -5,61 +5,176 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-async function fetchBuildLogs(id, headers) {
-  try {
-    console.log("[LOGS] fetching events", id);
+function buildHelpfulMessage(status, deployment, logs) {
+  const url =
+    deployment.url
+      ? `https://${deployment.url}`
+      : null;
 
-    const res = await fetch(
-      `https://api.vercel.com/v6/deployments/${id}/events`,
-      { headers }
-    );
+  if (status === "READY") {
+    return `
+✅ Deployment successful
 
-    console.log(
-      "[LOGS] events status:",
-      res.status
-    );
+Your project is live.
 
-    const raw = await res.text();
+URL:
+${url}
 
-    console.log(
-      "[LOGS] events raw:",
-      raw.slice(0, 3000)
-    );
+Everything completed correctly.
+`.trim();
+  }
 
-    let data = [];
+  if (
+    status === "ERROR" ||
+    status === "CANCELED"
+  ) {
+    const reason =
+      deployment.error?.message ||
+      deployment.error?.code ||
+      logs ||
+      "Build failed";
 
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      return raw;
+    let fix = [];
+
+    const lower =
+      reason.toLowerCase();
+
+    if (
+      lower.includes("package")
+    ) {
+      fix.push(
+        "• Check package.json exists"
+      );
     }
 
+    if (
+      lower.includes("module")
+    ) {
+      fix.push(
+        "• Install missing dependencies"
+      );
+    }
+
+    if (
+      lower.includes("env")
+    ) {
+      fix.push(
+        "• Add environment variables"
+      );
+    }
+
+    if (
+      lower.includes("build")
+    ) {
+      fix.push(
+        "• Verify build command"
+      );
+    }
+
+    if (
+      lower.includes("github")
+    ) {
+      fix.push(
+        "• Verify GitHub permissions"
+      );
+    }
+
+    if (
+      fix.length === 0
+    ) {
+      fix = [
+        "• Check repo structure",
+        "• Verify framework",
+        "• Verify install/build commands",
+      ];
+    }
+
+    return `
+❌ Deployment failed
+
+Reason:
+${reason}
+
+How to fix:
+
+${fix.join("\n")}
+`.trim();
+  }
+
+  return `
+⚙️ Deploying...
+
+Current State:
+${status}
+
+Waiting for build result...
+`.trim();
+}
+
+async function fetchEvents(
+  id,
+  headers
+) {
+  try {
+    const controller =
+      new AbortController();
+
+    const timeout =
+      setTimeout(
+        () =>
+          controller.abort(),
+        2500
+      );
+
+    const res =
+      await fetch(
+        `https://api.vercel.com/v6/deployments/${id}/events`,
+        {
+          headers,
+          signal:
+            controller.signal,
+        }
+      );
+
+    clearTimeout(
+      timeout
+    );
+
+    if (
+      !res.ok
+    ) {
+      return "";
+    }
+
+    const json =
+      await res.json();
+
     const events =
-      data.events ||
-      data ||
+      json.events ||
+      json ||
       [];
 
-    if (!Array.isArray(events)) {
-      return JSON.stringify(events);
+    if (
+      !Array.isArray(
+        events
+      )
+    ) {
+      return "";
     }
 
     return events
+      .slice(-15)
       .map(
-        (e) =>
-          e.payload?.text ||
-          e.payload?.name ||
-          e.text ||
-          e.name ||
-          JSON.stringify(e)
+        (x) =>
+          x.payload
+            ?.text ||
+          x.text ||
+          ""
       )
+      .filter(Boolean)
       .join("\n");
 
-  } catch (e) {
-    console.error(
-      "[LOGS ERROR]",
-      e
-    );
-
+  } catch {
     return "";
   }
 }
@@ -69,19 +184,56 @@ export default async function handler(
   res
 ) {
   try {
-    const { id } = req.query;
+    const id =
+      req.query.id;
 
-    console.log(
-      "[START]",
-      id
-    );
+    if (!id) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Missing deployment id",
+        });
+    }
+
+    const existing =
+      await supabase
+        .from(
+          "deployments"
+        )
+        .select(
+          "status,logs,url"
+        )
+        .eq(
+          "deployment_id",
+          id
+        )
+        .single();
+
+    if (
+      existing.data &&
+      (
+        existing.data
+          .status ===
+          "READY" ||
+        existing.data
+          .status ===
+          "ERROR"
+      )
+    ) {
+      return res
+        .status(200)
+        .json(
+          existing.data
+        );
+    }
 
     const headers = {
       Authorization:
         `Bearer ${process.env.VERCEL_TOKEN}`,
     };
 
-    const depRes =
+    const dep =
       await fetch(
         `https://api.vercel.com/v13/deployments/${id}`,
         {
@@ -89,70 +241,44 @@ export default async function handler(
         }
       );
 
-    console.log(
-      "[DEPLOY STATUS]",
-      depRes.status
-    );
+    const deployment =
+      await dep.json();
 
-    const raw =
-      await depRes.text();
-
-    console.log(
-      "[DEPLOY RAW]",
-      raw.slice(0, 3000)
-    );
-
-    let deployment;
-
-    try {
-      deployment =
-        JSON.parse(raw);
-    } catch {
+    if (
+      !dep.ok
+    ) {
       return res
         .status(500)
         .json({
           error:
-            "Bad deployment JSON",
+            deployment
+              ?.error
+              ?.message ||
+            "Vercel error",
         });
     }
 
     const status =
       deployment.readyState ||
-      deployment.state ||
-      "UNKNOWN";
+      "BUILDING";
 
     const url =
       deployment.url
         ? `https://${deployment.url}`
         : null;
 
-    const inspector =
-      deployment.inspectorUrl
-        ? `https://${deployment.inspectorUrl}`
-        : null;
-
-    console.log(
-      "[READY STATE]",
-      status
-    );
-
-    let logs =
-      await fetchBuildLogs(
+    const rawLogs =
+      await fetchEvents(
         id,
         headers
       );
 
-    if (!logs) {
-      logs =
-JSON.stringify(
-deployment,
-null,
-2
-).slice(
-0,
-6000
-);
-    }
+    const logs =
+      buildHelpfulMessage(
+        status,
+        deployment,
+        rawLogs
+      );
 
     await supabase
       .from(
@@ -168,25 +294,17 @@ null,
         id
       );
 
-    console.log(
-      "[UPDATED]"
-    );
-
     return res
       .status(200)
       .json({
         status,
         logs,
         url,
-        inspector,
       });
 
-  } catch (err) {
-    console.error(
-      "[FATAL]",
-      err
-    );
-
+  } catch (
+    err
+  ) {
     return res
       .status(500)
       .json({
