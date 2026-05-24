@@ -223,7 +223,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
   const interval =
     setInterval(() => {
       fetchStatuses();
-    }, 5000);
+    }, 2000);
 
   return () =>
     clearInterval(interval);
