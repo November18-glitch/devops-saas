@@ -6,170 +6,438 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export default async function handler(req, res) {
+function createTroubleshooting(reason) {
+  const text =
+    (reason || "")
+      .toLowerCase();
+
+  const fixes = [];
+
+  if (
+    text.includes(
+      "package"
+    )
+  ) {
+    fixes.push(
+      "• Add package.json"
+    );
+  }
+
+  if (
+    text.includes(
+      "build"
+    )
+  ) {
+    fixes.push(
+      "• Add build script"
+    );
+  }
+
+  if (
+    text.includes(
+      "module"
+    )
+  ) {
+    fixes.push(
+      "• Install missing dependencies"
+    );
+  }
+
+  if (
+    text.includes(
+      "env"
+    )
+  ) {
+    fixes.push(
+      "• Configure environment variables"
+    );
+  }
+
+  if (
+    text.includes(
+      "framework"
+    )
+  ) {
+    fixes.push(
+      "• Verify framework detection"
+    );
+  }
+
+  if (
+    fixes.length === 0
+  ) {
+    fixes.push(
+      "• Verify repository structure"
+    );
+    fixes.push(
+      "• Ensure package.json exists"
+    );
+    fixes.push(
+      "• Verify build command"
+    );
+  }
+
+  return fixes.join("\n");
+}
+
+export default async function handler(
+  req,
+  res
+) {
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
+    if (
+      req.method !==
+      "POST"
+    ) {
+      return res
+        .status(405)
+        .json({
+          error:
+            "Method not allowed",
+        });
     }
 
-    const { repoUrl, projectName, teamId, projectId, userId } = req.body;
+    const {
+      repoUrl,
+      projectName,
+      teamId,
+      projectId,
+      userId,
+    } = req.body;
 
-    // 🔥 STRICT VALIDATION
-    if (!repoUrl || !projectName || !teamId || !projectId || !userId) {
-      return res.status(400).json({
-        error: "Missing repoUrl, projectName, teamId, projectId or userId",
-      });
+    if (
+      !repoUrl ||
+      !projectName ||
+      !teamId ||
+      !projectId ||
+      !userId
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Missing deployment fields",
+        });
     }
 
-    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    const match =
+      repoUrl.match(
+        /github\.com\/([^\/]+)\/([^\/]+)/
+      );
 
     if (!match) {
-      return res.status(400).json({
-        error: "Invalid GitHub URL",
-      });
+      return res
+        .status(400)
+        .json({
+          error:
+            `
+❌ Invalid GitHub URL
+
+Example:
+https://github.com/user/project
+`.trim(),
+        });
     }
 
-    const owner = match[1];
-    const repo = match[2].replace(".git", "");
+    const owner =
+      match[1];
 
-    const githubRes = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        },
-      }
+    const repo =
+      match[2]
+        .replace(
+          ".git",
+          ""
+        );
+
+    console.log(
+      "[CHECKING REPO]",
+      owner,
+      repo
     );
 
-    const githubData = await githubRes.json();
-
-    if (!githubRes.ok) {
-      return res.status(404).json({
-        error: "GitHub repo not found or no access",
-      });
-    }
-
-    const repoId = githubData.id;
-
-    // 🔥 ANALYZE REPO BEFORE DEPLOYING
-    const analysis = await analyzeRepo(owner, repo);
-
-    console.log("✅ REPO ANALYSIS:", analysis);
-
-    if (!analysis.deployable) {
-      return res.status(400).json({
-        error: analysis.reason,
-      });
-    }
-
-    const uniqueProjectName =
-      projectName.toLowerCase().replace(/\s+/g, "-") +
-      "-" +
-      Date.now();
-
-    // ✅ VERCEL DEPLOYMENT
-    const vercelRes = await fetch(
-      "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: uniqueProjectName,
-
-          framework: analysis.framework,
-
-          installCommand: analysis.installCommand,
-
-          buildCommand: analysis.buildCommand,
-
-          outputDirectory: analysis.outputDirectory,
-
-          gitSource: {
-            type: "github",
-            repoId: repoId,
-            ref: analysis.branch || "main",
+    const githubRes =
+      await fetch(
+        `https://api.github.com/repos/${owner}/${repo}`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${process.env.GITHUB_TOKEN}`,
           },
-        }),
-      }
-    );
+        }
+      );
 
-    const data = await vercelRes.json();
+    const github =
+      await githubRes.json();
 
-    console.log("VERCEL RESPONSE:", data);
+    if (
+      !githubRes.ok ||
+      github.archived
+    ) {
+      return res
+        .status(404)
+        .json({
+          error:
+`
+❌ Repository unavailable
 
-    if (!vercelRes.ok) {
-      console.error("❌ VERCEL ERROR:", data);
-
-      return res.status(500).json({
-        error:
-          data.error?.message ||
-          data.message ||
-          "Deployment failed",
-      });
+How to fix:
+• Verify URL
+• Make repo accessible
+• Verify GitHub token
+`.trim(),
+        });
     }
 
-    // ✅ FIX DEPLOYMENT URL
-    const deploymentUrl = data.url.startsWith("http")
-      ? data.url
-      : `https://${data.url}`;
+    const repoId =
+      github.id;
 
-    // 🔥 INSERT DEPLOYMENT INTO SUPABASE
-    const { data: insertedDeployment, error } = await supabase
-      .from("deployments")
+    console.log(
+      "[ANALYZE]"
+    );
+
+    const analysis =
+      await analyzeRepo(
+        owner,
+        repo
+      );
+
+    console.log(
+      analysis
+    );
+
+    if (
+      !analysis
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+`
+❌ Repository analysis failed
+
+Could not inspect repository.
+`.trim(),
+        });
+    }
+
+    if (
+      !analysis.deployable
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+`
+❌ Deployment cancelled
+
+Reason:
+${analysis.reason}
+
+How to fix:
+
+${createTroubleshooting(
+  analysis.reason
+)}
+`.trim(),
+        });
+    }
+
+    if (
+      !analysis.framework ||
+      !analysis.buildCommand
+    ) {
+      return res
+        .status(400)
+        .json({
+          error:
+`
+❌ Missing deployment configuration
+
+How to fix:
+• package.json
+• build script
+• framework setup
+`.trim(),
+        });
+    }
+
+    const deploymentName =
+      `${projectName
+        .toLowerCase()
+        .replace(
+          /\s+/g,
+          "-"
+        )}-${Date.now()}`;
+
+    console.log(
+      "[DEPLOY]"
+    );
+
+    const vercelRes =
+      await fetch(
+        "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
+        {
+          method:
+            "POST",
+
+          headers: {
+            Authorization:
+              `Bearer ${process.env.VERCEL_TOKEN}`,
+
+            "Content-Type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify(
+              {
+                name:
+                  deploymentName,
+
+                framework:
+                  analysis.framework,
+
+                installCommand:
+                  analysis.installCommand,
+
+                buildCommand:
+                  analysis.buildCommand,
+
+                outputDirectory:
+                  analysis.outputDirectory,
+
+                gitSource:
+                  {
+                    type:
+                      "github",
+
+                    repoId,
+
+                    ref:
+                      analysis.branch ||
+                      github.default_branch ||
+                      "main",
+                  },
+              }
+            ),
+        }
+      );
+
+    const deployment =
+      await vercelRes.json();
+
+    console.log(
+      deployment
+    );
+
+    if (
+      !vercelRes.ok
+    ) {
+      return res
+        .status(500)
+        .json({
+          error:
+`
+❌ Deployment rejected
+
+${deployment.error?.message || deployment.message}
+
+How to fix:
+• Verify build command
+• Verify framework
+• Check repo root
+`.trim(),
+        });
+    }
+
+    const url =
+      deployment.url
+        ? `https://${deployment.url}`
+        : null;
+
+    await supabase
+      .from(
+        "deployments"
+      )
       .insert({
-        deployment_id: data.id,
-        url: deploymentUrl,
-        status: data.readyState || "BUILDING",
+        deployment_id:
+          deployment.id,
 
-        logs: `
-🚀 Deployment started...
+        status:
+          deployment.readyState ||
+          "BUILDING",
 
-Framework: ${analysis.framework}
-Build Command: ${analysis.buildCommand}
-Install Command: ${analysis.installCommand}
-Output Directory: ${analysis.outputDirectory}
+        url,
+
+        logs:
+`
+🚀 Deployment started
+
+Framework:
+${analysis.framework}
+
+Build:
+${analysis.buildCommand}
+
+Install:
+${analysis.installCommand}
+
+Output:
+${analysis.outputDirectory}
 
 Detected:
-${analysis.detected.join(", ")}
-
+${
+analysis.detected?.join(
+", "
+) ||
+"None"
+}
 `.trim(),
 
-        environment: "preview",
-        triggered_by: "user",
-        team_id: teamId,
-        project_id: projectId,
-        user_id: userId,
-      })
-      .select();
+        environment:
+          "preview",
 
-    if (error) {
-      console.error("❌ SUPABASE INSERT FAILED:");
-      console.error(error);
+        triggered_by:
+          "user",
 
-      return res.status(500).json({
-        error: "Supabase insert failed",
-        details: error.message,
+        project_id:
+          projectId,
+
+        team_id:
+          teamId,
+
+        user_id:
+          userId,
       });
-    }
 
-    console.log("✅ INSERTED DEPLOYMENT:", insertedDeployment);
+    return res
+      .status(200)
+      .json({
+        deploymentId:
+          deployment.id,
 
-    return res.status(200).json({
-      deploymentId: data.id,
-      url: deploymentUrl,
-      projectName: uniqueProjectName,
-      analysis,
-    });
+        url,
 
-  } catch (err) {
-    console.error("DEPLOY CRASH:", err);
+        analysis,
+      });
 
-    return res.status(500).json({
-      error: "Internal server error",
-      details: err.message,
-    });
+  } catch (
+    err
+  ) {
+    console.error(
+      "[DEPLOY ERROR]",
+      err
+    );
+
+    return res
+      .status(500)
+      .json({
+        error:
+`
+❌ Internal deploy error
+
+${err.message}
+`.trim(),
+      });
   }
 }
