@@ -322,9 +322,6 @@ ${createTroubleshooting(
            framework:
             analysis.framework,
 
-           rootDirectory:
-            "frontend",
-
            installCommand:
             "npm install",
 
