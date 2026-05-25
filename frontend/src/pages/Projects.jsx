@@ -43,7 +43,7 @@ export default function Projects() {
       try {
         const { data: session } = await supabase.auth.getSession();
 
-        const res = await fetch("/api/getTeams", {
+        const res = await fetch("/api/app?action=getTeams", {
           headers: {
             Authorization: `Bearer ${session.session?.access_token}`,
           },
@@ -74,7 +74,9 @@ export default function Projects() {
       return;
     }
 
-    fetch(`/api/getProjects?teamId=${selectedTeam}`)
+    fetch(
+     `/api/app?action=getProjects&teamId=${selectedTeam}`
+    )
       .then((res) => res.json())
       .then((data) => {
         const loadedProjects = data.projects || [];
@@ -98,7 +100,9 @@ export default function Projects() {
 
     setLoading(true);
 
-    fetch(`/api/getDeployments?projectId=${selectedProject}`)
+    fetch(
+    `/api/app?action=getDeployments&projectId=${selectedProject}`
+    )
       .then((res) => res.json())
       .then((data) => {
         const safe = data.deployments || [];

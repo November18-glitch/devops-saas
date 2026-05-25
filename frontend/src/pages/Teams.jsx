@@ -28,7 +28,7 @@ export default function Teams() {
       try {
         const { data: session } = await supabase.auth.getSession();
 
-        const res = await fetch("/api/getTeams", {
+        const res = await fetch("/api/app?action=getTeams", {
           headers: {
             Authorization: `Bearer ${session.session?.access_token}`,
           },
