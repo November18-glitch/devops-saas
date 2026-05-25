@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "@supabase/supabase-js": "^2.89.0",
     "axios": "^1.4.0",
     "lucide-react": "^0.563.0",
