@@ -127,7 +127,7 @@ export default function Projects() {
 
     if (!user) return alert("User not loaded yet");
 
-    const res = await fetch("/api/createProject", {
+    const res = await fetch("/api/app?action=createProject", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -221,12 +221,12 @@ ${data.analysis?.detected?.join(", ") || "None"}
   }
 
   const interval =
-    setInterval(() => {
+    setTimeout(() => {
       fetchStatuses();
     }, 2000);
 
   return () =>
-    clearInterval(interval);
+    clearTimeout(interval);
 
 }, [
   deployments

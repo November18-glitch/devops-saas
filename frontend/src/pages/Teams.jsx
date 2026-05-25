@@ -94,7 +94,7 @@ export default function Teams() {
     try {
       const { data: session } = await supabase.auth.getSession();
 
-      const res = await fetch("/api/deleteTeam", {
+      const res = await fetch("/api/app?action=deleteTeam", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
