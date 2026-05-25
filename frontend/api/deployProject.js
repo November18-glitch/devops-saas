@@ -13,59 +13,33 @@ function createTroubleshooting(reason) {
 
   const fixes = [];
 
-  if (
-    text.includes(
-      "package"
-    )
-  ) {
-    fixes.push(
-      "• Add package.json"
-    );
+  if (text.includes("package")) {
+    fixes.push("• Add package.json");
   }
 
-  if (
-    text.includes(
-      "build"
-    )
-  ) {
-    fixes.push(
-      "• Add build script"
-    );
+  if (text.includes("build")) {
+    fixes.push("• Add build script");
   }
 
-  if (
-    text.includes(
-      "module"
-    )
-  ) {
+  if (text.includes("module")) {
     fixes.push(
       "• Install missing dependencies"
     );
   }
 
-  if (
-    text.includes(
-      "env"
-    )
-  ) {
+  if (text.includes("env")) {
     fixes.push(
       "• Configure environment variables"
     );
   }
 
-  if (
-    text.includes(
-      "framework"
-    )
-  ) {
+  if (text.includes("framework")) {
     fixes.push(
       "• Verify framework detection"
     );
   }
 
-  if (
-    fixes.length === 0
-  ) {
+  if (fixes.length === 0) {
     fixes.push(
       "• Verify repository structure"
     );
@@ -78,6 +52,60 @@ function createTroubleshooting(reason) {
   }
 
   return fixes.join("\n");
+}
+
+async function insertFailedDeployment(
+  teamId,
+  projectId,
+  userId,
+  reason
+) {
+  try {
+    await supabase
+      .from("deployments")
+      .insert({
+        deployment_id:
+          crypto.randomUUID(),
+
+        status:
+          "ERROR",
+
+        logs:
+`
+❌ Deployment failed
+
+Reason:
+${reason}
+
+How to fix:
+
+${createTroubleshooting(
+  reason
+)}
+`.trim(),
+
+        environment:
+          "preview",
+
+        triggered_by:
+          "user",
+
+        team_id:
+          teamId,
+
+        project_id:
+          projectId,
+
+        user_id:
+          userId,
+      });
+
+  } catch (e) {
+    console.error(
+      "[FAILED INSERT]",
+      e
+    );
+  }
 }
 
 export default async function handler(
@@ -126,11 +154,18 @@ export default async function handler(
       );
 
     if (!match) {
+      await insertFailedDeployment(
+        teamId,
+        projectId,
+        userId,
+        "Invalid GitHub repository URL"
+      );
+
       return res
         .status(400)
         .json({
           error:
-            `
+`
 ❌ Invalid GitHub URL
 
 Example:
@@ -173,6 +208,13 @@ https://github.com/user/project
       !githubRes.ok ||
       github.archived
     ) {
+      await insertFailedDeployment(
+        teamId,
+        projectId,
+        userId,
+        "Repository unavailable"
+      );
+
       return res
         .status(404)
         .json({
@@ -197,8 +239,7 @@ How to fix:
 
     const analysis =
       await analyzeRepo(
-        owner,
-        repo
+        repoUrl
       );
 
     console.log(
@@ -208,21 +249,31 @@ How to fix:
     if (
       !analysis
     ) {
+      await insertFailedDeployment(
+        teamId,
+        projectId,
+        userId,
+        "Repository analysis failed"
+      );
+
       return res
         .status(400)
         .json({
           error:
-`
-❌ Repository analysis failed
-
-Could not inspect repository.
-`.trim(),
+            "Repository analysis failed",
         });
     }
 
     if (
       !analysis.deployable
     ) {
+      await insertFailedDeployment(
+        teamId,
+        projectId,
+        userId,
+        analysis.reason
+      );
+
       return res
         .status(400)
         .json({
@@ -242,25 +293,6 @@ ${createTroubleshooting(
         });
     }
 
-    if (
-      !analysis.framework ||
-      !analysis.buildCommand
-    ) {
-      return res
-        .status(400)
-        .json({
-          error:
-`
-❌ Missing deployment configuration
-
-How to fix:
-• package.json
-• build script
-• framework setup
-`.trim(),
-        });
-    }
-
     const deploymentName =
       `${projectName
         .toLowerCase()
@@ -268,10 +300,6 @@ How to fix:
           /\s+/g,
           "-"
         )}-${Date.now()}`;
-
-    console.log(
-      "[DEPLOY]"
-    );
 
     const vercelRes =
       await fetch(
@@ -289,64 +317,58 @@ How to fix:
           },
 
           body:
-            JSON.stringify(
-              {
-                name:
-                  deploymentName,
+            JSON.stringify({
+              name:
+                deploymentName,
 
-                framework:
-                  analysis.framework,
+              framework:
+                analysis.framework,
 
-                installCommand:
-                  analysis.installCommand,
+              installCommand:
+                analysis.installCommand,
 
-                buildCommand:
-                  analysis.buildCommand,
+              buildCommand:
+                analysis.buildCommand,
 
-                outputDirectory:
-                  analysis.outputDirectory,
+              outputDirectory:
+                analysis.outputDirectory,
 
-                gitSource:
-                  {
-                    type:
-                      "github",
+              gitSource: {
+                type:
+                  "github",
 
-                    repoId,
+                repoId,
 
-                    ref:
-                      analysis.branch ||
-                      github.default_branch ||
-                      "main",
-                  },
-              }
-            ),
+                ref:
+                  github.default_branch ||
+                  "main",
+              },
+            }),
         }
       );
 
     const deployment =
       await vercelRes.json();
 
-    console.log(
-      deployment
-    );
-
     if (
       !vercelRes.ok
     ) {
+
+      await insertFailedDeployment(
+        teamId,
+        projectId,
+        userId,
+        deployment.error?.message ||
+          deployment.message ||
+          "Deployment rejected"
+      );
+
       return res
         .status(500)
         .json({
           error:
-`
-❌ Deployment rejected
-
-${deployment.error?.message || deployment.message}
-
-How to fix:
-• Verify build command
-• Verify framework
-• Check repo root
-`.trim(),
+            deployment.error?.message ||
+            deployment.message,
         });
     }
 
@@ -370,29 +392,7 @@ How to fix:
         url,
 
         logs:
-`
-🚀 Deployment started
-
-Framework:
-${analysis.framework}
-
-Build:
-${analysis.buildCommand}
-
-Install:
-${analysis.installCommand}
-
-Output:
-${analysis.outputDirectory}
-
-Detected:
-${
-analysis.detected?.join(
-", "
-) ||
-"None"
-}
-`.trim(),
+          "🚀 Deployment started",
 
         environment:
           "preview",
@@ -424,6 +424,7 @@ analysis.detected?.join(
   } catch (
     err
   ) {
+
     console.error(
       "[DEPLOY ERROR]",
       err
@@ -433,11 +434,7 @@ analysis.detected?.join(
       .status(500)
       .json({
         error:
-`
-❌ Internal deploy error
-
-${err.message}
-`.trim(),
+          err.message,
       });
   }
 }
