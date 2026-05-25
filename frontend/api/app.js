@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import analyzeRepo from "./analyzeRepo";
+import analyzeRepo from "./analyzeRepo.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
