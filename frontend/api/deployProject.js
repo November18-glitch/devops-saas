@@ -319,27 +319,25 @@ ${createTroubleshooting(
           body: JSON.stringify({
            name: deploymentName,
 
-           framework:
-            analysis.framework,
+           framework: analysis.framework,
 
-           installCommand:
-            "npm install",
+           installCommand: "cd frontend && npm install",
 
-           buildCommand:
-            "npm run build",
+           buildCommand: "cd frontend && npm run build",
 
-           outputDirectory:
-            "dist",
+           outputDirectory: "frontend/dist",
 
            gitSource: {
             type: "github",
+
             repoId,
+
             ref:
              analysis.branch ||
              github.default_branch ||
              "main",
            },
-          }),
+         })
         }
       );
 
