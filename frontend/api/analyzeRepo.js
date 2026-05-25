@@ -1,38 +1,82 @@
 export default async function analyzeRepo(
-  repoUrl
+  repoInput
 ) {
   try {
-    if (!repoUrl) {
+
+    if (!repoInput) {
       return {
         valid: false,
         reason: "Repository URL missing",
       };
     }
 
-    const match =
-      repoUrl.match(
-        /github\.com\/([^\/]+)\/([^\/]+)/
-      );
+    let owner;
+    let repo;
 
-    if (!match) {
-      return {
-        valid: false,
-        reason:
-          "Invalid GitHub repository URL",
-      };
-    }
-
-    const owner =
-      match[1];
-
-    const repo =
-      match[2]
-        .replace(
-          ".git",
-          ""
+    // FULL URL
+    if (
+      repoInput.includes(
+        "github.com"
+      )
+    ) {
+      const match =
+        repoInput.match(
+          /github\.com\/([^\/]+)\/([^\/]+)/i
         );
 
-    const response =
+      if (!match) {
+        return {
+          valid: false,
+          reason:
+            "Invalid GitHub repository URL",
+        };
+      }
+
+      owner =
+        match[1];
+
+      repo =
+        match[2]
+          .replace(
+            ".git",
+            ""
+          );
+
+    }
+
+    // OWNER + REPO
+    else {
+
+      const parts =
+        repoInput
+          .trim()
+          .split(" ");
+
+      if (
+        parts.length !==
+        2
+      ) {
+        return {
+          valid: false,
+          reason:
+            "Invalid GitHub repository",
+        };
+      }
+
+      owner =
+        parts[0];
+
+      repo =
+        parts[1];
+    }
+
+    console.log(
+      "[CHECKING REPO]",
+      owner,
+      repo
+    );
+
+    const res =
       await fetch(
         `https://api.github.com/repos/${owner}/${repo}`,
         {
@@ -44,40 +88,36 @@ export default async function analyzeRepo(
       );
 
     if (
-      !response.ok
+      !res.ok
     ) {
       return {
         valid: false,
         reason:
-          "Repository not found or inaccessible",
+          "Repository not found",
       };
     }
 
     const data =
-      await response.json();
+      await res.json();
 
     return {
       valid: true,
-
-      deployable:
-        true,
+      deployable: true,
 
       owner,
-
       repo,
 
       defaultBranch:
-        data.default_branch ||
-        "main",
+        data.default_branch,
 
       framework:
         "vite",
 
-      buildCommand:
-        "npm run build",
-
       installCommand:
         "npm install",
+
+      buildCommand:
+        "npm run build",
 
       outputDirectory:
         "dist",
@@ -90,15 +130,16 @@ export default async function analyzeRepo(
   } catch (
     err
   ) {
+
     console.error(
-      "ANALYZE REPO ERROR:",
+      "[ANALYZE]",
       err
     );
 
     return {
       valid: false,
       reason:
-        "Repository analysis failed",
+        "Analysis failed",
     };
   }
 }
