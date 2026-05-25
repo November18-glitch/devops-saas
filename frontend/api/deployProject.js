@@ -316,34 +316,33 @@ ${createTroubleshooting(
               "application/json",
           },
 
-          body:
-            JSON.stringify({
-              name:
-                deploymentName,
+          body: JSON.stringify({
+           name: deploymentName,
 
-              framework:
-                analysis.framework,
+           framework:
+            analysis.framework,
 
-              installCommand:
-                analysis.installCommand,
+           rootDirectory:
+            "frontend",
 
-              buildCommand:
-                analysis.buildCommand,
+           installCommand:
+            "npm install",
 
-              outputDirectory:
-                analysis.outputDirectory,
+           buildCommand:
+            "npm run build",
 
-              gitSource: {
-                type:
-                  "github",
+           outputDirectory:
+            "dist",
 
-                repoId,
-
-                ref:
-                  github.default_branch ||
-                  "main",
-              },
-            }),
+           gitSource: {
+            type: "github",
+            repoId,
+            ref:
+             analysis.branch ||
+             github.default_branch ||
+             "main",
+           },
+          }),
         }
       );
 
