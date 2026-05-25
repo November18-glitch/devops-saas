@@ -415,20 +415,63 @@ ${createTroubleshooting(
         analysis,
       });
 
-  } catch (
+  } 
+  catch (err) {
+   console.error(
+    "[DEPLOY ERROR]",
     err
-  ) {
+  );
 
-    console.error(
-      "[DEPLOY ERROR]",
-      err
-    );
+  try {
+    await supabase
+      .from("deployments")
+      .insert({
+        deployment_id:
+          `failed-${Date.now()}`,
 
-    return res
-      .status(500)
-      .json({
-        error:
-          err.message,
+        status:
+          "ERROR",
+
+        logs:
+`
+❌ Deployment failed
+
+Reason:
+${err.message}
+
+Troubleshooting:
+
+• Check repo structure
+• Verify build command
+• Verify framework
+`.trim(),
+
+        environment:
+          "preview",
+
+        triggered_by:
+          "user",
+
+        project_id:
+          req.body.projectId,
+
+        team_id:
+          req.body.teamId,
+
+        user_id:
+          req.body.userId,
       });
-  }
-}
+
+  } catch {}
+
+  return res
+    .status(500)
+    .json({
+      error:
+`
+❌ Deployment failed
+
+${err.message}
+`.trim(),
+    });
+}}

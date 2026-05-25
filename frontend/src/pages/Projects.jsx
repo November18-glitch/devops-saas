@@ -180,7 +180,25 @@ export default function Projects() {
     const data = await res.json();
 
     if (!res.ok) {
-      return alert(data.error || "Deployment failed");
+
+    setDeployments(
+    (prev)=>[
+    {
+    id:`failed-${Date.now()}`,
+
+    status:"ERROR",
+
+    url:null,
+
+    logs:
+    data.error ||
+    "Deployment failed",
+    },
+    ...prev
+    ]
+    );
+
+    return;
     }
 
     setDeployments((prev) => [
@@ -227,7 +245,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
   const interval =
     setTimeout(() => {
       fetchStatuses();
-    }, 2000);
+    }, 1500);
 
   return () =>
     clearTimeout(interval);
