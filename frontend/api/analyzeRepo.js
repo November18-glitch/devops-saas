@@ -2,7 +2,6 @@ export default async function analyzeRepo(
   repoInput
 ) {
   try {
-
     if (!repoInput) {
       return {
         valid: false,
@@ -26,7 +25,6 @@ export default async function analyzeRepo(
         "github.com"
       )
     ) {
-
       const match =
         repoInput.match(
           /github\.com\/([^\/]+)\/([^\/]+)/i
@@ -50,9 +48,7 @@ export default async function analyzeRepo(
             ".git",
             ""
           );
-
     } else {
-
       const parts =
         repoInput
           .trim()
@@ -85,7 +81,7 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    GET REPO
+    LOAD REPO
     ==========================
     */
 
@@ -131,7 +127,6 @@ export default async function analyzeRepo(
     if (
       !packageRes.ok
     ) {
-
       packagePath =
         "frontend/package.json";
 
@@ -161,12 +156,9 @@ export default async function analyzeRepo(
     let packageJson;
 
     try {
-
       packageJson =
         await packageRes.json();
-
     } catch {
-
       return {
         valid: true,
         deployable: false,
@@ -189,76 +181,44 @@ export default async function analyzeRepo(
       "npm install";
 
     let buildCommand =
-      "npm run build";
+      packageJson
+        .scripts?.build
+        ? "npm run build"
+        : null;
 
     if (
-      packageJson.workspaces
-    ) {
-
-      installCommand =
-        "pnpm install";
-
-      buildCommand =
-        "pnpm run build";
-    }
-
-    if (
+      packageJson.workspaces ||
       packageJson.packageManager
         ?.includes(
           "pnpm"
         )
     ) {
-
       installCommand =
         "pnpm install";
 
       buildCommand =
-        "pnpm run build";
+        packageJson
+          .scripts?.build
+          ? "pnpm run build"
+          : null;
     }
 
     /*
     ==========================
-    DETECT BUILD SCRIPT
+    FRAMEWORK DETECTION
     ==========================
     */
 
-    if (
-      !packageJson.scripts
-        ?.build
-    ) {
-      return {
-        valid: true,
-        deployable: false,
-
-        owner,
-        repo,
-
-        reason:
-          "Missing build script",
-
-        detected: [
-          packagePath,
-        ],
-      };
-    }
-
-    /*
-    ==========================
-    DETECT FRAMEWORK
-    ==========================
-    */
+    const deps = {
+      ...(packageJson.dependencies || {}),
+      ...(packageJson.devDependencies || {}),
+    };
 
     let framework =
       null;
 
     let outputDirectory =
-      "dist";
-
-    const deps = {
-
-      ...(packageJson.dependencies || {}),
-      ...(packageJson.devDependencies || {}),
-    };
+      null;
 
     if (
       deps.vite
@@ -284,10 +244,10 @@ export default async function analyzeRepo(
       deps.react
     ) {
       framework =
-        "create-react-app";
+        "vite";
 
       outputDirectory =
-        "build";
+        "dist";
     }
 
     else if (
@@ -302,78 +262,94 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    FRONTEND FOLDER
+    FRONTEND DIRECTORY
     ==========================
     */
 
     if (
-      packagePath.startsWith(
-        "frontend/"
-      )
+      packagePath ===
+      "frontend/package.json"
     ) {
-
-      installCommand =
-        `cd frontend && ${installCommand}`;
-
-      buildCommand =
-        `cd frontend && ${buildCommand}`;
-
       outputDirectory =
-        `frontend/${outputDirectory}`;
+        outputDirectory
+          ? `frontend/${outputDirectory}`
+          : null;
     }
 
     /*
     ==========================
-    DONE
+    BUILD CHECK
+    ==========================
+    */
+
+    if (
+      !buildCommand
+    ) {
+      return {
+        valid: true,
+        deployable: false,
+
+        owner,
+        repo,
+
+        framework,
+
+        installCommand,
+
+        outputDirectory,
+
+        reason:
+          "Missing build script",
+
+        detected: [
+          packagePath,
+        ],
+      };
+    }
+
+    /*
+    ==========================
+    SUCCESS
     ==========================
     */
 
     return {
+      valid: true,
 
-     valid: true,
+      deployable: true,
 
-     deployable:
-      framework !== null,
+      owner,
 
-     owner,
+      repo,
 
-     repo,
+      defaultBranch:
+        repoData.default_branch,
 
-     defaultBranch:
-      repoData.default_branch,
+      framework,
 
-     framework,
+      installCommand,
 
-     installCommand,
+      buildCommand,
 
-     buildCommand,
+      outputDirectory,
 
-     outputDirectory,
-
-     reason:
-      framework === null
-        ? "Unsupported framework"
-        : null,
-
-     detected: [
-      packagePath,
-      framework ||
-      "unknown",
- ],
-};
+      detected: [
+        packagePath,
+        framework ||
+          "unknown",
+      ],
+    };
   }
 
   catch (
     err
   ) {
-
     console.error(
       "[ANALYZE]",
       err
     );
 
     return {
-
       valid: false,
 
       deployable: false,
