@@ -203,7 +203,11 @@ export default function Projects() {
 
     setDeployments((prev) => [
       {
-        id: data.deploymentId,
+        id:
+         data.deploymentId,
+
+        localId:
+         data.localDeploymentId,
         status: "BUILDING",
 
         logs: `

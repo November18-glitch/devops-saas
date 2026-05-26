@@ -425,18 +425,23 @@ ${analysis.framework}
     );
 
     return res
-      .status(200)
-      .json({
-        deploymentId:
-          tempDeploymentId,
+     .status(200)
+     .json({
 
-        url:
-          deployment.url
-            ? `https://${deployment.url}`
-            : null,
+     deploymentId:
+      deployment.id,
 
-        analysis,
-      });
+     localDeploymentId:
+     tempDeploymentId,
+
+     url:
+      deployment.url
+      ? `https://${deployment.url}`
+      : null,
+
+     analysis,
+
+    });
 
   } catch (err) {
 
