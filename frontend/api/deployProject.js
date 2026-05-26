@@ -7,45 +7,130 @@ const supabase = createClient(
 );
 
 function createTroubleshooting(reason) {
-  const text = (reason || "").toLowerCase();
+  const text =
+    (reason || "")
+      .toLowerCase();
 
   const fixes = [];
 
-  if (text.includes("package")) {
-    fixes.push("• Add package.json");
+  if (
+    text.includes(
+      "framework"
+    )
+  ) {
+    fixes.push(
+`Framework could not be deployed.
+
+Possible causes:
+• Unsupported framework
+• Framework auto-detection failed
+• Missing config files
+
+Solutions:
+• Add package.json
+• Add vercel.json if needed
+• Try Vite / Next.js / Express`
+    );
   }
 
-  if (text.includes("build")) {
-    fixes.push("• Add build script");
+  if (
+    text.includes(
+      "workspace"
+    )
+  ) {
+    fixes.push(
+`Monorepo detected.
+
+Possible causes:
+• Project inside subfolder
+• Workspace packages unsupported
+
+Solutions:
+• Configure frontend root
+• Add proper build directory`
+    );
   }
 
-  if (text.includes("module")) {
-    fixes.push("• Install missing dependencies");
+  if (
+    text.includes(
+      "build"
+    )
+  ) {
+    fixes.push(
+`Build process failed.
+
+Possible causes:
+• Missing build script
+• Syntax errors
+• Wrong output folder
+
+Solutions:
+• Run npm run build locally
+• Verify scripts`
+    );
   }
 
-  if (text.includes("workspace")) {
-    fixes.push("• Monorepo detected → configure root directory");
+  if (
+    text.includes(
+      "package"
+    )
+  ) {
+    fixes.push(
+`package.json issue.
+
+Solutions:
+• Verify package.json exists
+• Add dependencies
+• Commit lockfile`
+    );
   }
 
-  if (text.includes("framework")) {
-    fixes.push("• Verify framework detection");
+  if (
+    text.includes(
+      "module"
+    )
+  ) {
+    fixes.push(
+`Dependency error.
+
+Solutions:
+• npm install
+• Commit package-lock.json
+• Check imports`
+    );
   }
 
-  if (text.includes("env")) {
-    fixes.push("• Configure environment variables");
+  if (
+    text.includes(
+      "repository"
+    )
+  ) {
+    fixes.push(
+`Repository unavailable.
+
+Solutions:
+• Verify URL
+• Make repo public
+• Check GitHub permissions`
+    );
   }
 
-  if (text.includes("script")) {
-    fixes.push("• Verify npm scripts");
+  if (
+    fixes.length === 0
+  ) {
+    fixes.push(
+`General troubleshooting:
+
+• Check repository structure
+• Verify framework
+• Run build locally
+• Review deployment logs`
+    );
   }
 
-  if (fixes.length === 0) {
-    fixes.push("• Verify repository structure");
-    fixes.push("• Run build locally");
-    fixes.push("• Check deployment configuration");
-  }
-
-  return fixes.join("\n");
+  return fixes.join(
+    "\n\n"
+  );
 }
 
 async function updateDeployment(
