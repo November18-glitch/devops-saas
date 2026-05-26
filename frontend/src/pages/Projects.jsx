@@ -245,7 +245,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
   const interval =
     setTimeout(() => {
       fetchStatuses();
-    }, 1500);
+    }, 10000);
 
   return () =>
     clearTimeout(interval);

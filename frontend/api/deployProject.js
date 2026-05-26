@@ -23,87 +23,54 @@ function createTroubleshooting(reason) {
     fixes.push("• Install missing dependencies");
   }
 
-  if (text.includes("env")) {
-    fixes.push("• Configure environment variables");
+  if (text.includes("workspace")) {
+    fixes.push("• Monorepo detected → configure root directory");
   }
 
   if (text.includes("framework")) {
     fixes.push("• Verify framework detection");
   }
 
+  if (text.includes("env")) {
+    fixes.push("• Configure environment variables");
+  }
+
+  if (text.includes("script")) {
+    fixes.push("• Verify npm scripts");
+  }
+
   if (fixes.length === 0) {
     fixes.push("• Verify repository structure");
-    fixes.push("• Ensure package.json exists");
-    fixes.push("• Verify build command");
+    fixes.push("• Run build locally");
+    fixes.push("• Check deployment configuration");
   }
 
   return fixes.join("\n");
 }
 
-async function insertFailedDeployment(
-  teamId,
-  projectId,
-  userId,
-  reason,
-  raw = null
+async function updateDeployment(
+  deploymentId,
+  status,
+  logs,
+  url = null
 ) {
   try {
     await supabase
       .from("deployments")
-      .insert({
-        deployment_id:
-          crypto.randomUUID(),
+      .update({
+        status,
+        logs,
+        ...(url ? { url } : {}),
+      })
+      .eq(
+        "deployment_id",
+        deploymentId
+      );
 
-        status:
-          "ERROR",
-
-        logs:
-`
-❌ Deployment failed
-
-Reason:
-
-${reason}
-
-${
-raw
-? `
-Raw:
-
-${typeof raw === "string"
-? raw
-: JSON.stringify(raw, null, 2)}
-`
-: ""
-}
-
-Troubleshooting:
-
-${createTroubleshooting(
-reason
-)}
-`.trim(),
-
-        environment:
-          "preview",
-
-        triggered_by:
-          "user",
-
-        team_id:
-          teamId,
-
-        project_id:
-          projectId,
-
-        user_id:
-          userId,
-      });
-
-  } catch (e) {
+  } catch (err) {
     console.error(
-      "[FAILED INSERT]",
-      e
+      "[UPDATE ERROR]",
+      err
     );
   }
 }
@@ -112,11 +79,12 @@ export default async function handler(
   req,
   res
 ) {
+  let tempDeploymentId = crypto.randomUUID();
+
   try {
 
     if (
-      req.method !==
-      "POST"
+      req.method !== "POST"
     ) {
       return res
         .status(405)
@@ -149,26 +117,50 @@ export default async function handler(
         });
     }
 
+    await supabase
+      .from(
+        "deployments"
+      )
+      .insert({
+        deployment_id:
+          tempDeploymentId,
+
+        status:
+          "ANALYZING",
+
+        logs:
+`
+🔎 Checking repository...
+
+Repository:
+${repoUrl}
+`.trim(),
+
+        environment:
+          "preview",
+
+        triggered_by:
+          "user",
+
+        team_id:
+          teamId,
+
+        project_id:
+          projectId,
+
+        user_id:
+          userId,
+      });
+
     const match =
       repoUrl.match(
-        /github\.com\/([^\/]+)\/([^\/]+)/
+        /github\.com\/([^\/]+)\/([^\/]+)/i
       );
 
     if (!match) {
-
-      await insertFailedDeployment(
-        teamId,
-        projectId,
-        userId,
+      throw new Error(
         "Invalid GitHub repository URL"
       );
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Invalid GitHub URL",
-        });
     }
 
     const owner =
@@ -205,29 +197,10 @@ export default async function handler(
       !githubRes.ok ||
       github.archived
     ) {
-
-      await insertFailedDeployment(
-        teamId,
-        projectId,
-        userId,
-        "Repository unavailable",
-        github
+      throw new Error(
+        "Repository unavailable"
       );
-
-      return res
-        .status(404)
-        .json({
-          error:
-            "Repository unavailable",
-        });
     }
-
-    const repoId =
-      github.id;
-
-    console.log(
-      "[ANALYZE]"
-    );
 
     const analysis =
       await analyzeRepo(
@@ -239,55 +212,41 @@ export default async function handler(
     );
 
     if (
-      !analysis
+      !analysis?.deployable
     ) {
-
-      await insertFailedDeployment(
-        teamId,
-        projectId,
-        userId,
-        "Repository analysis failed"
+      throw new Error(
+        analysis?.reason ||
+        "Repository not deployable"
       );
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Repository analysis failed",
-        });
     }
 
-    if (
-      !analysis.deployable
-    ) {
+    await updateDeployment(
+      tempDeploymentId,
+      "BUILDING",
 
-      await insertFailedDeployment(
-        teamId,
-        projectId,
-        userId,
-        analysis.reason,
-        analysis
-      );
+`
+🚀 Deployment started
 
-      return res
-        .status(400)
-        .json({
-          error:
-            analysis.reason,
-        });
-    }
+Framework:
+${analysis.framework}
 
-    const deploymentName =
-`${projectName
-.toLowerCase()
-.replace(
- /\s+/g,
- "-"
-)}-${Date.now()}`;
+Install:
+${analysis.installCommand}
+
+Build:
+${analysis.buildCommand}
+
+Output:
+${analysis.outputDirectory}
+
+Detected:
+${analysis.detected?.join(", ") || "None"}
+`
+    );
 
     const vercelRes =
       await fetch(
-        "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
+        "https://api.vercel.com/v13/deployments",
         {
           method:
             "POST",
@@ -303,10 +262,19 @@ export default async function handler(
           body:
             JSON.stringify({
               name:
-                deploymentName,
+                `${projectName
+                  .toLowerCase()
+                  .replace(
+                    /\s+/g,
+                    "-"
+                  )}-${Date.now()}`,
 
-              framework:
-                analysis.framework,
+              ...(analysis.framework
+                ? {
+                    framework:
+                      analysis.framework,
+                  }
+                : {}),
 
               installCommand:
                 analysis.installCommand,
@@ -321,10 +289,10 @@ export default async function handler(
                 type:
                   "github",
 
-                repoId,
+                repoId:
+                  github.id,
 
                 ref:
-                  analysis.branch ||
                   github.default_branch ||
                   "main",
               },
@@ -335,124 +303,73 @@ export default async function handler(
     const deployment =
       await vercelRes.json();
 
-    console.log(
-      deployment
-    );
-
     if (
       !vercelRes.ok
     ) {
-
-      await insertFailedDeployment(
-        teamId,
-        projectId,
-        userId,
-
-        deployment.error?.message ||
-
-        deployment.message ||
-
-        "Deployment rejected",
-
-        deployment
+      throw new Error(
+        deployment?.error?.message ||
+        deployment?.message ||
+        "Deployment rejected"
       );
-
-      return res
-        .status(500)
-        .json({
-          error:
-            deployment.error?.message ||
-            deployment.message ||
-            "Deployment rejected",
-        });
     }
 
-    const url =
+    await updateDeployment(
+      tempDeploymentId,
+
+      deployment.readyState ||
+      "BUILDING",
+
+`
+🚀 Deployment accepted
+
+Deployment ID:
+${deployment.id}
+`,
+
       deployment.url
         ? `https://${deployment.url}`
-        : null;
-
-    await supabase
-      .from(
-        "deployments"
-      )
-      .insert({
-
-        deployment_id:
-          deployment.id,
-
-        status:
-          deployment.readyState ||
-          "BUILDING",
-
-        url,
-
-logs:
-`
-🚀 Deployment started
-
-Framework:
-${analysis.framework}
-
-Build:
-${analysis.buildCommand}
-
-Install:
-${analysis.installCommand}
-
-Output:
-${analysis.outputDirectory}
-
-Detected:
-${
-analysis.detected?.join(", ")
-||
-"None"
-}
-`.trim(),
-
-        environment:
-          "preview",
-
-        triggered_by:
-          "user",
-
-        project_id:
-          projectId,
-
-        team_id:
-          teamId,
-
-        user_id:
-          userId,
-      });
+        : null
+    );
 
     return res
       .status(200)
       .json({
         deploymentId:
-          deployment.id,
+          tempDeploymentId,
 
-        url,
+        url:
+          deployment.url
+            ? `https://${deployment.url}`
+            : null,
 
         analysis,
       });
 
-  }
-
-  catch (err) {
+  } catch (err) {
 
     console.error(
       "[DEPLOY ERROR]",
       err
     );
 
-    await insertFailedDeployment(
-      req.body.teamId,
-      req.body.projectId,
-      req.body.userId,
-      err.message,
-      err
+    await updateDeployment(
+      tempDeploymentId,
+
+      "ERROR",
+
+`
+❌ Deployment failed
+
+Reason:
+
+${err.message}
+
+Troubleshooting:
+
+${createTroubleshooting(
+err.message
+)}
+`.trim()
     );
 
     return res
@@ -461,6 +378,5 @@ analysis.detected?.join(", ")
         error:
           err.message,
       });
-
   }
 }
