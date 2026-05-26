@@ -39,15 +39,11 @@ export default async function analyzeRepo(
         };
       }
 
-      owner =
-        match[1];
+      owner = match[1];
 
       repo =
         match[2]
-          .replace(
-            ".git",
-            ""
-          );
+          .replace(".git", "");
     } else {
       const parts =
         repoInput
@@ -81,7 +77,7 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    LOAD REPO
+    GET REPO
     ==========================
     */
 
@@ -96,9 +92,7 @@ export default async function analyzeRepo(
         }
       );
 
-    if (
-      !repoRes.ok
-    ) {
+    if (!repoRes.ok) {
       return {
         valid: false,
         deployable: false,
@@ -112,32 +106,48 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    FIND PACKAGE.JSON
+    CHECK FRONTEND FIRST
     ==========================
     */
 
+    const packageCandidates = [
+      "frontend/package.json",
+      "package.json",
+    ];
+
+    let packageJson =
+      null;
+
     let packagePath =
-      "package.json";
+      null;
 
-    let packageRes =
-      await fetch(
-        `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch}/package.json`
-      );
-
-    if (
-      !packageRes.ok
+    for (
+      const candidate
+      of packageCandidates
     ) {
-      packagePath =
-        "frontend/package.json";
-
-      packageRes =
+      const r =
         await fetch(
-          `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch}/frontend/package.json`
+          `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch}/${candidate}`
         );
+
+      if (
+        r.ok
+      ) {
+        try {
+          packageJson =
+            await r.json();
+
+          packagePath =
+            candidate;
+
+          break;
+
+        } catch {}
+      }
     }
 
     if (
-      !packageRes.ok
+      !packageJson
     ) {
       return {
         valid: true,
@@ -153,27 +163,9 @@ export default async function analyzeRepo(
       };
     }
 
-    let packageJson;
-
-    try {
-      packageJson =
-        await packageRes.json();
-    } catch {
-      return {
-        valid: true,
-        deployable: false,
-
-        owner,
-        repo,
-
-        reason:
-          "Invalid package.json",
-      };
-    }
-
     /*
     ==========================
-    DETECT PACKAGE MANAGER
+    COMMANDS
     ==========================
     */
 
@@ -181,14 +173,11 @@ export default async function analyzeRepo(
       "npm install";
 
     let buildCommand =
-      packageJson
-        .scripts?.build
-        ? "npm run build"
-        : null;
+      "npm run build";
 
     if (
-      packageJson.workspaces ||
-      packageJson.packageManager
+      packageJson
+        .packageManager
         ?.includes(
           "pnpm"
         )
@@ -197,15 +186,70 @@ export default async function analyzeRepo(
         "pnpm install";
 
       buildCommand =
-        packageJson
-          .scripts?.build
-          ? "pnpm run build"
-          : null;
+        "pnpm run build";
+    }
+
+    if (
+      packageJson
+        .workspaces
+    ) {
+      installCommand =
+        "pnpm install";
+
+      buildCommand =
+        "pnpm build";
     }
 
     /*
     ==========================
-    FRAMEWORK DETECTION
+    VERIFY BUILD
+    ==========================
+    */
+
+    if (
+      !packageJson
+        .scripts
+        ?.build
+    ) {
+      return {
+        valid: true,
+
+        deployable:
+          false,
+
+        owner,
+
+        repo,
+
+        framework:
+          null,
+
+        installCommand,
+
+        outputDirectory:
+          null,
+
+        reason:
+          "Missing build script",
+
+        detected: [
+          packagePath,
+        ],
+      };
+    }
+
+    buildCommand =
+      packageJson
+        .scripts
+        .build.includes(
+          "vite"
+        )
+        ? "npm run build"
+        : buildCommand;
+
+    /*
+    ==========================
+    FRAMEWORK
     ==========================
     */
 
@@ -218,7 +262,7 @@ export default async function analyzeRepo(
       null;
 
     let outputDirectory =
-      null;
+      "dist";
 
     if (
       deps.vite
@@ -244,25 +288,15 @@ export default async function analyzeRepo(
       deps.react
     ) {
       framework =
-        "vite";
+        "create-react-app";
 
       outputDirectory =
-        "dist";
-    }
-
-    else if (
-      deps.nuxt
-    ) {
-      framework =
-        "nuxtjs";
-
-      outputDirectory =
-        ".output";
+        "build";
     }
 
     /*
     ==========================
-    FRONTEND DIRECTORY
+    FRONTEND FOLDER
     ==========================
     */
 
@@ -270,53 +304,22 @@ export default async function analyzeRepo(
       packagePath ===
       "frontend/package.json"
     ) {
+      installCommand =
+        `cd frontend && ${installCommand}`;
+
+      buildCommand =
+        `cd frontend && ${buildCommand}`;
+
       outputDirectory =
-        outputDirectory
-          ? `frontend/${outputDirectory}`
-          : null;
+        `frontend/${outputDirectory}`;
     }
-
-    /*
-    ==========================
-    BUILD CHECK
-    ==========================
-    */
-
-    if (
-      !buildCommand
-    ) {
-      return {
-        valid: true,
-        deployable: false,
-
-        owner,
-        repo,
-
-        framework,
-
-        installCommand,
-
-        outputDirectory,
-
-        reason:
-          "Missing build script",
-
-        detected: [
-          packagePath,
-        ],
-      };
-    }
-
-    /*
-    ==========================
-    SUCCESS
-    ==========================
-    */
 
     return {
       valid: true,
 
-      deployable: true,
+      deployable:
+        framework !==
+        null,
 
       owner,
 
@@ -333,15 +336,18 @@ export default async function analyzeRepo(
 
       outputDirectory,
 
+      reason:
+        framework
+          ? null
+          : "Unsupported framework",
+
       detected: [
         packagePath,
-        framework ||
-          "unknown",
+        framework,
       ],
     };
-  }
 
-  catch (
+  } catch (
     err
   ) {
     console.error(
@@ -352,7 +358,8 @@ export default async function analyzeRepo(
     return {
       valid: false,
 
-      deployable: false,
+      deployable:
+        false,
 
       reason:
         err.message ||
