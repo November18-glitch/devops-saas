@@ -145,7 +145,9 @@ async function updateDeployment(
       .update({
         status,
         logs,
-        ...(url ? { url } : {}),
+        ...(url
+          ? { url }
+          : {}),
       })
       .eq(
         "deployment_id",
@@ -164,12 +166,14 @@ export default async function handler(
   req,
   res
 ) {
-  let tempDeploymentId = crypto.randomUUID();
+  let tempDeploymentId =
+    crypto.randomUUID();
 
   try {
 
     if (
-      req.method !== "POST"
+      req.method !==
+      "POST"
     ) {
       return res
         .status(405)
@@ -331,7 +335,7 @@ ${analysis.detected?.join(", ") || "None"}
 
     const vercelRes =
       await fetch(
-        "https://api.vercel.com/v13/deployments",
+        "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
         {
           method:
             "POST",
@@ -346,29 +350,14 @@ ${analysis.detected?.join(", ") || "None"}
 
           body:
             JSON.stringify({
+
               name:
-                `${projectName
-                  .toLowerCase()
-                  .replace(
-                    /\s+/g,
-                    "-"
-                  )}-${Date.now()}`,
-
-              ...(analysis.framework
-                ? {
-                    framework:
-                      analysis.framework,
-                  }
-                : {}),
-
-              installCommand:
-                analysis.installCommand,
-
-              buildCommand:
-                analysis.buildCommand,
-
-              outputDirectory:
-                analysis.outputDirectory,
+`${projectName
+.toLowerCase()
+.replace(
+ /\s+/g,
+ "-"
+)}-${Date.now()}`,
 
               gitSource: {
                 type:
@@ -381,6 +370,22 @@ ${analysis.detected?.join(", ") || "None"}
                   github.default_branch ||
                   "main",
               },
+
+              projectSettings: {
+
+                framework:
+                  analysis.framework,
+
+                installCommand:
+                  analysis.installCommand,
+
+                buildCommand:
+                  analysis.buildCommand,
+
+                outputDirectory:
+                  analysis.outputDirectory,
+              },
+
             }),
         }
       );
@@ -409,6 +414,9 @@ ${analysis.detected?.join(", ") || "None"}
 
 Deployment ID:
 ${deployment.id}
+
+Framework:
+${analysis.framework}
 `,
 
       deployment.url
