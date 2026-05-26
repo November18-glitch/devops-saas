@@ -249,7 +249,7 @@ export default async function analyzeRepo(
     */
 
     let framework =
-      "other";
+      null;
 
     let outputDirectory =
       "dist";
@@ -330,31 +330,37 @@ export default async function analyzeRepo(
 
     return {
 
-      valid: true,
+     valid: true,
 
-      deployable: true,
+     deployable:
+      framework !== null,
 
-      owner,
+     owner,
 
-      repo,
+     repo,
 
-      defaultBranch:
-        repoData.default_branch,
+     defaultBranch:
+      repoData.default_branch,
 
-      framework,
+     framework,
 
-      installCommand,
+     installCommand,
 
-      buildCommand,
+     buildCommand,
 
-      outputDirectory,
+     outputDirectory,
 
-      detected: [
-        packagePath,
-        framework,
-      ],
-    };
+     reason:
+      framework === null
+        ? "Unsupported framework"
+        : null,
 
+     detected: [
+      packagePath,
+      framework ||
+      "unknown",
+ ],
+};
   }
 
   catch (
