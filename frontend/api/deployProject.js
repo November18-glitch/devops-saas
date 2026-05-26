@@ -309,13 +309,13 @@ export default async function handler(
                 analysis.framework,
 
               installCommand:
-                "cd frontend && npm install",
+                analysis.installCommand,
 
               buildCommand:
-                "cd frontend && npm run build",
+                analysis.buildCommand,
 
               outputDirectory:
-                "frontend/dist",
+                analysis.outputDirectory,
 
               gitSource: {
                 type:
