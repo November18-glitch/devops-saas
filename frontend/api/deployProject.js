@@ -7,9 +7,7 @@ const supabase = createClient(
 );
 
 function createTroubleshooting(reason) {
-  const text =
-    (reason || "")
-      .toLowerCase();
+  const text = (reason || "").toLowerCase();
 
   const fixes = [];
 
@@ -22,33 +20,21 @@ function createTroubleshooting(reason) {
   }
 
   if (text.includes("module")) {
-    fixes.push(
-      "• Install missing dependencies"
-    );
+    fixes.push("• Install missing dependencies");
   }
 
   if (text.includes("env")) {
-    fixes.push(
-      "• Configure environment variables"
-    );
+    fixes.push("• Configure environment variables");
   }
 
   if (text.includes("framework")) {
-    fixes.push(
-      "• Verify framework detection"
-    );
+    fixes.push("• Verify framework detection");
   }
 
   if (fixes.length === 0) {
-    fixes.push(
-      "• Verify repository structure"
-    );
-    fixes.push(
-      "• Ensure package.json exists"
-    );
-    fixes.push(
-      "• Verify build command"
-    );
+    fixes.push("• Verify repository structure");
+    fixes.push("• Ensure package.json exists");
+    fixes.push("• Verify build command");
   }
 
   return fixes.join("\n");
@@ -58,7 +44,8 @@ async function insertFailedDeployment(
   teamId,
   projectId,
   userId,
-  reason
+  reason,
+  raw = null
 ) {
   try {
     await supabase
@@ -75,12 +62,25 @@ async function insertFailedDeployment(
 ❌ Deployment failed
 
 Reason:
+
 ${reason}
 
-How to fix:
+${
+raw
+? `
+Raw:
+
+${typeof raw === "string"
+? raw
+: JSON.stringify(raw, null, 2)}
+`
+: ""
+}
+
+Troubleshooting:
 
 ${createTroubleshooting(
-  reason
+reason
 )}
 `.trim(),
 
@@ -113,6 +113,7 @@ export default async function handler(
   res
 ) {
   try {
+
     if (
       req.method !==
       "POST"
@@ -154,6 +155,7 @@ export default async function handler(
       );
 
     if (!match) {
+
       await insertFailedDeployment(
         teamId,
         projectId,
@@ -165,12 +167,7 @@ export default async function handler(
         .status(400)
         .json({
           error:
-`
-❌ Invalid GitHub URL
-
-Example:
-https://github.com/user/project
-`.trim(),
+            "Invalid GitHub URL",
         });
     }
 
@@ -208,25 +205,20 @@ https://github.com/user/project
       !githubRes.ok ||
       github.archived
     ) {
+
       await insertFailedDeployment(
         teamId,
         projectId,
         userId,
-        "Repository unavailable"
+        "Repository unavailable",
+        github
       );
 
       return res
         .status(404)
         .json({
           error:
-`
-❌ Repository unavailable
-
-How to fix:
-• Verify URL
-• Make repo accessible
-• Verify GitHub token
-`.trim(),
+            "Repository unavailable",
         });
     }
 
@@ -249,6 +241,7 @@ How to fix:
     if (
       !analysis
     ) {
+
       await insertFailedDeployment(
         teamId,
         projectId,
@@ -267,39 +260,30 @@ How to fix:
     if (
       !analysis.deployable
     ) {
+
       await insertFailedDeployment(
         teamId,
         projectId,
         userId,
-        analysis.reason
+        analysis.reason,
+        analysis
       );
 
       return res
         .status(400)
         .json({
           error:
-`
-❌ Deployment cancelled
-
-Reason:
-${analysis.reason}
-
-How to fix:
-
-${createTroubleshooting(
-  analysis.reason
-)}
-`.trim(),
+            analysis.reason,
         });
     }
 
     const deploymentName =
-      `${projectName
-        .toLowerCase()
-        .replace(
-          /\s+/g,
-          "-"
-        )}-${Date.now()}`;
+`${projectName
+.toLowerCase()
+.replace(
+ /\s+/g,
+ "-"
+)}-${Date.now()}`;
 
     const vercelRes =
       await fetch(
@@ -316,33 +300,44 @@ ${createTroubleshooting(
               "application/json",
           },
 
-          body: JSON.stringify({
-           name: deploymentName,
+          body:
+            JSON.stringify({
+              name:
+                deploymentName,
 
-           framework: analysis.framework,
+              framework:
+                analysis.framework,
 
-           installCommand: "cd frontend && npm install",
+              installCommand:
+                "cd frontend && npm install",
 
-           buildCommand: "cd frontend && npm run build",
+              buildCommand:
+                "cd frontend && npm run build",
 
-           outputDirectory: "frontend/dist",
+              outputDirectory:
+                "frontend/dist",
 
-           gitSource: {
-            type: "github",
+              gitSource: {
+                type:
+                  "github",
 
-            repoId,
+                repoId,
 
-            ref:
-             analysis.branch ||
-             github.default_branch ||
-             "main",
-           },
-         })
+                ref:
+                  analysis.branch ||
+                  github.default_branch ||
+                  "main",
+              },
+            }),
         }
       );
 
     const deployment =
       await vercelRes.json();
+
+    console.log(
+      deployment
+    );
 
     if (
       !vercelRes.ok
@@ -352,9 +347,14 @@ ${createTroubleshooting(
         teamId,
         projectId,
         userId,
+
         deployment.error?.message ||
-          deployment.message ||
-          "Deployment rejected"
+
+        deployment.message ||
+
+        "Deployment rejected",
+
+        deployment
       );
 
       return res
@@ -362,7 +362,8 @@ ${createTroubleshooting(
         .json({
           error:
             deployment.error?.message ||
-            deployment.message,
+            deployment.message ||
+            "Deployment rejected",
         });
     }
 
@@ -376,6 +377,7 @@ ${createTroubleshooting(
         "deployments"
       )
       .insert({
+
         deployment_id:
           deployment.id,
 
@@ -385,8 +387,29 @@ ${createTroubleshooting(
 
         url,
 
-        logs:
-          "🚀 Deployment started",
+logs:
+`
+🚀 Deployment started
+
+Framework:
+${analysis.framework}
+
+Build:
+${analysis.buildCommand}
+
+Install:
+${analysis.installCommand}
+
+Output:
+${analysis.outputDirectory}
+
+Detected:
+${
+analysis.detected?.join(", ")
+||
+"None"
+}
+`.trim(),
 
         environment:
           "preview",
@@ -415,63 +438,29 @@ ${createTroubleshooting(
         analysis,
       });
 
-  } 
+  }
+
   catch (err) {
-   console.error(
-    "[DEPLOY ERROR]",
-    err
-  );
 
-  try {
-    await supabase
-      .from("deployments")
-      .insert({
-        deployment_id:
-          `failed-${Date.now()}`,
+    console.error(
+      "[DEPLOY ERROR]",
+      err
+    );
 
-        status:
-          "ERROR",
+    await insertFailedDeployment(
+      req.body.teamId,
+      req.body.projectId,
+      req.body.userId,
+      err.message,
+      err
+    );
 
-        logs:
-`
-❌ Deployment failed
-
-Reason:
-${err.message}
-
-Troubleshooting:
-
-• Check repo structure
-• Verify build command
-• Verify framework
-`.trim(),
-
-        environment:
-          "preview",
-
-        triggered_by:
-          "user",
-
-        project_id:
-          req.body.projectId,
-
-        team_id:
-          req.body.teamId,
-
-        user_id:
-          req.body.userId,
+    return res
+      .status(500)
+      .json({
+        error:
+          err.message,
       });
 
-  } catch {}
-
-  return res
-    .status(500)
-    .json({
-      error:
-`
-❌ Deployment failed
-
-${err.message}
-`.trim(),
-    });
-}}
+  }
+}
