@@ -39,12 +39,18 @@ export default async function analyzeRepo(
         };
       }
 
-      owner = match[1];
+      owner =
+        match[1];
 
       repo =
         match[2]
-          .replace(".git", "");
-    } else {
+          .replace(
+            ".git",
+            ""
+          );
+    }
+
+    else {
       const parts =
         repoInput
           .trim()
@@ -92,7 +98,9 @@ export default async function analyzeRepo(
         }
       );
 
-    if (!repoRes.ok) {
+    if (
+      !repoRes.ok
+    ) {
       return {
         valid: false,
         deployable: false,
@@ -106,7 +114,7 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    CHECK FRONTEND FIRST
+    CHECK PACKAGE
     ==========================
     */
 
@@ -125,17 +133,17 @@ export default async function analyzeRepo(
       const candidate
       of packageCandidates
     ) {
-      const r =
+      const response =
         await fetch(
           `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch}/${candidate}`
         );
 
       if (
-        r.ok
+        response.ok
       ) {
         try {
           packageJson =
-            await r.json();
+            await response.json();
 
           packagePath =
             candidate;
@@ -151,9 +159,12 @@ export default async function analyzeRepo(
     ) {
       return {
         valid: true,
-        deployable: false,
+
+        deployable:
+          false,
 
         owner,
+
         repo,
 
         reason:
@@ -202,7 +213,7 @@ export default async function analyzeRepo(
 
     /*
     ==========================
-    VERIFY BUILD
+    BUILD CHECK
     ==========================
     */
 
@@ -226,6 +237,8 @@ export default async function analyzeRepo(
 
         installCommand,
 
+        buildCommand,
+
         outputDirectory:
           null,
 
@@ -237,15 +250,6 @@ export default async function analyzeRepo(
         ],
       };
     }
-
-    buildCommand =
-      packageJson
-        .scripts
-        .build.includes(
-          "vite"
-        )
-        ? "npm run build"
-        : buildCommand;
 
     /*
     ==========================
@@ -295,24 +299,13 @@ export default async function analyzeRepo(
     }
 
     /*
-    ==========================
-    FRONTEND FOLDER
-    ==========================
+    IMPORTANT:
+    DO NOT prepend
+    frontend/
+    DO NOT use
+    cd frontend &&
+    deployProject handles rootDirectory
     */
-
-    if (
-      packagePath ===
-      "frontend/package.json"
-    ) {
-      installCommand =
-        `cd frontend && ${installCommand}`;
-
-      buildCommand =
-        `cd frontend && ${buildCommand}`;
-
-      outputDirectory =
-        `frontend/${outputDirectory}`;
-    }
 
     return {
       valid: true,
@@ -347,9 +340,12 @@ export default async function analyzeRepo(
       ],
     };
 
-  } catch (
+  }
+
+  catch (
     err
   ) {
+
     console.error(
       "[ANALYZE]",
       err
