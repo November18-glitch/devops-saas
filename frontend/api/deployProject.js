@@ -370,21 +370,39 @@ ${analysis.detected?.join(", ") || "None"}
                   github.default_branch ||
                   "main",
               },
-
               projectSettings: {
 
                 framework:
-                  analysis.framework,
+                 analysis.framework,
+
+                rootDirectory:
+                 analysis.detected?.includes(
+                 "frontend/package.json"
+                  )
+                 ? "frontend"
+                 : null,
 
                 installCommand:
-                  analysis.installCommand,
+                 analysis.installCommand
+                 ?.replace(
+                 "cd frontend && ",
+                 ""
+                 ),
 
                 buildCommand:
-                  analysis.buildCommand,
+                 analysis.buildCommand
+                 ?.replace(
+                 "cd frontend && ",
+                 ""
+                 ),
 
                 outputDirectory:
-                  analysis.outputDirectory,
-              },
+                 analysis.outputDirectory
+                 ?.replace(
+                 "frontend/",
+                 ""
+                 ),
+               },
 
             }),
         }
