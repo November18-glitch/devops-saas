@@ -1,314 +1,421 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabase =
+createClient(
+process.env.SUPABASE_URL,
+process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-function normalizeStatus(state) {
-  if (!state) return "BUILDING";
+function normalizeStatus(
+state
+) {
+if (!state)
+return "BUILDING";
 
-  const s = state.toUpperCase();
+const s =
+state.toUpperCase();
 
-  if (
-    s === "READY"
-  ) {
-    return "READY";
-  }
-
-  if (
-    s === "ERROR" ||
-    s === "FAILED" ||
-    s === "CANCELED"
-  ) {
-    return "ERROR";
-  }
-
-  return "BUILDING";
+if (
+s === "READY"
+) {
+return "READY";
 }
 
-function buildTroubleshooting(raw) {
-  const text =
-    String(raw || "")
-      .toLowerCase();
+if (
+[
+"ERROR",
+"FAILED",
+"CANCELED"
+].includes(s)
+) {
+return "ERROR";
+}
 
-  const fixes = [];
+return "BUILDING";
+}
 
-  if (
-    text.includes(
-      "package.json"
-    )
-  ) {
-    fixes.push(
-      "• package.json missing"
-    );
-  }
+function buildTroubleshooting(
+raw
+) {
+const text =
+String(
+raw || ""
+).toLowerCase();
 
-  if (
-    text.includes(
-      "module not found"
-    )
-  ) {
-    fixes.push(
-      "• install missing dependencies"
-    );
-  }
+const fixes = [];
 
-  if (
-    text.includes(
-      "command failed"
-    )
-  ) {
-    fixes.push(
-      "• verify build command"
-    );
-  }
+if (
+text.includes(
+"package"
+)
+) {
+fixes.push(
+"• Verify package.json"
+);
+}
 
-  if (
-    text.includes(
-      "environment variable"
-    )
-  ) {
-    fixes.push(
-      "• add environment variables"
-    );
-  }
+if (
+text.includes(
+"module"
+)
+) {
+fixes.push(
+"• Install dependencies"
+);
+}
 
-  if (
-    text.includes(
-      "npm"
-    )
-  ) {
-    fixes.push(
-      "• run npm install locally"
-    );
-  }
+if (
+text.includes(
+"build"
+)
+) {
+fixes.push(
+"• Verify build script"
+);
+}
 
-  if (
-    text.includes(
-      "next"
-    )
-  ) {
-    fixes.push(
-      "• verify next.config"
-    );
-  }
+if (
+text.includes(
+"environment"
+)
+) {
+fixes.push(
+"• Configure environment variables"
+);
+}
 
-  if (
-    fixes.length === 0
-  ) {
-    fixes.push(
-      "• check repo structure"
-    );
+if (
+text.includes(
+"workspace"
+)
+) {
+fixes.push(
+"• Monorepo detected"
+);
+}
 
-    fixes.push(
-      "• run build locally"
-    );
+if (
+fixes.length === 0
+) {
+fixes.push(
+"• Review deployment logs"
+);
 
-    fixes.push(
-      "• verify framework"
-    );
-  }
+fixes.push(
+"• Run locally"
+);
 
-  return fixes.join("\n");
+fixes.push(
+"• Verify repo structure"
+);
+}
+
+return fixes.join(
+"\n"
+);
 }
 
 async function fetchLogs(
-  id,
-  headers
+id,
+headers
 ) {
-  try {
-    const res =
-      await fetch(
-        `https://api.vercel.com/v6/deployments/${id}/events`,
-        {
-          headers,
-        }
-      );
+try {
 
-    if (
-      !res.ok
-    ) {
-      return "";
-    }
+const res =
+await fetch(
+`https://api.vercel.com/v6/deployments/${id}/events`,
+{
+headers,
+}
+);
 
-    const data =
-      await res.json();
+if (
+!res.ok
+) {
+return "";
+}
 
-    const events =
-      data.events ||
-      [];
+const data =
+await res.json();
 
-    return events
-      .map(
-        (
-          x
-        ) =>
-          x.payload
-            ?.text ||
-          ""
-      )
-      .filter(
-        Boolean
-      )
-      .join(
-        "\n"
-      );
+return (
+data.events ||
+[]
+)
+.map(
+(
+e
+)=>
+e.payload
+?.text
+)
+.filter(
+Boolean
+)
+.join(
+"\n"
+);
 
-  } catch {
-    return "";
-  }
+} catch {
+
+return "";
+
+}
 }
 
 export default async function handler(
-  req,
-  res
+req,
+res
 ) {
-  try {
-    const id =
-      req.query.id;
 
-    if (
-      !id
-    ) {
-      return res
-        .status(
-          400
-        )
-        .json({
-          error:
-            "missing id",
-        });
-    }
+try {
 
-    const headers =
-      {
-        Authorization:
-          `Bearer ${process.env.VERCEL_TOKEN}`,
-      };
+const {
+id
+} =
+req.query;
 
-    const dep =
-      await fetch(
-        `https://api.vercel.com/v13/deployments/${id}`,
-        {
-          headers,
-        }
-      );
+if (
+!id
+) {
+return res
+.status(
+400
+)
+.json({
+error:
+"missing id",
+});
+}
 
-    const deployment =
-      await dep.json();
+/*
+FIND LOCAL DB ROW
+*/
 
-    if (
-      !dep.ok
-    ) {
-      return res
-        .status(
-          500
-        )
-        .json({
-          error:
-            deployment
-              ?.error
-              ?.message ||
-            "vercel failed",
-        });
-    }
+const {
+data:
+row,
+error:
+dbError,
+}
+=
+await supabase
+.from(
+"deployments"
+)
+.select(
+"*"
+)
+.eq(
+"deployment_id",
+id
+)
+.single();
 
-    const status =
-      normalizeStatus(
-        deployment.readyState ||
-          deployment.state
-      );
+if (
+dbError ||
+!row
+) {
 
-    const url =
-      deployment.url
-        ? `https://${deployment.url}`
-        : null;
+return res
+.status(
+404
+)
+.json({
+error:
+"deployment not found",
+});
 
-    const rawLogs =
-      await fetchLogs(
-        id,
-        headers
-      );
+}
 
-    let logs =
-      rawLogs;
+const vercelId =
+row.logs
+?.match(
+/Deployment ID:\s*(dpl_[^\n]+)/i
+)
+?.[1];
 
-    if (
-      status ===
-      "READY"
-    ) {
-      logs = `
-✅ Deployment successful
+if (
+!vercelId
+) {
+
+return res
+.status(
+200
+)
+.json({
+
+status:
+row.status,
+
+logs:
+row.logs,
+
+url:
+row.url,
+
+});
+
+}
+
+const headers =
+{
+Authorization:
+`Bearer ${process.env.VERCEL_TOKEN}`,
+};
+
+const dep =
+await fetch(
+`https://api.vercel.com/v13/deployments/${vercelId}`,
+{
+headers,
+}
+);
+
+const deployment =
+await dep.json();
+
+if (
+!dep.ok
+) {
+
+return res
+.status(
+500
+)
+.json({
+error:
+deployment
+?.error
+?.message ||
+"vercel failed",
+});
+
+}
+
+const status =
+normalizeStatus(
+deployment.readyState
+);
+
+const url =
+deployment.url
+? `https://${deployment.url}`
+: row.url;
+
+const rawLogs =
+await fetchLogs(
+vercelId,
+headers
+);
+
+let logs =
+rawLogs;
+
+if (
+status ===
+"READY"
+) {
+
+logs =
+`
+✅ Deployment completed
+
+Status:
+READY
 
 URL:
 ${url}
 
-Finished in seconds.
+Deployment ID:
+${vercelId}
 `
-        .trim();
-    }
+.trim();
 
-    if (
-      status ===
-      "ERROR"
-    ) {
-      logs = `
+}
+
+if (
+status ===
+"ERROR"
+) {
+
+logs =
+`
 ❌ Deployment failed
 
 Reason:
 
 ${
-  rawLogs ||
-  deployment
-    ?.error
-    ?.message ||
-  "Build failed"
+rawLogs ||
+deployment
+?.error
+?.message ||
+"Build failed"
 }
 
 Troubleshooting:
 
 ${buildTroubleshooting(
-  rawLogs
+rawLogs
 )}
 `
-        .trim();
-    }
+.trim();
 
-    await supabase
-      .from(
-        "deployments"
-      )
-      .update({
-        status,
-        logs,
-        url,
-      })
-      .eq(
-        "deployment_id",
-        id
-      );
+}
 
-    return res
-      .status(
-        200
-      )
-      .json({
-        status,
-        logs,
-        url,
-      });
+await supabase
+.from(
+"deployments"
+)
+.update({
 
-  } catch (
-    err
-  ) {
-    return res
-      .status(
-        500
-      )
-      .json({
-        error:
-          err.message,
-      });
-  }
+status,
+
+url,
+
+logs,
+
+})
+.eq(
+"id",
+row.id
+);
+
+return res
+.status(
+200
+)
+.json({
+
+status,
+
+url,
+
+logs,
+
+});
+
+}
+
+catch (
+err
+) {
+
+console.error(
+"[STATUS ERROR]",
+err
+);
+
+return res
+.status(
+500
+)
+.json({
+
+error:
+err.message,
+
+});
+
+}
 }
