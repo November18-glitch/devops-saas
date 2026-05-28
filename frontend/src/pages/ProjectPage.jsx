@@ -57,9 +57,7 @@ export default function ProjectPage() {
         try {
 
           const res =
-            await fetch(
-              `/api/getProjectById?id=${projectId}`
-            );
+            await fetch(`/api/app?action=getProjectById&id=${projectId}`);
 
           const data =
             await safeJson(res);
@@ -95,7 +93,7 @@ export default function ProjectPage() {
 
           const res =
             await fetch(
-              `/api/getDeployments?projectId=${projectId}`
+              `/api/app?action=getDeployments&projectId=${projectId}`
             );
 
           const data =
