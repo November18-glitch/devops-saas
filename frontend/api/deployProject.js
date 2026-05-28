@@ -405,14 +405,25 @@ ${analysis.detected?.join(", ") || "None"}
                  ),
                },
 
-               env: {
+               env: [
 
-                VITE_SUPABASE_URL:
+               {
+                key:
+                 "VITE_SUPABASE_URL",
+
+                value:
                  process.env.VITE_SUPABASE_URL,
+              },
 
-                VITE_SUPABASE_ANON_KEY:
+               {
+                key:
+                 "VITE_SUPABASE_ANON_KEY",
+
+                value:
                  process.env.VITE_SUPABASE_ANON_KEY,
-               },
+              },
+
+                ],
 
             }),
         }
