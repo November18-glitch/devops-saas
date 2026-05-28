@@ -370,6 +370,7 @@ ${analysis.detected?.join(", ") || "None"}
                   github.default_branch ||
                   "main",
               },
+
               projectSettings: {
 
                 framework:
@@ -402,6 +403,15 @@ ${analysis.detected?.join(", ") || "None"}
                  "frontend/",
                  ""
                  ),
+               },
+
+               env: {
+
+                VITE_SUPABASE_URL:
+                 process.env.VITE_SUPABASE_URL,
+
+                VITE_SUPABASE_ANON_KEY:
+                 process.env.VITE_SUPABASE_ANON_KEY,
                },
 
             }),
