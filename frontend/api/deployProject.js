@@ -346,7 +346,7 @@ ${analysis.detected?.join(", ") || "None"}
 
     const vercelPayload = {
 
-      name:
+  name:
 `${projectName
 .toLowerCase()
 .replace(
@@ -354,57 +354,57 @@ ${analysis.detected?.join(", ") || "None"}
  "-"
 )}-${Date.now()}`,
 
-      gitSource: {
-        type:
-          "github",
+  gitSource: {
+    type:
+      "github",
 
-        repoId:
-          github.id,
+    repoId:
+      github.id,
 
-        ref:
-          github.default_branch ||
-          "main",
-      },
+    ref:
+      github.default_branch ||
+      "main",
+  },
 
-      projectSettings: {
+  projectSettings: {
 
-        framework:
-          analysis.framework,
+    framework:
+      analysis.framework,
 
-        ...(rootDirectory
-          ? {
-              rootDirectory,
-            }
-          : {}),
+    ...(rootDirectory
+      ? {
+          rootDirectory,
+        }
+      : {}),
 
-        installCommand:
-          analysis.installCommand,
+    installCommand:
+      analysis.installCommand,
 
-        buildCommand:
-          analysis.buildCommand,
+    buildCommand:
+      analysis.buildCommand,
 
-        outputDirectory:
-          analysis.outputDirectory,
-      },
+    outputDirectory:
+      analysis.outputDirectory,
+  },
 
-      /*
-      IMPORTANT:
-      env MUST BE OBJECT
-      NOT ARRAY
-      */
+  env: {
 
-      env: {
+    VITE_SUPABASE_URL: {
+      value:
+        process.env.VITE_SUPABASE_URL,
+    },
 
-        VITE_SUPABASE_URL:
-          process.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: {
+      value:
+        process.env.VITE_SUPABASE_ANON_KEY,
+    },
 
-        VITE_SUPABASE_ANON_KEY:
-          process.env.VITE_SUPABASE_ANON_KEY,
-
-        VITE_FRONTEND_URL:
-          process.env.VITE_FRONTEND_URL,
-      },
-    };
+    VITE_FRONTEND_URL: {
+      value:
+        process.env.VITE_FRONTEND_URL,
+    },
+  },
+};
 
     console.log(
       "[VERCEL PAYLOAD]",
