@@ -388,15 +388,20 @@ ${analysis.detected?.join(", ") || "None"}
   },
 
   env: {
-
   VITE_SUPABASE_URL:
-    process.env.VITE_SUPABASE_URL,
+    String(
+      process.env.VITE_SUPABASE_URL || ""
+    ),
 
   VITE_SUPABASE_ANON_KEY:
-    process.env.VITE_SUPABASE_ANON_KEY,
+    String(
+      process.env.VITE_SUPABASE_ANON_KEY || ""
+    ),
 
   VITE_FRONTEND_URL:
-    process.env.VITE_FRONTEND_URL || "",
+    String(
+      process.env.FRONTEND_URL || ""
+    ),
 },
 };
 
