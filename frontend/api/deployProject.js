@@ -140,6 +140,7 @@ async function updateDeployment(
   url = null
 ) {
   try {
+
     await supabase
       .from("deployments")
       .update({
@@ -155,6 +156,7 @@ async function updateDeployment(
       );
 
   } catch (err) {
+
     console.error(
       "[UPDATE ERROR]",
       err
@@ -166,6 +168,7 @@ export default async function handler(
   req,
   res
 ) {
+
   let tempDeploymentId =
     crypto.randomUUID();
 
@@ -211,6 +214,7 @@ export default async function handler(
         "deployments"
       )
       .insert({
+
         deployment_id:
           tempDeploymentId,
 
@@ -333,6 +337,80 @@ ${analysis.detected?.join(", ") || "None"}
 `
     );
 
+    const rootDirectory =
+      analysis.detected?.includes(
+        "frontend/package.json"
+      )
+        ? "frontend"
+        : null;
+
+    const vercelPayload = {
+
+      name:
+`${projectName
+.toLowerCase()
+.replace(
+ /\s+/g,
+ "-"
+)}-${Date.now()}`,
+
+      gitSource: {
+        type:
+          "github",
+
+        repoId:
+          github.id,
+
+        ref:
+          github.default_branch ||
+          "main",
+      },
+
+      projectSettings: {
+
+        framework:
+          analysis.framework,
+
+        ...(rootDirectory
+          ? {
+              rootDirectory,
+            }
+          : {}),
+
+        installCommand:
+          analysis.installCommand,
+
+        buildCommand:
+          analysis.buildCommand,
+
+        outputDirectory:
+          analysis.outputDirectory,
+      },
+
+      /*
+      IMPORTANT:
+      env MUST BE OBJECT
+      NOT ARRAY
+      */
+
+      env: {
+
+        VITE_SUPABASE_URL:
+          process.env.VITE_SUPABASE_URL,
+
+        VITE_SUPABASE_ANON_KEY:
+          process.env.VITE_SUPABASE_ANON_KEY,
+
+        VITE_FRONTEND_URL:
+          process.env.VITE_FRONTEND_URL,
+      },
+    };
+
+    console.log(
+      "[VERCEL PAYLOAD]",
+      vercelPayload
+    );
+
     const vercelRes =
       await fetch(
         "https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1",
@@ -349,88 +427,19 @@ ${analysis.detected?.join(", ") || "None"}
           },
 
           body:
-            JSON.stringify({
-
-              name:
-`${projectName
-.toLowerCase()
-.replace(
- /\s+/g,
- "-"
-)}-${Date.now()}`,
-
-              gitSource: {
-                type:
-                  "github",
-
-                repoId:
-                  github.id,
-
-                ref:
-                  github.default_branch ||
-                  "main",
-              },
-
-              projectSettings: {
-
-                framework:
-                 analysis.framework,
-
-                rootDirectory:
-                 analysis.detected?.includes(
-                 "frontend/package.json"
-                  )
-                 ? "frontend"
-                 : null,
-
-                installCommand:
-                 analysis.installCommand
-                 ?.replace(
-                 "cd frontend && ",
-                 ""
-                 ),
-
-                buildCommand:
-                 analysis.buildCommand
-                 ?.replace(
-                 "cd frontend && ",
-                 ""
-                 ),
-
-                outputDirectory:
-                 analysis.outputDirectory
-                 ?.replace(
-                 "frontend/",
-                 ""
-                 ),
-               },
-
-               env: [
-
-               {
-                key:
-                 "VITE_SUPABASE_URL",
-
-                value:
-                 process.env.VITE_SUPABASE_URL,
-              },
-
-               {
-                key:
-                 "VITE_SUPABASE_ANON_KEY",
-
-                value:
-                 process.env.VITE_SUPABASE_ANON_KEY,
-              },
-
-                ],
-
-            }),
+            JSON.stringify(
+              vercelPayload
+            ),
         }
       );
 
     const deployment =
       await vercelRes.json();
+
+    console.log(
+      "[VERCEL RESPONSE]",
+      deployment
+    );
 
     if (
       !vercelRes.ok
@@ -464,23 +473,22 @@ ${analysis.framework}
     );
 
     return res
-     .status(200)
-     .json({
+      .status(200)
+      .json({
 
-     deploymentId:
-      deployment.id,
+        deploymentId:
+          deployment.id,
 
-     localDeploymentId:
-     tempDeploymentId,
+        localDeploymentId:
+          tempDeploymentId,
 
-     url:
-      deployment.url
-      ? `https://${deployment.url}`
-      : null,
+        url:
+          deployment.url
+            ? `https://${deployment.url}`
+            : null,
 
-     analysis,
-
-    });
+        analysis,
+      });
 
   } catch (err) {
 
