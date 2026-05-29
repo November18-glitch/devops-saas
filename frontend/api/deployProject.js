@@ -400,7 +400,7 @@ ${analysis.detected?.join(", ") || "None"}
 
   VITE_FRONTEND_URL:
     String(
-      process.env.FRONTEND_URL || ""
+      process.env.VITE_FRONTEND_URL || ""
     ),
 },
 };
