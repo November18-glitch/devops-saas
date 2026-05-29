@@ -18,6 +18,7 @@ import Landing from "./pages/Landing";
 // Layout
 import Layout from "./components/Layout";
 
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);

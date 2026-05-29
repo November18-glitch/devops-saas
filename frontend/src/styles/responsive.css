@@ -1,0 +1,72 @@
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+}
+
+button {
+  width: auto;
+  max-width: 100%;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+
+  .dashboard-grid,
+  .projects-grid,
+  .teams-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .navbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  .card,
+  .project-card,
+  .team-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  .container,
+  .dashboard-container,
+  .projects-container,
+  .teams-container {
+    padding: 16px;
+  }
+}
