@@ -6,17 +6,8 @@ const supabaseUrl =
 const supabaseAnonKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl) {
-  throw new Error(
-    "VITE_SUPABASE_URL missing"
-  );
-}
-
-if (!supabaseAnonKey) {
-  throw new Error(
-    "VITE_SUPABASE_ANON_KEY missing"
-  );
-}
+console.log("URL =", supabaseUrl);
+console.log("KEY =", supabaseAnonKey);
 
 export const supabase =
   createClient(
