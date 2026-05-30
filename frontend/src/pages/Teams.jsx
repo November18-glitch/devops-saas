@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"; // ✅ FIXED
 import { useNavigate } from "react-router-dom"; // ✅ FIXED
-import { supabase } from "../supabaseClient";
+import { supabase } from "../lib/supabase";
 import "./Teams.css";
 
 export default function Teams() {
