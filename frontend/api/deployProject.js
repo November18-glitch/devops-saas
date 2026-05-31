@@ -344,37 +344,40 @@ ${analysis.detected?.join(", ") || "None"}
         ? "frontend"
         : null;
 
-    const vercelPayload = {
+    console.log(
+  "DEPLOY_SUPABASE_URL =",
+  process.env.DEPLOY_SUPABASE_URL
+);
+
+console.log(
+  "DEPLOY_SUPABASE_ANON_KEY exists =",
+  !!process.env.DEPLOY_SUPABASE_ANON_KEY
+);
+
+const vercelPayload = {
 
   name:
-`${projectName
-.toLowerCase()
-.replace(
- /\s+/g,
- "-"
-)}-${Date.now()}`,
+   `${projectName
+   .toLowerCase()
+   .replace(
+    /\s+/g,
+    "-"
+   )}-${Date.now()}`,
 
   gitSource: {
-    type:
-      "github",
-
-    repoId:
-      github.id,
-
+    type: "github",
+    repoId: github.id,
     ref:
       github.default_branch ||
       "main",
   },
 
   projectSettings: {
-
     framework:
       analysis.framework,
 
     ...(rootDirectory
-      ? {
-          rootDirectory,
-        }
+      ? { rootDirectory }
       : {}),
 
     installCommand:
@@ -388,14 +391,14 @@ ${analysis.detected?.join(", ") || "None"}
   },
 
   env: {
-   VITE_SUPABASE_URL:
-    process.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_URL:
+      process.env.DEPLOY_SUPABASE_URL,
 
-   VITE_SUPABASE_ANON_KEY:
-    process.env.VITE_SUPABASE_ANON_KEY,
+    VITE_SUPABASE_ANON_KEY:
+      process.env.DEPLOY_SUPABASE_ANON_KEY,
 
-   VITE_FRONTEND_URL:
-    process.env.VITE_FRONTEND_URL,
+    VITE_FRONTEND_URL:
+      process.env.VITE_FRONTEND_URL,
   },
 };
 
