@@ -210,40 +210,20 @@ export default async function handler(
     }
 
     await supabase
-      .from(
-        "deployments"
-      )
-      .insert({
+     .from("deployments")
+     .insert({
+     deployment_id: tempDeploymentId,
+     project_id: projectId,
+     team_id: teamId,
+     user_id: userId,
+     status: "ANALYZING",
+     logs: `
+     🔎 Checking repository...
 
-        deployment_id:
-          tempDeploymentId,
-
-        status:
-          "ANALYZING",
-
-        logs:
-`
-🔎 Checking repository...
-
-Repository:
-${repoUrl}
-`.trim(),
-
-        environment:
-          "preview",
-
-        triggered_by:
-          "user",
-
-        team_id:
-          teamId,
-
-        project_id:
-          projectId,
-
-        user_id:
-          userId,
-      });
+     Repository:
+     ${repoUrl}
+     `.trim(),
+});
 
     const match =
       repoUrl.match(
@@ -313,29 +293,35 @@ ${repoUrl}
       );
     }
 
-    await updateDeployment(
-      tempDeploymentId,
+    await supabase
+  .from("deployments")
+  .update({
+    status:
+      deployment.readyState ||
       "BUILDING",
 
-`
-🚀 Deployment started
+    vercel_deployment_id:
+      deployment.id,
+
+    url:
+      deployment.url
+        ? `https://${deployment.url}`
+        : null,
+
+    logs: `
+🚀 Deployment accepted
+
+Deployment ID:
+${deployment.id}
 
 Framework:
 ${analysis.framework}
-
-Install:
-${analysis.installCommand}
-
-Build:
-${analysis.buildCommand}
-
-Output:
-${analysis.outputDirectory}
-
-Detected:
-${analysis.detected?.join(", ") || "None"}
-`
-    );
+`.trim(),
+  })
+  .eq(
+    "deployment_id",
+    tempDeploymentId
+  );
 
     const rootDirectory =
       analysis.detected?.includes(
