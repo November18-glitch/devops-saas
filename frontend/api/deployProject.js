@@ -345,14 +345,14 @@ ${analysis.detected?.join(", ") || "None"}
         : null;
 
     console.log(
-  "DEPLOY_SUPABASE_URL =",
-  process.env.DEPLOY_SUPABASE_URL
-);
+     "VITE_SUPABASE_URL exists =",
+     !!process.env.VITE_SUPABASE_URL
+    );
 
-console.log(
-  "DEPLOY_SUPABASE_ANON_KEY exists =",
-  !!process.env.DEPLOY_SUPABASE_ANON_KEY
-);
+    console.log(
+     "VITE_SUPABASE_ANON_KEY exists =",
+     !!process.env.VITE_SUPABASE_ANON_KEY
+    );
 
 const vercelPayload = {
 
@@ -391,14 +391,14 @@ const vercelPayload = {
   },
 
   env: {
-    VITE_SUPABASE_URL:
-      process.env.DEPLOY_SUPABASE_URL,
+  VITE_SUPABASE_URL:
+    process.env.VITE_SUPABASE_URL,
 
-    VITE_SUPABASE_ANON_KEY:
-      process.env.DEPLOY_SUPABASE_ANON_KEY,
+  VITE_SUPABASE_ANON_KEY:
+    process.env.VITE_SUPABASE_ANON_KEY,
 
-    VITE_FRONTEND_URL:
-      process.env.VITE_FRONTEND_URL,
+  VITE_FRONTEND_URL:
+    process.env.VITE_FRONTEND_URL,
   },
 };
 
@@ -447,26 +447,36 @@ const vercelPayload = {
       );
     }
 
-    await updateDeployment(
-      tempDeploymentId,
-
+    await supabase
+  .from("deployments")
+  .update({
+    status:
       deployment.readyState ||
       "BUILDING",
 
-`
-🚀 Deployment accepted
-
-Deployment ID:
-${deployment.id}
-
-Framework:
-${analysis.framework}
-`,
-
+    url:
       deployment.url
         ? `https://${deployment.url}`
-        : null
-    );
+        : null,
+
+    vercel_deployment_id:
+      deployment.id,
+
+    logs:
+     `
+      🚀 Deployment accepted
+
+         Deployment ID:
+          ${deployment.id}
+
+         Framework:
+          ${analysis.framework}
+         `.trim()
+        })
+        .eq(
+        "deployment_id",
+        tempDeploymentId
+      );
 
     return res
       .status(200)

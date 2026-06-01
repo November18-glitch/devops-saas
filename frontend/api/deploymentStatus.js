@@ -229,31 +229,18 @@ error:
 }
 
 const vercelId =
-row.logs
-?.match(
-/Deployment ID:\s*(dpl_[^\n]+)/i
-)
-?.[1];
+  row.vercel_deployment_id;
 
-if (
-!vercelId
-) {
+if (!vercelId) {
 
 return res
-.status(
-200
-)
+.status(200)
 .json({
-
-status:
-row.status,
-
+status: row.status,
 logs:
-row.logs,
-
-url:
-row.url,
-
+row.logs ||
+"Waiting for deployment...",
+url: row.url,
 });
 
 }
@@ -269,6 +256,7 @@ await fetch(
 `https://api.vercel.com/v13/deployments/${vercelId}`,
 {
 headers,
+cache: "no-store",
 }
 );
 
