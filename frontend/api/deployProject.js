@@ -293,35 +293,28 @@ export default async function handler(
       );
     }
 
-    await supabase
-  .from("deployments")
-  .update({
-    status:
-      deployment.readyState ||
+    await updateDeployment(
+     tempDeploymentId,
       "BUILDING",
+      `
+     🚀 Deployment started
 
-    vercel_deployment_id:
-      deployment.id,
+       Framework:
+        ${analysis.framework}
 
-    url:
-      deployment.url
-        ? `https://${deployment.url}`
-        : null,
+      Install:
+        ${analysis.installCommand}
 
-    logs: `
-🚀 Deployment accepted
+      Build:
+        ${analysis.buildCommand}
 
-Deployment ID:
-${deployment.id}
+      Output:
+        ${analysis.outputDirectory}
 
-Framework:
-${analysis.framework}
-`.trim(),
-  })
-  .eq(
-    "deployment_id",
-    tempDeploymentId
-  );
+      Detected:
+        ${analysis.detected?.join(", ") || "None"}
+      `
+    );
 
     const rootDirectory =
       analysis.detected?.includes(
