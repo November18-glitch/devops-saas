@@ -6,10 +6,26 @@ const url =
 const key =
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log("URL =", url);
-console.log("KEY =", key);
+console.log(
+  "URL =",
+  url
+);
+
+console.log(
+  "KEY exists =",
+  !!key
+);
+
+if (!url || !key) {
+  console.error(
+    "Supabase environment variables missing"
+  );
+}
 
 export const supabase =
   url && key
-    ? createClient(url, key)
+    ? createClient(
+        url,
+        key
+      )
     : null;

@@ -24,23 +24,43 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial session load
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+
+  if (!supabase) {
+    console.error(
+      "Supabase not configured"
+    );
+
+    setLoading(false);
+
+    return;
+  }
+
+  supabase.auth
+    .getSession()
+    .then(({ data }) => {
+      setSession(
+        data.session
+      );
+
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange(
+  const {
+    data: listener,
+  } =
+    supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setSession(session);
+        setSession(
+          session
+        );
       }
     );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+
+}, []);
 
   // 🔒 IMPORTANT: prevents blank screen
   if (loading) {
