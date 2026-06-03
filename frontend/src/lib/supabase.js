@@ -1,9 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-console.log("VITE_SUPABASE_URL =", import.meta.env.VITE_SUPABASE_URL);
-console.log("VITE_SUPABASE_ANON_KEY exists =", !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+const url =
+  import.meta.env.VITE_SUPABASE_URL;
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const key =
+  import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log("URL =", url);
+console.log("KEY =", key);
+
+export const supabase =
+  url && key
+    ? createClient(url, key)
+    : null;
