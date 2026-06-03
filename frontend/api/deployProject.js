@@ -368,22 +368,9 @@ const vercelPayload = {
     outputDirectory:
       analysis.outputDirectory,
   },
-
-  env: {
-  VITE_SUPABASE_URL: {
-    value: process.env.VITE_SUPABASE_URL,
-  },
-
-  VITE_SUPABASE_ANON_KEY: {
-    value: process.env.VITE_SUPABASE_ANON_KEY,
-  },
-
-  VITE_FRONTEND_URL: {
-    value: process.env.VITE_FRONTEND_URL,
-  },
-},
 };
-   console.log(
+
+console.log(
   "[ENV CHECK]",
   JSON.stringify(
     vercelPayload.env,
