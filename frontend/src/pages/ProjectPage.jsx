@@ -15,6 +15,9 @@ export default function ProjectPage() {
   const [loading, setLoading] =
     useState(true);
 
+  const [redeploying, setRedeploying] =
+    useState(false);
+
   /*
   ==========================
   SAFE JSON
@@ -100,22 +103,21 @@ export default function ProjectPage() {
             await safeJson(res);
 
           const safe =
-            data.deployments || [];
+            (data.deployments || [])
+            .sort(
+            (a,b) =>
+            new Date(b.created_at) -
+            new Date(a.created_at)
+            );
 
           setDeployments(
             safe.map((d) => ({
-              id:
-                d.deployment_id,
-
-              status:
-                d.status,
-
-              url:
-                d.url || null,
-
-              logs:
-                d.logs || "",
-            }))
+             id: d.deployment_id,
+             status: d.status,
+             url: d.url || null,
+             logs: d.logs || "",
+             createdAt: d.created_at,
+           }))
           );
 
         } catch (err) {
@@ -144,7 +146,7 @@ export default function ProjectPage() {
     async () => {
 
       if (!project) return;
-
+      setRedeploying(true);
       try {
 
         const res =
@@ -176,7 +178,9 @@ export default function ProjectPage() {
                   userId:
                     project.user_id,
                 }),
+                
             }
+            
           );
 
         const data =
@@ -191,18 +195,12 @@ export default function ProjectPage() {
         setDeployments(
           (prev) => [
             {
-              id:
-                data.localDeploymentId,
-
-              status:
-                "BUILDING",
-
-              url:
-                data.url || null,
-
-              logs:
-                "🚀 Deployment started...",
-            },
+           id: data.localDeploymentId,
+           status: "BUILDING",
+           url: data.url || null,
+           logs: "🚀 Deployment started...",
+           createdAt: new Date().toISOString(),
+         },
 
             ...prev,
           ]
@@ -210,13 +208,14 @@ export default function ProjectPage() {
 
       } catch (err) {
 
-        console.error(
-          err
-        );
+       console.error(err);
 
-        alert(
-          err.message
-        );
+       alert(err.message);
+
+      } finally {
+
+       setRedeploying(false);
+
       }
     };
 
@@ -228,27 +227,17 @@ export default function ProjectPage() {
 
   useEffect(() => {
 
-    if (
-      !deployments.length
-    ) {
-      return;
-    }
+  if (!deployments.length) return;
 
-    const interval =
-      setInterval(() => {
+  fetchStatuses(deployments);
 
-        fetchStatuses(
-          deployments
-        );
+  const interval = setInterval(() => {
+    fetchStatuses(deployments);
+  }, 5000);
 
-      }, 3000);
+  return () => clearInterval(interval);
 
-    return () =>
-      clearInterval(
-        interval
-      );
-
-  }, [deployments]);
+}, [deployments]);
 
   const fetchStatuses =
     async (list) => {
@@ -384,8 +373,11 @@ export default function ProjectPage() {
         <button
           style={primaryBtn}
           onClick={handleRedeploy}
+          disabled={redeploying}
         >
-          🚀 Redeploy
+          {redeploying
+          ? "Deploying..."
+          : "🚀 Redeploy"}
         </button>
       </div>
 
@@ -419,7 +411,17 @@ export default function ProjectPage() {
             }}>
               {d.id}
             </p>
-
+            <p
+            style={{
+             fontSize: 12,
+             color: "#64748b",
+             marginTop: 4,
+           }}
+            >
+            {new Date(
+            d.createdAt
+            ).toLocaleString()}
+           </p>
             <p>
               Status:{" "}
 
@@ -435,7 +437,10 @@ export default function ProjectPage() {
                       : "#facc15",
                 }}
               >
-                {d.status}
+                {d.status === "ANALYZING" && "🔎 Analyzing"}
+                {d.status === "BUILDING" && "🚀 Building"}
+                {d.status === "READY" && "✅ Ready"}
+                {d.status === "ERROR" && "❌ Failed"}
               </span>
             </p>
 
@@ -451,7 +456,7 @@ export default function ProjectPage() {
                 rel="noreferrer"
                 style={link}
               >
-                🌍 Open Deployment
+                🚀 Open Deployment
               </a>
             )}
           </div>
@@ -512,4 +517,4 @@ const primaryBtn = {
 const link = {
   color: "#6366f1",
   textDecoration: "none",
-};
+}
