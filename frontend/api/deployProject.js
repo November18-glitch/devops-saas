@@ -191,15 +191,13 @@ export default async function handler(
       projectName,
       teamId,
       projectId,
-      userId,
     } = req.body;
 
     if (
       !repoUrl ||
       !projectName ||
       !teamId ||
-      !projectId ||
-      !userId
+      !projectId 
     ) {
       return res
         .status(400)
@@ -215,7 +213,6 @@ export default async function handler(
      deployment_id: tempDeploymentId,
      project_id: projectId,
      team_id: teamId,
-     user_id: userId,
      status: "ANALYZING",
      logs: `
      🔎 Checking repository...
