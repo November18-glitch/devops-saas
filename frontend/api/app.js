@@ -121,14 +121,11 @@ export default async function handler(req, res) {
           .from("projects")
           .insert({
             name,
-            repo_url:
-              repoUrl,
-            repo_type:
-              "github",
-            default_branch:
-              analysis.defaultBranch,
-            team_id:
-              teamId,
+            repo_url: repoUrl,
+            repo_type: "github",
+            default_branch: analysis.defaultBranch,
+            team_id: teamId,
+            user_id: userId,
           })
           .select()
           .single();
