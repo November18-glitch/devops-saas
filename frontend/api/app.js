@@ -100,18 +100,9 @@ export default async function handler(req, res) {
       }
 
       const analysis =
-        await analyzeRepo(
-          repoUrl
-        );
-
-      if (
-        !analysis.valid
-      ) {
-        return res.status(400).json({
-          error:
-            analysis.reason,
-        });
-      }
+       await analyzeRepo(
+       repoUrl
+      );
 
       const {
         data,
@@ -123,9 +114,21 @@ export default async function handler(req, res) {
             name,
             repo_url: repoUrl,
             repo_type: "github",
-            default_branch: analysis.defaultBranch,
+
+            default_branch:
+             analysis.defaultBranch || "main",
+
             team_id: teamId,
             user_id: userId,
+
+            deployable:
+             analysis.deployable ?? false,
+
+            framework:
+             analysis.framework || null,
+
+            analysis_reason:
+             analysis.reason || null,
           })
           .select()
           .single();

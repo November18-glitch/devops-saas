@@ -344,6 +344,26 @@ export default function ProjectPage() {
             {project.repo_url}
           </a>
         </p>
+        {project.deployable === false && (
+         <div
+           style={{
+            background: "#fef2f2",
+            color: "#991b1b",
+            padding: 16,
+            borderRadius: 12,
+            marginTop: 16,
+            marginBottom: 16,
+           }}
+          >
+           <strong>
+            Deployment unavailable
+           </strong>
+
+          <p>
+           {project.analysis_reason}
+          </p>
+          </div>
+        )}
 
         {liveDeployment?.url && (
 
@@ -371,9 +391,12 @@ export default function ProjectPage() {
         marginBottom: 30,
       }}>
         <button
-          style={primaryBtn}
-          onClick={handleRedeploy}
-          disabled={redeploying}
+         style={primaryBtn}
+         onClick={handleRedeploy}
+         disabled={
+         redeploying ||
+          project.deployable === false
+         }
         >
           {redeploying
           ? "Deploying..."
