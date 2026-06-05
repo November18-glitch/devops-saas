@@ -61,12 +61,13 @@ export default function Dashboard() {
           });
 
           await supabase.from("projects").insert({
-            name: "Sample Next.js App",
-            repo_url: "https://github.com/vercel/nextjs-dashboard",
-            repo_type: "github",
-            default_branch: "main",
-            team_id: createdTeam.id,
-            env_vars: {},
+           name: "Sample Next.js App",
+           repo_url: "https://github.com/vercel/nextjs-dashboard",
+           repo_type: "github",
+           default_branch: "main",
+           team_id: createdTeam.id,
+           env_vars: {},
+           is_sample: true,
           });
 
           return loadDashboard();

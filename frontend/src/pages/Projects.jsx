@@ -233,6 +233,36 @@ ${data.analysis?.detected?.join(", ") || "None"}
       ...prev,
     ]);
   };
+  const deleteProject = async (project) => {
+  if (project.is_sample) {
+    alert("Sample projects cannot be deleted.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Delete ${project.name}?`
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", project.id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setProjects((prev) =>
+    prev.filter((p) => p.id !== project.id)
+  );
+
+  if (selectedProject === project.id) {
+    setSelectedProject("");
+  }
+};
 
   useEffect(() => {
   const active =
@@ -385,6 +415,57 @@ ${data.analysis?.detected?.join(", ") || "None"}
 
         <div style={card}>
           <h3>Deploy Existing Project</h3>
+          <div style={{ marginBottom: 20 }}>
+  {projects.map((project) => (
+    <div
+      key={project.id}
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 12,
+        marginBottom: 10,
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+      }}
+    >
+      <div>
+        <b>{project.name}</b>
+
+        {project.is_sample && (
+          <span
+            style={{
+              marginLeft: 10,
+              background: "#eef2ff",
+              color: "#4338ca",
+              padding: "4px 8px",
+              borderRadius: 999,
+              fontSize: 12,
+            }}
+          >
+            SAMPLE
+          </span>
+        )}
+      </div>
+
+      {!project.is_sample && (
+        <button
+          onClick={() => deleteProject(project)}
+          style={{
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 12px",
+            cursor: "pointer",
+          }}
+        >
+          Delete
+        </button>
+      )}
+    </div>
+  ))}
+</div>
 
           <select
             style={input}
