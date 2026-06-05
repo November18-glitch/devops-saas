@@ -98,16 +98,29 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      const { data: deploymentsData } = await supabase
+      const {
+       data: deploymentsData,
+       error: deploymentsError,
+       } = await supabase
        .from("deployments")
        .select("*")
        .order("created_at", {
        ascending: false,
        });
 
-setDeployments(
-  deploymentsData || []
-);
+      console.log(
+       "DEPLOYMENTS:",
+       deploymentsData
+      );
+
+      console.log(
+       "DEPLOYMENTS ERROR:",
+       deploymentsError
+      );
+
+      setDeployments(
+       deploymentsData || []
+      );
 
     } catch (err) {
       console.error("Dashboard crash:", err);
