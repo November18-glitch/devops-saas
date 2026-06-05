@@ -316,7 +316,7 @@ setDeployments(
 
           <StatCard
             label="Deployments"
-            value={deployments.length}
+            value={deployments?.length || 0}
             emoji="🚀"
           />
 
