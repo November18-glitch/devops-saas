@@ -98,35 +98,16 @@ export default function Dashboard() {
       setProjects(projectsData || []);
       setMembersCount(membersData?.length || 0);
 
-      let deployData = [];
+      const { data: deploymentsData } = await supabase
+       .from("deployments")
+       .select("*")
+       .order("created_at", {
+       ascending: false,
+       });
 
-      if (projectsData && projectsData.length > 0) {
-        const projectIds = projectsData.map((p) => p.id);
-
-        const { data: byProject } = await supabase
-          .from("deployments")
-          .select("*")
-          .in("project_id", projectIds);
-
-        deployData = byProject || [];
-      }
-
-      const { data: byTeam } = await supabase
-        .from("deployments")
-        .select("*")
-        .in("team_id", teamIds);
-
-      const merged = [...(deployData || []), ...(byTeam || [])];
-
-      const unique = Array.from(
-        new Map(merged.map((d) => [d.deployment_id, d])).values()
-      );
-
-      unique.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-
-      setDeployments(unique.slice(0, 5));
+setDeployments(
+  deploymentsData || []
+);
 
     } catch (err) {
       console.error("Dashboard crash:", err);
