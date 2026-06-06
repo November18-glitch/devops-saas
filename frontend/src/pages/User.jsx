@@ -15,7 +15,7 @@ export default function User() {
 
   return (
     <div>
-      <h1>DeployAlly 🚀</h1>
+      <h1>LaunchAlly 🚀</h1>
       <p>CI/CD + monitoring + team collaboration</p>
 
       <button onClick={handleCheckout}>

@@ -44,7 +44,7 @@ export default function Landing() {
           >
             <img
               src={logo}
-              alt="DeployAlly Logo"
+              alt="LaunchAlly Logo"
               style={{
                 width: 42,
                 height: 42,
@@ -60,7 +60,7 @@ export default function Landing() {
                 letterSpacing: -0.5,
               }}
             >
-              DeployAlly
+              LaunchAlly
             </h1>
           </div>
 

@@ -211,7 +211,7 @@ export default function Dashboard() {
         <div style={workflowCard}>
           <div style={workflowHeader}>
             <h2 style={workflowTitle}>
-              How DeployAlly Works
+              How LaunchAlly Works
             </h2>
 
             <p style={workflowSubtitle}>

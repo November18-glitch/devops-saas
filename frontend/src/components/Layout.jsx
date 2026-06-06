@@ -66,7 +66,7 @@ export default function Layout() {
         >
           <img
             src={logo}
-            alt="DeployAlly Logo"
+            alt="LaunchAlly Logo"
             style={{
               width: 36,
               height: 36,
@@ -81,7 +81,7 @@ export default function Layout() {
               fontWeight: 700,
             }}
           >
-            DeployAlly
+            LaunchAlly
           </h2>
         </div>
 
@@ -116,7 +116,7 @@ export default function Layout() {
               fontSize: 16,
             }}
           >
-            DeployAlly Pro
+            LaunchAllyPro
           </div>
 
           <div

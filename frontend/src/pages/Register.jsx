@@ -60,7 +60,7 @@ export default function Register() {
           <div style={styles.logoWrapper}>
             <img
               src={logo}
-              alt="DeployAlly"
+              alt="LaunchAlly"
               style={{
                 width: 46,
                 height: 46,
@@ -93,7 +93,7 @@ export default function Register() {
         <div style={styles.logoWrapper}>
           <img
             src={logo}
-            alt="DeployAlly"
+            alt="LaunchAlly"
             style={{
               width: 42,
               height: 42,
@@ -105,7 +105,7 @@ export default function Register() {
         </div>
 
         <p style={styles.subtitle}>
-          Start deploying apps with DeployAlly.
+          Start deploying apps with LaunchAlly.
         </p>
 
         <form onSubmit={handleRegister} style={styles.form}>

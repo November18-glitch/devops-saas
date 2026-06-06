@@ -40,7 +40,7 @@ export default function Login() {
         <div style={styles.logoWrapper}>
           <img
             src={logo}
-            alt="DeployAlly"
+            alt="LaunchAlly"
             style={{
               width: 42,
               height: 42,
@@ -48,7 +48,7 @@ export default function Login() {
             }}
           />
 
-          <h2 style={styles.title}>DeployAlly</h2>
+          <h2 style={styles.title}>LaunchAlly</h2>
         </div>
 
         <p style={styles.subtitle}>
