@@ -313,7 +313,7 @@ export default function Landing() {
                   marginBottom: 16,
                 }}
               >
-                deployally-api • main branch
+                launchally-api • main branch
               </div>
 
               <div

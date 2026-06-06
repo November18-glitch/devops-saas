@@ -12,14 +12,14 @@ export default async function handler(req, res) {
 
     const { email, token } = req.body
 
-    const joinUrl = `https://deployally.vercel.app/join?token=${token}`
+    const joinUrl = `https://launchally.vercel.app/join?token=${token}`
 
     const data = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: email,
-      subject: "You're invited to DeployAlly",
+      subject: "You're invited to LaunchAlly",
       html: `
-        <h2>You were invited to DeployAlly</h2>
+        <h2>You were invited to LaunchAlly</h2>
         <p>Click below to join the team:</p>
         <a href="${joinUrl}">${joinUrl}</a>
       `
