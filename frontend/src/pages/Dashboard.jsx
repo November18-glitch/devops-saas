@@ -55,28 +55,13 @@ export default function Dashboard() {
 
         if (!teamError && createdTeam) {
           const { error: memberError } =
-           await supabase.from("team_members").insert({
-            team_id: createdTeam.id,
-            user_id: user.id,
-            email: user.email,
-            role: "owner",
-            status: "active",
-           });
-
-console.log("TEAM MEMBER ERROR:", memberError);
-
-          const { error: projectError } =
-           await supabase.from("projects").insert({
-           name: "Sample Next.js App",
-           repo_url: "https://github.com/vercel/nextjs-dashboard",
-           repo_type: "github",
-           default_branch: "main",
-           team_id: createdTeam.id,
-           env_vars: {},
-           is_sample: true,
-          });
-
-console.log("PROJECT ERROR:", projectError);
+            await supabase.from("team_members").insert({
+              team_id: createdTeam.id,
+              user_id: user.id,
+              email: user.email,
+              role: "owner",
+              status: "active",
+            });
 
           return loadDashboard();
         }
@@ -92,12 +77,14 @@ console.log("PROJECT ERROR:", projectError);
         .select("*")
         .in("id", teamIds);
       console.log("TEAMS:", teamsData);
+
       const { data: projectsData } = await supabase
         .from("projects")
         .select("*")
         .in("team_id", teamIds)
         .order("created_at", { ascending: false });
       console.log("PROJECTS:", projectsData);
+
       const { data: membersData } = await supabase
         .from("team_members")
         .select("id")
@@ -109,37 +96,27 @@ console.log("PROJECT ERROR:", projectError);
       setMembersCount(membersData?.length || 0);
 
       const {
-       data: deploymentsData,
-       error: deploymentsError,
-       } = await supabase
-       .from("deployments")
-       .select("*")
-       .order("created_at", {
-       ascending: false,
-       });
+        data: deploymentsData,
+        error: deploymentsError,
+      } = await supabase
+        .from("deployments")
+        .select("*")
+        .order("created_at", {
+          ascending: false,
+        });
 
-      console.log(
-       "DEPLOYMENTS:",
-       deploymentsData
-      );
+      console.log("DEPLOYMENTS:", deploymentsData);
+      console.log("DEPLOYMENTS ERROR:", deploymentsError);
 
-      console.log(
-       "DEPLOYMENTS ERROR:",
-       deploymentsError
-      );
-
-      setDeployments(
-       deploymentsData || []
-      );
+      setDeployments(deploymentsData || []);
 
     } catch (err) {
       console.error("Dashboard crash:", err);
       setDeployments([]);
+    } finally {
+      setLoading(false);
     }
-    finally {
-    setLoading(false);
-    }
-  }
+  };
 
   const handleCheckout = async () => {
     const res = await fetch("/api/create-checkout-session", {
@@ -147,7 +124,6 @@ console.log("PROJECT ERROR:", projectError);
     });
 
     const data = await res.json();
-
     window.location.href = data.url;
   };
 
@@ -161,10 +137,6 @@ console.log("PROJECT ERROR:", projectError);
       </div>
     );
   }
-
-  const hasProjects = projects.length > 0;
-  const sampleProject = projects[0];
-  const firstTeam = team[0];
 
   return (
     <div style={container}>
@@ -212,123 +184,6 @@ console.log("PROJECT ERROR:", projectError);
             </div>
           )}
         </div>
-
-        {/* SIMPLE WORKFLOW */}
-        <div style={workflowCard}>
-          <div style={workflowHeader}>
-            <h2 style={workflowTitle}>
-              How LaunchAlly Works
-            </h2>
-
-            <p style={workflowSubtitle}>
-              Simple workflow from team setup to live deployment.
-            </p>
-          </div>
-
-          <div style={workflowGrid}>
-            <div style={workflowStep}>
-              <div style={stepNumber}>
-                1
-              </div>
-
-              <div style={stepContent}>
-                <h3 style={stepTitle}>
-                  Create or Join a Team
-                </h3>
-
-                <p style={stepText}>
-                  Every project belongs to a team workspace.
-                  Teams help organize deployments and collaboration.
-                </p>
-              </div>
-            </div>
-
-            <div style={workflowArrow}>
-              →
-            </div>
-
-            <div style={workflowStep}>
-              <div style={stepNumber}>
-                2
-              </div>
-
-              <div style={stepContent}>
-                <h3 style={stepTitle}>
-                  Add a Project
-                </h3>
-
-                <p style={stepText}>
-                  Connect a GitHub repository and configure your app.
-                </p>
-              </div>
-            </div>
-
-            <div style={workflowArrow}>
-              →
-            </div>
-
-            <div style={workflowStep}>
-              <div style={stepNumber}>
-                3
-              </div>
-
-              <div style={stepContent}>
-                <h3 style={stepTitle}>
-                  Deploy Instantly
-                </h3>
-
-                <p style={stepText}>
-                  Launch deployments and monitor them live from your dashboard.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {firstTeam && (
-            <div style={workspaceNotice}>
-              ✅ Your workspace has already been prepared automatically with:
-              <br />
-              <b>{firstTeam.name}</b> + sample project
-            </div>
-          )}
-        </div>
-
-        {/* QUICK ACTIONS */}
-        {hasProjects && (
-          <div style={quickStartBox}>
-            <div style={quickStartTop}>
-              <div>
-                <h2 style={quickTitle}>
-                  🚀 Quick Start
-                </h2>
-
-                <p style={quickText}>
-                  Jump directly into your sample workspace or manage all projects.
-                </p>
-              </div>
-            </div>
-
-            <div style={quickButtons}>
-              <button
-                style={primaryAction}
-                onClick={() =>
-                  navigate(`/projects?teamId=${sampleProject.team_id}`)
-                }
-              >
-                Open Workspace
-              </button>
-
-              <button
-                style={secondaryAction}
-                onClick={() =>
-                  navigate(`/projects/${sampleProject.id}`)
-                }
-              >
-                Open Sample App
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* STATS */}
         <div style={grid}>
@@ -383,7 +238,7 @@ console.log("PROJECT ERROR:", projectError);
               </h3>
 
               <p style={emptyText}>
-                Open your workspace and deploy the sample project.
+                Create a project to launch your first live application deployment.
               </p>
 
               <button
@@ -404,7 +259,7 @@ console.log("PROJECT ERROR:", projectError);
                     <div>
                       <div style={projectName}>
                         {projects.find((p) => p.id === d.project_id)?.name ||
-                          "Unknown"}
+                          "Unknown Project"}
                       </div>
 
                       <div style={deployTime}>
@@ -557,140 +412,11 @@ const successBox = {
   fontWeight: 600,
 };
 
-const workflowCard = {
-  background: "white",
-  borderRadius: 24,
-  padding: 30,
-  marginBottom: 28,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-};
-
-const workflowHeader = {
-  marginBottom: 26,
-};
-
-const workflowTitle = {
-  margin: 0,
-  marginBottom: 10,
-  fontSize: 26,
-};
-
-const workflowSubtitle = {
-  margin: 0,
-  color: "#64748b",
-};
-
-const workflowGrid = {
-  display: "flex",
-  alignItems: "stretch",
-  gap: 16,
-  flexWrap: "wrap",
-};
-
-const workflowStep = {
-  flex: 1,
-  minWidth: 240,
-  border: "1px solid #e2e8f0",
-  borderRadius: 20,
-  padding: 22,
-  display: "flex",
-  gap: 18,
-  background: "#fafcff",
-};
-
-const workflowArrow = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 28,
-  color: "#94a3b8",
-  fontWeight: 700,
-};
-
-const stepNumber = {
-  width: 42,
-  height: 42,
-  borderRadius: "50%",
-  background: "#6366f1",
-  color: "white",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: 700,
-  flexShrink: 0,
-};
-
-const stepContent = {
-  flex: 1,
-};
-
-const stepTitle = {
-  margin: 0,
-  marginBottom: 10,
-  fontSize: 17,
-};
-
-const stepText = {
-  margin: 0,
-  color: "#64748b",
-  lineHeight: 1.6,
-};
-
-const workspaceNotice = {
-  marginTop: 24,
-  background: "#eef2ff",
-  color: "#4338ca",
-  padding: 18,
-  borderRadius: 16,
-  lineHeight: 1.7,
-};
-
-const quickStartBox = {
-  background: "white",
-  borderRadius: 24,
-  padding: 30,
-  marginBottom: 28,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-};
-
-const quickStartTop = {
-  marginBottom: 22,
-};
-
-const quickTitle = {
-  margin: 0,
-  marginBottom: 10,
-  fontSize: 24,
-};
-
-const quickText = {
-  margin: 0,
-  color: "#64748b",
-  lineHeight: 1.6,
-};
-
-const quickButtons = {
-  display: "flex",
-  gap: 14,
-  flexWrap: "wrap",
-};
-
 const primaryAction = {
   padding: "14px 20px",
   background: "#6366f1",
   color: "white",
   border: "none",
-  borderRadius: 12,
-  cursor: "pointer",
-  fontWeight: 700,
-  fontSize: 14,
-};
-
-const secondaryAction = {
-  padding: "14px 20px",
-  background: "#eef2ff",
-  color: "#4338ca",
-  border: "1px solid #c7d2fe",
   borderRadius: 12,
   cursor: "pointer",
   fontWeight: 700,
@@ -750,6 +476,8 @@ const tableHeader = {
 
 const deploymentsTitle = {
   margin: 0,
+  fontSize: 22,
+  fontWeight: 700,
   marginBottom: 6,
 };
 
@@ -761,7 +489,7 @@ const tableSubtext = {
 const viewAllBtn = {
   padding: "12px 16px",
   borderRadius: 12,
-  border: "1px solid #dbeafe",
+  border: "1px solid #e2e8f0",
   background: "#f8fafc",
   cursor: "pointer",
   fontWeight: 700,
