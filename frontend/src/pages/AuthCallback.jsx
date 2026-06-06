@@ -10,10 +10,17 @@ export default function AuthCallback() {
     async function handleAuth() {
       // IMPORTANT:
       // Creates session after email confirmation
+      const code = params.get("code");
+
+       if (!code) {
+        navigate("/login");
+        return;
+      }
+
       const { error } =
-        await supabase.auth.exchangeCodeForSession(
-          window.location.href
-        );
+       await supabase.auth.exchangeCodeForSession(
+       code
+      );
 
       if (error) {
         console.error(
