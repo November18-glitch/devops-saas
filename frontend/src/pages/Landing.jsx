@@ -155,7 +155,7 @@ export default function Landing() {
                 marginBottom: 40,
               }}
             >
-              DeployAlly gives developers and teams a clean,
+              LaunchAlly gives developers and teams a clean,
               beginner-friendly workspace to manage deployments,
               monitor projects, collaborate with teammates and
               streamline DevOps — all from one modern dashboard.
@@ -494,7 +494,7 @@ export default function Landing() {
             color: "#94a3b8",
           }}
         >
-          © {new Date().getFullYear()} DeployAlly. All rights reserved.
+          © {new Date().getFullYear()} LaunchAlly. All rights reserved.
         </footer>
       </div>
 
