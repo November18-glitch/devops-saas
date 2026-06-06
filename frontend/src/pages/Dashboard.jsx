@@ -185,6 +185,23 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* QUICK START BOX (ONBOARDING) */}
+        <div style={quickStartBox}>
+          <h2 style={quickStartTitle}>🚀 Getting Started</h2>
+          <ol style={quickStartList}>
+            <li style={quickStartStep}>Create a Team</li>
+            <li style={quickStartStep}>Add a Project</li>
+            <li style={quickStartStep}>Connect your GitHub repository</li>
+            <li style={quickStartStep}>Deploy your application</li>
+          </ol>
+          <button
+            style={primaryAction}
+            onClick={() => navigate("/projects")}
+          >
+            Create First Project
+          </button>
+        </div>
+
         {/* STATS */}
         <div style={grid}>
           <StatCard
@@ -299,6 +316,26 @@ export default function Dashboard() {
   );
 }
 
+function StatCard({ label, value, emoji }) {
+  return (
+    <div style={statCard}>
+      <div style={statTop}>
+        <div style={statLabel}>
+          {label}
+        </div>
+
+        <div style={statEmoji}>
+          {emoji}
+        </div>
+      </div>
+
+      <div style={statValue}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
 /* ================= STYLES ================= */
 
 const container = {
@@ -344,8 +381,8 @@ const heroCard = {
   background: "white",
   borderRadius: 28,
   padding: 32,
-  marginBottom: 28,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+  marginBottom: 24,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
 };
 
 const heroTop = {
@@ -364,9 +401,10 @@ const welcomeRow = {
 };
 
 const heroTitle = {
-  fontSize: 36,
+  fontSize: 32,
   margin: 0,
   fontWeight: 800,
+  color: "#0f172a",
 };
 
 const heroSubtitle = {
@@ -385,26 +423,27 @@ const teamText = {
 const proBadge = {
   background: "#facc15",
   color: "#000",
-  padding: "8px 14px",
+  padding: "6px 12px",
   borderRadius: 999,
   fontWeight: 700,
-  fontSize: 13,
+  fontSize: 12,
 };
 
 const upgradeBtn = {
-  marginTop: 24,
-  padding: "14px 22px",
-  borderRadius: 14,
+  marginTop: 20,
+  padding: "12px 20px",
+  borderRadius: 12,
   border: "none",
-  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
   color: "white",
   fontWeight: 700,
   cursor: "pointer",
   fontSize: 15,
+  transition: "opacity 0.2s",
 };
 
 const successBox = {
-  marginTop: 24,
+  marginTop: 20,
   padding: 14,
   background: "#dcfce7",
   color: "#166534",
@@ -412,57 +451,94 @@ const successBox = {
   fontWeight: 600,
 };
 
+/* QUICK START INTERFACE STYLES */
+const quickStartBox = {
+  background: "linear-gradient(135deg, #ffffff, #f1f5f9)",
+  border: "1px solid #e2e8f0",
+  borderRadius: 24,
+  padding: "32px",
+  marginBottom: 28,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+};
+
+const quickStartTitle = {
+  margin: "0 0 16px 0",
+  fontSize: 22,
+  fontWeight: 700,
+  color: "#0f172a",
+};
+
+const quickStartList = {
+  margin: "0 0 24px 0",
+  paddingLeft: "24px",
+  lineHeight: "2.2",
+  color: "#334155",
+  fontSize: 16,
+};
+
+const quickStartStep = {
+  fontWeight: 500,
+};
+
 const primaryAction = {
-  padding: "14px 20px",
+  padding: "12px 24px",
   background: "#6366f1",
   color: "white",
   border: "none",
   borderRadius: 12,
   cursor: "pointer",
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: 15,
+  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.2)",
 };
 
 const grid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
   gap: 20,
   marginBottom: 28,
 };
 
 const statCard = {
   background: "white",
-  padding: 26,
-  borderRadius: 22,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+  padding: 24,
+  borderRadius: 20,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+  border: "1px solid #f1f5f9",
 };
 
 const statTop = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: 16,
+  marginBottom: 12,
 };
 
 const statEmoji = {
-  fontSize: 24,
+  fontSize: 22,
+  background: "#f8fafc",
+  padding: "8px",
+  borderRadius: "10px",
 };
 
 const statLabel = {
   color: "#64748b",
   fontSize: 14,
+  fontWeight: 600,
 };
 
 const statValue = {
-  fontSize: 36,
+  fontSize: 32,
   fontWeight: 800,
+  color: "#0f172a",
 };
 
 const tableWrapper = {
   background: "white",
   borderRadius: 24,
   padding: 30,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+  border: "1px solid #f1f5f9",
 };
 
 const tableHeader = {
@@ -476,35 +552,40 @@ const tableHeader = {
 
 const deploymentsTitle = {
   margin: 0,
-  fontSize: 22,
+  fontSize: 20,
   fontWeight: 700,
-  marginBottom: 6,
+  color: "#0f172a",
+  marginBottom: 4,
 };
 
 const tableSubtext = {
   margin: 0,
   color: "#64748b",
+  fontSize: 14,
 };
 
 const viewAllBtn = {
-  padding: "12px 16px",
-  borderRadius: 12,
+  padding: "10px 16px",
+  borderRadius: 10,
   border: "1px solid #e2e8f0",
-  background: "#f8fafc",
+  background: "white",
   cursor: "pointer",
-  fontWeight: 700,
+  fontWeight: 600,
+  fontSize: 14,
+  color: "#334155",
 };
 
 const deploymentsList = {
   display: "flex",
   flexDirection: "column",
-  gap: 16,
+  gap: 14,
 };
 
 const deploymentCard = {
   border: "1px solid #e2e8f0",
-  borderRadius: 18,
-  padding: 20,
+  borderRadius: 16,
+  padding: 18,
+  background: "#ffffff",
 };
 
 const deploymentTop = {
@@ -512,14 +593,15 @@ const deploymentTop = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: 20,
-  marginBottom: 16,
+  marginBottom: 14,
   flexWrap: "wrap",
 };
 
 const projectName = {
   fontWeight: 700,
-  fontSize: 17,
-  marginBottom: 6,
+  fontSize: 16,
+  color: "#0f172a",
+  marginBottom: 4,
 };
 
 const deployTime = {
@@ -538,42 +620,47 @@ const deploymentBottom = {
 const environmentTag = {
   background: "#eef2ff",
   color: "#4338ca",
-  padding: "7px 12px",
+  padding: "6px 12px",
   borderRadius: 999,
-  fontSize: 13,
+  fontSize: 12,
   fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
 };
 
 const emptyState = {
   textAlign: "center",
-  padding: "50px 20px",
+  padding: "40px 20px",
 };
 
 const emptyEmoji = {
-  fontSize: 44,
-  marginBottom: 14,
+  fontSize: 40,
+  marginBottom: 12,
 };
 
 const emptyText = {
   color: "#64748b",
   marginBottom: 20,
+  fontSize: 15,
 };
 
 const viewBtn = {
-  padding: "10px 14px",
-  background: "#6366f1",
-  color: "white",
+  padding: "8px 14px",
+  background: "#f1f5f9",
+  color: "#334155",
   borderRadius: 10,
   textDecoration: "none",
-  fontSize: 14,
-  fontWeight: 700,
+  fontSize: 13,
+  fontWeight: 600,
+  border: "1px solid #e2e8f0",
 };
 
 const statusBadge = (status) => ({
-  padding: "7px 12px",
+  padding: "6px 12px",
   borderRadius: 999,
   fontWeight: 700,
-  fontSize: 12,
+  fontSize: 11,
+  letterSpacing: "0.5px",
   background:
     status === "READY"
       ? "#dcfce7"
@@ -587,23 +674,3 @@ const statusBadge = (status) => ({
       ? "#854d0e"
       : "#991b1b",
 });
-
-function StatCard({ label, value, emoji }) {
-  return (
-    <div style={statCard}>
-      <div style={statTop}>
-        <div style={statLabel}>
-          {label}
-        </div>
-
-        <div style={statEmoji}>
-          {emoji}
-        </div>
-      </div>
-
-      <div style={statValue}>
-        {value}
-      </div>
-    </div>
-  );
-}
