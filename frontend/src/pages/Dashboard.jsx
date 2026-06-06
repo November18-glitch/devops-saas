@@ -176,16 +176,16 @@ export default function Dashboard() {
           <div style={quickStartBox}>
             <h2 style={quickStartTitle}>🚀 Onboarding Roadmap</h2>
             <ol style={quickStartList}>
-              <li style={quickStartStep}>Assign / Verify default organization</li>
-              <li style={quickStartStep}>Register configuration scopes (Project)</li>
-              <li style={quickStartStep}>Synchronize Version Control providers (GitHub)</li>
-              <li style={quickStartStep}>Initialize production deployment pipelines</li>
+              <li style={quickStartStep}>1. Create your first project</li>
+              <li style={quickStartStep}>2. Connect your GitHub repository</li>
+              <li style={quickStartStep}>3. Configure deployment settings</li>
+              <li style={quickStartStep}>4. Deploy your application</li>
             </ol>
             <button
               style={primaryAction}
               onClick={() => navigate("/projects")}
             >
-              Initialize First Project
+              Create First Project
             </button>
           </div>
         )}

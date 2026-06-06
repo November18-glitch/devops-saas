@@ -6,38 +6,36 @@ export default function Header() {
   const [avatar, setAvatar] = useState(null);
   const [fullName, setFullName] = useState("");
 
-  // ----------------------------------
-  // INITIAL LOAD
-  // ----------------------------------
-
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
+
       if (!data?.user) return;
 
-      setUser(data.user);
+      const currentUser = data.user;
 
-      // Load avatar from auth metadata
-      setAvatar(data.user.user_metadata?.avatar_url || null);
+      setUser(currentUser);
 
-      // Load full name from profiles table
+      setAvatar(currentUser.user_metadata?.avatar_url || null);
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
-        .eq("id", data.user.id)
+        .eq("id", currentUser.id)
         .single();
 
       if (profile?.full_name) {
         setFullName(profile.full_name);
+      } else {
+        const fallbackName =
+          currentUser.email?.split("@")[0] || "Member";
+
+        setFullName(fallbackName);
       }
     };
 
     loadUser();
   }, []);
-
-  // ----------------------------------
-  // LIVE AVATAR UPDATE LISTENER
-  // ----------------------------------
 
   useEffect(() => {
     const handler = (event) => {
@@ -45,7 +43,6 @@ export default function Header() {
 
       setAvatar(newAvatar);
 
-      // Keep auth cache in sync
       setUser((prev) => ({
         ...prev,
         user_metadata: {
@@ -62,10 +59,6 @@ export default function Header() {
     };
   }, []);
 
-  // ----------------------------------
-  // ✅ LIVE NAME UPDATE LISTENER (ADD THIS)
-  // ----------------------------------
-
   useEffect(() => {
     const handler = (event) => {
       setFullName(event.detail);
@@ -78,7 +71,12 @@ export default function Header() {
     };
   }, []);
 
-  // ----------------------------------
+  const displayName =
+    fullName ||
+    user?.email?.split("@")[0] ||
+    "Member";
+
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <div
@@ -86,25 +84,68 @@ export default function Header() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "20px 30px",
-        borderBottom: "1px solid #eee",
+        padding: "18px 30px",
+        borderBottom: "1px solid #e5e7eb",
+        background: "#fff",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <img
-          src={avatar || "https://via.placeholder.com/50"}
-          alt="profile"
-          style={{
-            width: 45,
-            height: 45,
-            borderRadius: "50%",
-            objectFit: "cover",
-          }}
-        />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        {avatar ? (
+          <img
+            src={avatar}
+            alt="profile"
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #e5e7eb",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              background: "#e2e8f0",
+              color: "#334155",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              fontSize: 18,
+            }}
+          >
+            {initial}
+          </div>
+        )}
 
         <div>
-          <div>Welcome back 👋</div>
-          <strong>{fullName || "User"}</strong>
+          <div
+            style={{
+              fontSize: 13,
+              color: "#64748b",
+            }}
+          >
+            Welcome back 👋
+          </div>
+
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              color: "#0f172a",
+            }}
+          >
+            {displayName}
+          </div>
         </div>
       </div>
 
@@ -112,6 +153,15 @@ export default function Header() {
         onClick={async () => {
           await supabase.auth.signOut();
           window.location.reload();
+        }}
+        style={{
+          background: "#6366f1",
+          color: "white",
+          border: "none",
+          padding: "10px 18px",
+          borderRadius: 10,
+          cursor: "pointer",
+          fontWeight: 600,
         }}
       >
         Log out
