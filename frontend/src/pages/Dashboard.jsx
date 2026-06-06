@@ -176,10 +176,10 @@ export default function Dashboard() {
           <div style={quickStartBox}>
             <h2 style={quickStartTitle}>🚀 Onboarding Roadmap</h2>
             <ol style={quickStartList}>
-              <li style={quickStartStep}>1. Create your first project</li>
-              <li style={quickStartStep}>2. Connect your GitHub repository</li>
-              <li style={quickStartStep}>3. Configure deployment settings</li>
-              <li style={quickStartStep}>4. Deploy your application</li>
+              <li style={quickStartStep}>Create your first project</li>
+              <li style={quickStartStep}>Connect your GitHub repository</li>
+              <li style={quickStartStep}>Configure deployment settings</li>
+              <li style={quickStartStep}>Deploy your application</li>
             </ol>
             <button
               style={primaryAction}
