@@ -24,6 +24,7 @@ export default function Dashboard() {
 
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
+      console.log("USER:", user);
 
       if (!user) {
         setLoading(false);
@@ -34,6 +35,7 @@ export default function Dashboard() {
         .from("team_members")
         .select("*")
         .eq("user_id", user.id);
+      console.log("TEAM MEMBERS:", tmList);
 
       // AUTO ONBOARDING
       if (!tmList || tmList.length === 0) {
@@ -83,17 +85,18 @@ export default function Dashboard() {
         .from("teams")
         .select("*")
         .in("id", teamIds);
-
+      console.log("TEAMS:", teamsData);
       const { data: projectsData } = await supabase
         .from("projects")
         .select("*")
         .in("team_id", teamIds)
         .order("created_at", { ascending: false });
-
+      console.log("PROJECTS:", projectsData);
       const { data: membersData } = await supabase
         .from("team_members")
         .select("id")
         .in("team_id", teamIds);
+      console.log("MEMBERS:", membersData);
 
       setTeam(teamsData || []);
       setProjects(projectsData || []);
@@ -127,9 +130,10 @@ export default function Dashboard() {
       console.error("Dashboard crash:", err);
       setDeployments([]);
     }
-
+    finally {
     setLoading(false);
-  };
+    }
+  }
 
   const handleCheckout = async () => {
     const res = await fetch("/api/create-checkout-session", {
