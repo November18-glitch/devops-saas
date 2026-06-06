@@ -54,15 +54,19 @@ export default function Dashboard() {
           .single();
 
         if (!teamError && createdTeam) {
-          await supabase.from("team_members").insert({
+          const { error: memberError } =
+           await supabase.from("team_members").insert({
             team_id: createdTeam.id,
             user_id: user.id,
             email: user.email,
             role: "owner",
             status: "active",
-          });
+           });
 
-          await supabase.from("projects").insert({
+console.log("TEAM MEMBER ERROR:", memberError);
+
+          const { error: projectError } =
+           await supabase.from("projects").insert({
            name: "Sample Next.js App",
            repo_url: "https://github.com/vercel/nextjs-dashboard",
            repo_type: "github",
@@ -71,6 +75,8 @@ export default function Dashboard() {
            env_vars: {},
            is_sample: true,
           });
+
+console.log("PROJECT ERROR:", projectError);
 
           return loadDashboard();
         }
