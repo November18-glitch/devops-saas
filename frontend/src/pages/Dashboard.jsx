@@ -14,6 +14,9 @@ export default function Dashboard() {
   const [membersCount, setMembersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Track hover states for buttons dynamically without messy external CSS
+  const [hoveredBtn, setHoveredBtn] = useState(null);
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -24,20 +27,19 @@ export default function Dashboard() {
 
       const { data: auth } = await supabase.auth.getUser();
       const user = auth?.user;
-      console.log("USER:", user);
 
       if (!user) {
         setLoading(false);
         return;
       }
 
-      const { data: tmList } = await supabase
+      // 1. Fetch user's team associations
+      const { data: tmList, error: tmError } = await supabase
         .from("team_members")
         .select("*")
         .eq("user_id", user.id);
-      console.log("TEAM MEMBERS:", tmList);
 
-      // AUTO ONBOARDING
+      // 2. AUTO ONBOARDING (If user has no team associations)
       if (!tmList || tmList.length === 0) {
         const username =
           user.user_metadata?.username ||
@@ -54,8 +56,9 @@ export default function Dashboard() {
           .single();
 
         if (!teamError && createdTeam) {
-          const { error: memberError } =
-            await supabase.from("team_members").insert({
+          const { error: memberError } = await supabase
+            .from("team_members")
+            .insert({
               team_id: createdTeam.id,
               user_id: user.id,
               email: user.email,
@@ -63,55 +66,36 @@ export default function Dashboard() {
               status: "active",
             });
 
-          return loadDashboard();
+          if (!memberError) {
+            // Re-fetch everything safely after setup completes
+            return loadDashboard();
+          }
         }
-
+        
+        // Safety switch to prevent infinite loops if insert fails
         setLoading(false);
         return;
       }
 
+      // 3. Map out verified IDs (fallback to dummy safe id if list is empty)
       const teamIds = tmList.map((t) => t.team_id);
+      const safeTeamIds = teamIds.length > 0 ? teamIds : [0];
 
-      const { data: teamsData } = await supabase
-        .from("teams")
-        .select("*")
-        .in("id", teamIds);
-      console.log("TEAMS:", teamsData);
+      // 4. Run concurrent fetches for performance optimization
+      const [teamsRes, projectsRes, membersRes, deploymentsRes] = await Promise.all([
+        supabase.from("teams").select("*").in("id", safeTeamIds),
+        supabase.from("projects").select("*").in("team_id", safeTeamIds).order("created_at", { ascending: false }),
+        supabase.from("team_members").select("id").in("team_id", safeTeamIds),
+        supabase.from("deployments").select("*").order("created_at", { ascending: false })
+      ]);
 
-      const { data: projectsData } = await supabase
-        .from("projects")
-        .select("*")
-        .in("team_id", teamIds)
-        .order("created_at", { ascending: false });
-      console.log("PROJECTS:", projectsData);
-
-      const { data: membersData } = await supabase
-        .from("team_members")
-        .select("id")
-        .in("team_id", teamIds);
-      console.log("MEMBERS:", membersData);
-
-      setTeam(teamsData || []);
-      setProjects(projectsData || []);
-      setMembersCount(membersData?.length || 0);
-
-      const {
-        data: deploymentsData,
-        error: deploymentsError,
-      } = await supabase
-        .from("deployments")
-        .select("*")
-        .order("created_at", {
-          ascending: false,
-        });
-
-      console.log("DEPLOYMENTS:", deploymentsData);
-      console.log("DEPLOYMENTS ERROR:", deploymentsError);
-
-      setDeployments(deploymentsData || []);
+      setTeam(teamsRes.data || []);
+      setProjects(projectsRes.data || []);
+      setMembersCount(membersRes.data?.length || 0);
+      setDeployments(deploymentsRes.data || []);
 
     } catch (err) {
-      console.error("Dashboard crash:", err);
+      console.error("Dashboard core loop failure:", err);
       setDeployments([]);
     } finally {
       setLoading(false);
@@ -119,12 +103,15 @@ export default function Dashboard() {
   };
 
   const handleCheckout = async () => {
-    const res = await fetch("/api/create-checkout-session", {
-      method: "POST",
-    });
-
-    const data = await res.json();
-    window.location.href = data.url;
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data?.url) window.location.href = data.url;
+    } catch (e) {
+      console.error("Billing checkout failed:", e);
+    }
   };
 
   if (loading) {
@@ -132,7 +119,7 @@ export default function Dashboard() {
       <div style={loadingContainer}>
         <div style={loadingCard}>
           <div style={loadingSpinner}></div>
-          <div>Loading dashboard...</div>
+          <div>Synchronizing workspace data...</div>
         </div>
       </div>
     );
@@ -142,30 +129,23 @@ export default function Dashboard() {
     <div style={container}>
       <div style={main}>
 
-        {/* HERO */}
+        {/* HERO SECTION */}
         <div style={heroCard}>
           <div style={heroTop}>
             <div style={{ flex: 1 }}>
               <div style={welcomeRow}>
-                <h1 style={heroTitle}>
-                  Welcome back 👋
-                </h1>
-
-                {isPro && (
-                  <div style={proBadge}>
-                    PRO
-                  </div>
-                )}
+                <h1 style={heroTitle}>Welcome back 👋</h1>
+                {isPro && <div style={proBadge}>PRO</div>}
               </div>
 
               <p style={heroSubtitle}>
-                Deploy apps, manage teams, and monitor deployments from one clean dashboard.
+                Deploy systems, orchestrate teams, and track real-time changes instantly.
               </p>
 
               <div style={teamText}>
-                Teams:{" "}
-                <b>
-                  {team.map((t) => t.name).join(", ") || "—"}
+                Active Workspaces:{" "}
+                <b style={{ color: "#334155" }}>
+                  {team.map((t) => t.name).join(", ") || "No Active Workspaces Found"}
                 </b>
               </div>
             </div>
@@ -174,126 +154,92 @@ export default function Dashboard() {
           {!isPro ? (
             <button
               onClick={handleCheckout}
-              style={upgradeBtn}
+              onMouseEnter={() => setHoveredBtn("upgrade")}
+              onMouseLeave={() => setHoveredBtn(null)}
+              style={{
+                ...upgradeBtn,
+                opacity: hoveredBtn === "upgrade" ? 0.9 : 1,
+                transform: hoveredBtn === "upgrade" ? "translateY(-1px)" : "none",
+              }}
             >
               🚀 Upgrade to Pro
             </button>
           ) : (
             <div style={successBox}>
-              🔥 Unlimited deployments unlocked
+              🔥 Platinum access configured: Unlimited deployments unlocked
             </div>
           )}
         </div>
 
-        {/* QUICK START BOX (ONBOARDING) */}
-        <div style={quickStartBox}>
-          <h2 style={quickStartTitle}>🚀 Getting Started</h2>
-          <ol style={quickStartList}>
-            <li style={quickStartStep}>Create a Team</li>
-            <li style={quickStartStep}>Add a Project</li>
-            <li style={quickStartStep}>Connect your GitHub repository</li>
-            <li style={quickStartStep}>Deploy your application</li>
-          </ol>
-          <button
-            style={primaryAction}
-            onClick={() => navigate("/projects")}
-          >
-            Create First Project
-          </button>
-        </div>
+        {/* ONBOARDING QUICK START */}
+        {projects.length === 0 && (
+          <div style={quickStartBox}>
+            <h2 style={quickStartTitle}>🚀 Onboarding Roadmap</h2>
+            <ol style={quickStartList}>
+              <li style={quickStartStep}>Assign / Verify default organization</li>
+              <li style={quickStartStep}>Register configuration scopes (Project)</li>
+              <li style={quickStartStep}>Synchronize Version Control providers (GitHub)</li>
+              <li style={quickStartStep}>Initialize production deployment pipelines</li>
+            </ol>
+            <button
+              style={primaryAction}
+              onClick={() => navigate("/projects")}
+            >
+              Initialize First Project
+            </button>
+          </div>
+        )}
 
-        {/* STATS */}
+        {/* STATISTICS MATRICES */}
         <div style={grid}>
-          <StatCard
-            label="Projects"
-            value={projects.length}
-            emoji="📦"
-          />
-
-          <StatCard
-            label="Deployments"
-            value={deployments?.length || 0}
-            emoji="🚀"
-          />
-
-          <StatCard
-            label="Team Members"
-            value={membersCount}
-            emoji="👥"
-          />
+          <StatCard label="Total Projects" value={projects.length} emoji="📦" />
+          <StatCard label="Live Deployments" value={deployments.length} emoji="🚀" />
+          <StatCard label="Verified Members" value={membersCount} emoji="👥" />
         </div>
 
-        {/* DEPLOYMENTS */}
+        {/* LIVE DEPLOYMENT RECORDS */}
         <div style={tableWrapper}>
           <div style={tableHeader}>
             <div>
-              <h3 style={deploymentsTitle}>
-                Recent Deployments
-              </h3>
-
-              <p style={tableSubtext}>
-                Latest deployment activity across your teams
-              </p>
+              <h3 style={deploymentsTitle}>Recent Logs & Deployments</h3>
+              <p style={tableSubtext}>Latest operations pipeline metrics across your groups</p>
             </div>
-
-            <button
-              style={viewAllBtn}
-              onClick={() => navigate("/projects")}
-            >
-              View All
+            <button style={viewAllBtn} onClick={() => navigate("/projects")}>
+              View System Logs
             </button>
           </div>
 
           {deployments.length === 0 ? (
             <div style={emptyState}>
-              <div style={emptyEmoji}>
-                🚀
-              </div>
-
-              <h3 style={{ marginBottom: 10 }}>
-                No deployments yet
-              </h3>
-
+              <div style={emptyEmoji}>📡</div>
+              <h3 style={{ marginBottom: 10, color: "#1e293b" }}>No execution contexts found</h3>
               <p style={emptyText}>
-                Create a project to launch your first live application deployment.
+                Launch an app deployment stream inside a workspace project to build logs.
               </p>
-
-              <button
-                style={primaryAction}
-                onClick={() => navigate("/projects")}
-              >
-                Open Projects
+              <button style={primaryAction} onClick={() => navigate("/projects")}>
+                Provision Stack
               </button>
             </div>
           ) : (
             <div style={deploymentsList}>
               {deployments.map((d) => (
-                <div
-                  key={d.deployment_id}
-                  style={deploymentCard}
-                >
+                <div key={d.deployment_id || d.id} style={deploymentCard}>
                   <div style={deploymentTop}>
                     <div>
                       <div style={projectName}>
-                        {projects.find((p) => p.id === d.project_id)?.name ||
-                          "Unknown Project"}
+                        {projects.find((p) => p.id === d.project_id)?.name || "Production Kernel"}
                       </div>
-
                       <div style={deployTime}>
-                        {new Date(d.created_at).toLocaleString()}
+                        {d.created_at ? new Date(d.created_at).toLocaleString() : "Just now"}
                       </div>
                     </div>
-
                     <span style={statusBadge(d.status)}>
-                      {d.status}
+                      {d.status || "IDLE"}
                     </span>
                   </div>
 
                   <div style={deploymentBottom}>
-                    <div style={environmentTag}>
-                      {d.environment || "production"}
-                    </div>
-
+                    <div style={environmentTag}>{d.environment || "production"}</div>
                     {d.url && (
                       <a
                         href={d.url}
@@ -301,7 +247,7 @@ export default function Dashboard() {
                         rel="noreferrer"
                         style={viewBtn}
                       >
-                        Open Deployment
+                        Launch Instance ↗
                       </a>
                     )}
                   </div>
@@ -320,33 +266,24 @@ function StatCard({ label, value, emoji }) {
   return (
     <div style={statCard}>
       <div style={statTop}>
-        <div style={statLabel}>
-          {label}
-        </div>
-
-        <div style={statEmoji}>
-          {emoji}
-        </div>
+        <div style={statLabel}>{label}</div>
+        <div style={statEmoji}>{emoji}</div>
       </div>
-
-      <div style={statValue}>
-        {value}
-      </div>
+      <div style={statValue}>{value}</div>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
-
+/* ================= COMPONENT SPECIFIC INTERFACE STYLES ================= */
 const container = {
   background: "#f8fafc",
   minHeight: "100vh",
-  padding: "32px",
-  fontFamily: "Inter, sans-serif",
+  padding: "40px 24px",
+  fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
 };
 
 const main = {
-  maxWidth: 1200,
+  maxWidth: 1140,
   margin: "0 auto",
 };
 
@@ -360,29 +297,32 @@ const loadingContainer = {
 
 const loadingCard = {
   background: "white",
-  padding: "30px 40px",
-  borderRadius: 20,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+  padding: "24px 36px",
+  borderRadius: 16,
+  boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05)",
   display: "flex",
   alignItems: "center",
-  gap: 14,
+  gap: 16,
+  color: "#475569",
   fontWeight: 600,
 };
 
 const loadingSpinner = {
-  width: 18,
-  height: 18,
+  width: 20,
+  height: 20,
   borderRadius: "50%",
-  border: "3px solid #c7d2fe",
+  border: "3px solid #e2e8f0",
   borderTop: "3px solid #6366f1",
+  animation: "spin 1s linear infinite",
 };
 
 const heroCard = {
-  background: "white",
-  borderRadius: 28,
+  background: "#ffffff",
+  borderRadius: 24,
   padding: 32,
   marginBottom: 24,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+  border: "1px solid #f1f5f9",
+  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02)",
 };
 
 const heroTop = {
@@ -397,83 +337,86 @@ const welcomeRow = {
   alignItems: "center",
   gap: 14,
   flexWrap: "wrap",
-  marginBottom: 10,
+  marginBottom: 12,
 };
 
 const heroTitle = {
-  fontSize: 32,
+  fontSize: 30,
   margin: 0,
   fontWeight: 800,
   color: "#0f172a",
+  letterSpacing: "-0.5px",
 };
 
 const heroSubtitle = {
   color: "#475569",
-  lineHeight: 1.7,
-  maxWidth: 720,
-  fontSize: 16,
-  marginBottom: 14,
+  lineHeight: 1.6,
+  maxWidth: 640,
+  fontSize: 15,
+  margin: "0 0 16px 0",
 };
 
 const teamText = {
   color: "#64748b",
-  fontSize: 15,
+  fontSize: 14,
 };
 
 const proBadge = {
-  background: "#facc15",
-  color: "#000",
-  padding: "6px 12px",
+  background: "linear-gradient(135deg, #fef08a, #facc15)",
+  color: "#713f12",
+  padding: "4px 10px",
   borderRadius: 999,
   fontWeight: 700,
-  fontSize: 12,
+  fontSize: 11,
+  letterSpacing: "0.5px",
 };
 
 const upgradeBtn = {
-  marginTop: 20,
-  padding: "12px 20px",
+  marginTop: 24,
+  padding: "12px 24px",
   borderRadius: 12,
   border: "none",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+  background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
   color: "white",
   fontWeight: 700,
   cursor: "pointer",
-  fontSize: 15,
-  transition: "opacity 0.2s",
+  fontSize: 14,
+  boxShadow: "0 4px 14px 0 rgba(99, 102, 241, 0.3)",
+  transition: "all 0.2s ease-in-out",
 };
 
 const successBox = {
-  marginTop: 20,
-  padding: 14,
-  background: "#dcfce7",
+  marginTop: 24,
+  padding: "14px 18px",
+  background: "#f0fdf4",
+  border: "1px solid #bbf7d0",
   color: "#166534",
   borderRadius: 12,
   fontWeight: 600,
+  fontSize: 14,
 };
 
-/* QUICK START INTERFACE STYLES */
 const quickStartBox = {
-  background: "linear-gradient(135deg, #ffffff, #f1f5f9)",
+  background: "#ffffff",
   border: "1px solid #e2e8f0",
-  borderRadius: 24,
-  padding: "32px",
-  marginBottom: 28,
-  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+  borderRadius: 20,
+  padding: 32,
+  marginBottom: 24,
 };
 
 const quickStartTitle = {
   margin: "0 0 16px 0",
-  fontSize: 22,
+  fontSize: 20,
   fontWeight: 700,
   color: "#0f172a",
 };
 
 const quickStartList = {
   margin: "0 0 24px 0",
-  paddingLeft: "24px",
+  paddingLeft: 20,
   lineHeight: "2.2",
-  color: "#334155",
-  fontSize: 16,
+  color: "#475569",
+  fontSize: 14,
 };
 
 const quickStartStep = {
@@ -481,30 +424,30 @@ const quickStartStep = {
 };
 
 const primaryAction = {
-  padding: "12px 24px",
-  background: "#6366f1",
+  padding: "12px 22px",
+  background: "#0f172a",
   color: "white",
   border: "none",
-  borderRadius: 12,
+  borderRadius: 10,
   cursor: "pointer",
-  fontWeight: 700,
-  fontSize: 15,
-  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.2)",
+  fontWeight: 600,
+  fontSize: 14,
+  transition: "background 0.2s",
 };
 
 const grid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
   gap: 20,
-  marginBottom: 28,
+  marginBottom: 24,
 };
 
 const statCard = {
   background: "white",
   padding: 24,
-  borderRadius: 20,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-  border: "1px solid #f1f5f9",
+  borderRadius: 16,
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.01)",
 };
 
 const statTop = {
@@ -515,30 +458,32 @@ const statTop = {
 };
 
 const statEmoji = {
-  fontSize: 22,
-  background: "#f8fafc",
-  padding: "8px",
-  borderRadius: "10px",
+  fontSize: 18,
+  background: "#f1f5f9",
+  padding: "6px 10px",
+  borderRadius: 8,
 };
 
 const statLabel = {
   color: "#64748b",
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: 600,
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
 };
 
 const statValue = {
   fontSize: 32,
   fontWeight: 800,
   color: "#0f172a",
+  letterSpacing: "-0.5px",
 };
 
 const tableWrapper = {
   background: "white",
-  borderRadius: 24,
-  padding: 30,
-  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-  border: "1px solid #f1f5f9",
+  borderRadius: 20,
+  padding: 32,
+  border: "1px solid #e2e8f0",
 };
 
 const tableHeader = {
@@ -547,12 +492,12 @@ const tableHeader = {
   alignItems: "center",
   gap: 20,
   flexWrap: "wrap",
-  marginBottom: 26,
+  marginBottom: 24,
 };
 
 const deploymentsTitle = {
   margin: 0,
-  fontSize: 20,
+  fontSize: 18,
   fontWeight: 700,
   color: "#0f172a",
   marginBottom: 4,
@@ -561,31 +506,32 @@ const deploymentsTitle = {
 const tableSubtext = {
   margin: 0,
   color: "#64748b",
-  fontSize: 14,
+  fontSize: 13,
 };
 
 const viewAllBtn = {
-  padding: "10px 16px",
-  borderRadius: 10,
-  border: "1px solid #e2e8f0",
+  padding: "8px 14px",
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
   background: "white",
   cursor: "pointer",
   fontWeight: 600,
-  fontSize: 14,
+  fontSize: 13,
   color: "#334155",
+  transition: "all 0.15s",
 };
 
 const deploymentsList = {
   display: "flex",
   flexDirection: "column",
-  gap: 14,
+  gap: 12,
 };
 
 const deploymentCard = {
   border: "1px solid #e2e8f0",
-  borderRadius: 16,
-  padding: 18,
-  background: "#ffffff",
+  borderRadius: 12,
+  padding: 16,
+  background: "#f8fafc",
 };
 
 const deploymentTop = {
@@ -593,20 +539,20 @@ const deploymentTop = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: 20,
-  marginBottom: 14,
+  marginBottom: 12,
   flexWrap: "wrap",
 };
 
 const projectName = {
   fontWeight: 700,
-  fontSize: 16,
+  fontSize: 15,
   color: "#0f172a",
-  marginBottom: 4,
+  marginBottom: 2,
 };
 
 const deployTime = {
   color: "#64748b",
-  fontSize: 13,
+  fontSize: 12,
 };
 
 const deploymentBottom = {
@@ -618,59 +564,57 @@ const deploymentBottom = {
 };
 
 const environmentTag = {
-  background: "#eef2ff",
-  color: "#4338ca",
-  padding: "6px 12px",
-  borderRadius: 999,
-  fontSize: 12,
+  background: "#e0f2fe",
+  color: "#0369a1",
+  padding: "4px 10px",
+  borderRadius: 6,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
 };
 
 const emptyState = {
   textAlign: "center",
-  padding: "40px 20px",
+  padding: "48px 24px",
 };
 
 const emptyEmoji = {
-  fontSize: 40,
-  marginBottom: 12,
+  fontSize: 36,
+  marginBottom: 14,
 };
 
 const emptyText = {
   color: "#64748b",
   marginBottom: 20,
-  fontSize: 15,
+  fontSize: 14,
+  maxWidth: 400,
+  margin: "0 auto 20px auto",
 };
 
 const viewBtn = {
-  padding: "8px 14px",
-  background: "#f1f5f9",
-  color: "#334155",
-  borderRadius: 10,
+  padding: "6px 12px",
+  background: "#ffffff",
+  color: "#0f172a",
+  borderRadius: 8,
   textDecoration: "none",
-  fontSize: 13,
+  fontSize: 12,
   fontWeight: 600,
-  border: "1px solid #e2e8f0",
+  border: "1px solid #cbd5e1",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
 };
 
-const statusBadge = (status) => ({
-  padding: "6px 12px",
-  borderRadius: 999,
-  fontWeight: 700,
-  fontSize: 11,
-  letterSpacing: "0.5px",
-  background:
-    status === "READY"
-      ? "#dcfce7"
-      : status === "BUILDING"
-      ? "#fef9c3"
-      : "#fee2e2",
-  color:
-    status === "READY"
-      ? "#166534"
-      : status === "BUILDING"
-      ? "#854d0e"
-      : "#991b1b",
-});
+const statusBadge = (status) => {
+  const normStatus = (status || "").toUpperCase();
+  const isReady = normStatus === "READY" || normStatus === "SUCCESS" || normStatus === "ACTIVE";
+  const isBuilding = normStatus === "BUILDING" || normStatus === "PENDING";
+  
+  return {
+    padding: "4px 10px",
+    borderRadius: 999,
+    fontWeight: 700,
+    fontSize: 11,
+    letterSpacing: "0.5px",
+    background: isReady ? "#dcfce7" : isBuilding ? "#fef9c3" : "#fee2e2",
+    color: isReady ? "#15803d" : isBuilding ? "#a16207" : "#b91c1c",
+  };
+};
