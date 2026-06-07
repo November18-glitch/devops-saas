@@ -1,13 +1,23 @@
+/* =========================
+   GLOBAL RESPONSIVENESS
+========================= */
+
 * {
   box-sizing: border-box;
 }
 
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 img {
   max-width: 100%;
+  height: auto;
 }
 
 button {
-  width: auto;
   max-width: 100%;
 }
 
@@ -17,56 +27,86 @@ select {
   width: 100%;
 }
 
+/* =========================
+   TABLET
+========================= */
+
 @media (max-width: 900px) {
 
-  .dashboard-grid,
+  .teams-grid,
   .projects-grid,
-  .teams-grid {
+  .dashboard-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .row {
+    flex-direction: column !important;
+    gap: 12px;
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .sidebar {
     width: 100%;
   }
 
-  .navbar {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .row {
-    flex-direction: column;
-  }
-
   button {
-    width: 100%;
-  }
-
-  .card,
-  .project-card,
-  .team-card {
     width: 100%;
   }
 }
 
+/* =========================
+   MOBILE
+========================= */
+
 @media (max-width: 600px) {
 
+  body {
+    font-size: 14px;
+  }
+
   h1 {
-    font-size: 28px;
+    font-size: 24px !important;
   }
 
   h2 {
-    font-size: 22px;
+    font-size: 20px !important;
   }
 
   h3 {
-    font-size: 18px;
+    font-size: 18px !important;
   }
 
-  .container,
-  .dashboard-container,
+  .teams-container,
   .projects-container,
-  .teams-container {
-    padding: 16px;
+  .dashboard-container,
+  .container {
+    padding: 16px !important;
+  }
+
+  .team-card,
+  .project-card,
+  .card {
+    padding: 16px !important;
+  }
+
+  .team-actions {
+    flex-direction: column !important;
+  }
+
+  .button-row {
+    flex-direction: column !important;
+  }
+
+  .navbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .hero {
+    padding: 18px !important;
   }
 }

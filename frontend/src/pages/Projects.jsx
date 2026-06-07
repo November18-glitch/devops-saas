@@ -460,7 +460,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
             ))}
           </select>
 
-          <div style={buttonRow}>
+          <div className="button-row" style={buttonRow}>
             <button
               style={secondary}
               onClick={() => {
