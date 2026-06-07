@@ -17,8 +17,8 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: 'https://your-frontend-url.com/dashboard?success=true',
-      cancel_url: 'https://your-frontend-url.com/dashboard?canceled=true',
+      success_url: 'https://launchally.org/dashboard?success=true',
+      cancel_url: 'https://launchally.org/dashboard?canceled=true',
     });
 
     res.status(200).json({ url: session.url });
