@@ -88,31 +88,6 @@ export default function Teams() {
     navigate(`/projects?teamId=${teamId}`);
   };
 
-  const handleDeleteTeam = async (teamId) => {
-    if (!confirm("Delete this team?")) return;
-
-    try {
-      const { data: session } = await supabase.auth.getSession();
-
-      const res = await fetch("/api/app?action=deleteTeam", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.session?.access_token}`,
-        },
-        body: JSON.stringify({ teamId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) return alert(data.error);
-
-      setTeams((prev) => prev.filter((t) => t.id !== teamId));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete team");
-    }
-  };
 
   return (
     <div className="teams-container">
@@ -165,13 +140,6 @@ export default function Teams() {
                     onClick={() => handleOpenTeam(team.id)}
                   >
                     Open
-                  </button>
-
-                  <button
-                    className="danger"
-                    onClick={() => handleDeleteTeam(team.id)}
-                  >
-                    Delete
                   </button>
                 </div>
               </div>
