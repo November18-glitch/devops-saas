@@ -234,11 +234,6 @@ ${data.analysis?.detected?.join(", ") || "None"}
     ]);
   };
   const deleteProject = async (project) => {
-  if (project.is_sample) {
-    alert("Sample projects cannot be deleted.");
-    return;
-  }
-
   const confirmed = window.confirm(
     `Delete ${project.name}?`
   );
@@ -432,23 +427,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
       <div>
         <b>{project.name}</b>
 
-        {project.is_sample && (
-          <span
-            style={{
-              marginLeft: 10,
-              background: "#eef2ff",
-              color: "#4338ca",
-              padding: "4px 8px",
-              borderRadius: 999,
-              fontSize: 12,
-            }}
-          >
-            SAMPLE
-          </span>
-        )}
       </div>
-
-      {!project.is_sample && (
         <button
           onClick={() => deleteProject(project)}
           style={{
@@ -462,7 +441,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
         >
           Delete
         </button>
-      )}
+      )
     </div>
   ))}
 </div>
@@ -621,10 +600,12 @@ const secondary = {
   flex: 1,
   padding: 14,
   borderRadius: 12,
-  border: "1px solid #c7d2fe",
-  background: "#eef2ff",
+  border: "none",
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 700,
+  color: "white",
+  background: "#0f172a",
+  boxShadow: "0 4px 12px rgba(15,23,42,.15)",
 };
 
 const buttonRow = {
