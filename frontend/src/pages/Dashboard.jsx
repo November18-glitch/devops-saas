@@ -41,42 +41,13 @@ export default function Dashboard() {
 
       // 2. AUTO ONBOARDING (If user has no team associations)
       if (!tmList || tmList.length === 0) {
-        const username =
-          user.user_metadata?.username ||
-          user.email?.split("@")[0] ||
-          "My Team";
-
-        const { data: createdTeam, error: teamError } = await supabase
-          .from("teams")
-          .insert({
-            name: `${username}'s Team`,
-            owner_id: user.id,
-          })
-          .select()
-          .single();
-
-        if (!teamError && createdTeam) {
-          const { error: memberError } = await supabase
-            .from("team_members")
-            .insert({
-              team_id: createdTeam.id,
-              user_id: user.id,
-              email: user.email,
-              role: "owner",
-              status: "active",
-            });
-
-          if (!memberError) {
-            // Re-fetch everything safely after setup completes
-            return loadDashboard();
-          }
-        }
-        
-        // Safety switch to prevent infinite loops if insert fails
+        setTeam([]);
+        setProjects([]);
+        setDeployments([]);
+        setMembersCount(0);
         setLoading(false);
         return;
       }
-
       // 3. Map out verified IDs (fallback to dummy safe id if list is empty)
       const teamIds = tmList.map((t) => t.team_id);
       const safeTeamIds = teamIds.length > 0 ? teamIds : [0];
@@ -176,16 +147,16 @@ export default function Dashboard() {
           <div style={quickStartBox}>
             <h2 style={quickStartTitle}>🚀 Onboarding Roadmap</h2>
             <ol style={quickStartList}>
-              <li style={quickStartStep}>Create your first project</li>
+              <li style={quickStartStep}>Go to Teams and create a workspace</li>
+              <li style={quickStartStep}>Go to Projects and create a project</li>
               <li style={quickStartStep}>Connect your GitHub repository</li>
-              <li style={quickStartStep}>Configure deployment settings</li>
               <li style={quickStartStep}>Deploy your application</li>
             </ol>
             <button
               style={primaryAction}
-              onClick={() => navigate("/projects")}
+              onClick={() => navigate("/teams")}
             >
-              Create First Project
+              Create Team
             </button>
           </div>
         )}
