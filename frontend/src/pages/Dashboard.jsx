@@ -57,7 +57,7 @@ export default function Dashboard() {
         supabase.from("teams").select("*").in("id", safeTeamIds),
         supabase.from("projects").select("*").in("team_id", safeTeamIds).order("created_at", { ascending: false }),
         supabase.from("team_members").select("id").in("team_id", safeTeamIds),
-        supabase.from("deployments").select("*").order("created_at", { ascending: false })
+        supabase.from("deployments").select("*").in("team_id", safeTeamIds).order("created_at", { ascending: false }),
       ]);
 
       setTeam(teamsRes.data || []);
