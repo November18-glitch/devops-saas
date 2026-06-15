@@ -143,7 +143,7 @@ export default function Landing() {
                 maxWidth: 700,
               }}
             >
-              Deploy and manage apps without complicated DevOps workflows.
+              Launch applications, manage deployments, and collaborate with your team — all from one dashboard.
             </h1>
 
             <p
@@ -155,10 +155,8 @@ export default function Landing() {
                 marginBottom: 40,
               }}
             >
-              LaunchAlly gives developers and teams a clean,
-              beginner-friendly workspace to manage deployments,
-              monitor projects, collaborate with teammates and
-              streamline DevOps — all from one modern dashboard.
+              LaunchAlly helps developers and small teams launch applications, 
+              manage projects, monitor deployments, and collaborate from a single workspace.
             </p>
 
             {/* BUTTONS */}
@@ -213,7 +211,7 @@ export default function Landing() {
                 fontSize: 15,
               }}
             >
-              Built for modern developers, startups and growing teams.
+              Launch applications, manage projects, and collaborate with your team — all from one dashboard.
             </div>
           </div>
 
@@ -356,10 +354,10 @@ export default function Landing() {
                 zIndex: 2,
               }}
             >
-              <StatCard title="Deployments" value="1,284" />
-              <StatCard title="Projects" value="48" />
-              <StatCard title="Uptime" value="99.9%" />
-              <StatCard title="Teams" value="12" />
+              <StatCard title="GitHub Integration" value="✓" />
+              <StatCard title="Team Workspaces" value="✓" />
+              <StatCard title="Deployments" value="✓" />
+              <StatCard title="Monitoring" value="✓" />
             </div>
           </div>
         </section>
