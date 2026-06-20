@@ -106,7 +106,7 @@ export default function Landing() {
                 letterSpacing: "0.5px",
               }}
             >
-              THE STARTUP DEPLOYMENT OPERATING SYSTEM
+              Deploy apps without DevOps complexity
             </div>
 
             <h1
@@ -118,7 +118,7 @@ export default function Landing() {
                 letterSpacing: -1.5,
               }}
             >
-              Deploy, monitor, and manage your startup apps from one place.
+              Deploy and manage your app without learning DevOps.
             </h1>
 
             <p
@@ -130,7 +130,7 @@ export default function Landing() {
                 maxWidth: 580,
               }}
             >
-              LaunchAlly helps founders and small teams deploy applications, track deployments, manage projects, and collaborate without juggling five different tools.
+              LaunchAlly helps startups launch and operate applications without needing a dedicated DevOps engineer.
             </p>
 
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -264,36 +264,182 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* THE "WHY USE US" COMPARISON TABLE */}
-        <section style={{ background: "rgba(30,41,59,0.2)", borderTop: "1px solid rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.04)", padding: "100px 20px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
-            <h2 style={{ fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 16, letterSpacing: -1 }}>
-              Why LaunchAlly?
-            </h2>
-            <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48, fontSize: 16 }}>
-              How founders use alternative stacks compared to the optimized dynamic dashboard.
-            </p>
+        {/* WHY TEAMS CHOOSE LAUNCHALLY */}
+<section
+  style={{
+    background: "rgba(30,41,59,0.2)",
+    borderTop: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    padding: "100px 20px",
+  }}
+>
+  <div
+    style={{
+      maxWidth: 1000,
+      margin: "0 auto",
+    }}
+  >
+    <h2
+      style={{
+        fontSize: 36,
+        fontWeight: 800,
+        textAlign: "center",
+        marginBottom: 16,
+        letterSpacing: -1,
+      }}
+    >
+      Why Teams Choose LaunchAlly
+    </h2>
 
-            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 20, background: "rgba(255,255,255,0.02)" }}>
-                <div style={{ fontWeight: 700, color: "#64748b" }}>THE FRAGMENTED WAY</div>
-                <div style={{ fontWeight: 700, color: "#6366f1" }}>THE LAUNCHALLY WAY</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ color: "#94a3b8" }}>❌ GitHub for code storage</div>
-                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ One unified pipeline control map</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ color: "#94a3b8" }}>❌ Vercel + Railway to host separate files</div>
-                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ Direct environment control monitoring</div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20 }}>
-                <div style={{ color: "#94a3b8" }}>❌ Notion + Spreadsheets to map architecture</div>
-                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ Built-in intuitive collaborative workspaces</div>
-              </div>
-            </div>
-          </div>
-        </section>
+    <p
+      style={{
+        color: "#94a3b8",
+        textAlign: "center",
+        marginBottom: 60,
+        fontSize: 16,
+        maxWidth: 700,
+        marginLeft: "auto",
+        marginRight: "auto",
+      }}
+    >
+      LaunchAlly brings projects, deployments, monitoring, and collaboration
+      together so small teams can stay focused on building instead of juggling
+      multiple tools.
+    </p>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
+        gap: 24,
+      }}
+    >
+      <div
+        style={{
+          background: "#0f172a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: 28,
+        }}
+      >
+        <div style={{ fontSize: 30, marginBottom: 14 }}>🚀</div>
+
+        <h3
+          style={{
+            marginBottom: 12,
+            fontSize: 20,
+            fontWeight: 700,
+          }}
+        >
+          Deploy Faster
+        </h3>
+
+        <p
+          style={{
+            color: "#94a3b8",
+            lineHeight: 1.7,
+          }}
+        >
+          Connect your repository, manage deployments, and launch applications
+          from one workspace.
+        </p>
+      </div>
+
+      <div
+        style={{
+          background: "#0f172a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: 28,
+        }}
+      >
+        <div style={{ fontSize: 30, marginBottom: 14 }}>👥</div>
+
+        <h3
+          style={{
+            marginBottom: 12,
+            fontSize: 20,
+            fontWeight: 700,
+          }}
+        >
+          Built For Teams
+        </h3>
+
+        <p
+          style={{
+            color: "#94a3b8",
+            lineHeight: 1.7,
+          }}
+        >
+          Organize projects, collaborate with teammates, and keep everyone
+          aligned inside a shared workspace.
+        </p>
+      </div>
+
+      <div
+        style={{
+          background: "#0f172a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: 28,
+        }}
+      >
+        <div style={{ fontSize: 30, marginBottom: 14 }}>📊</div>
+
+        <h3
+          style={{
+            marginBottom: 12,
+            fontSize: 20,
+            fontWeight: 700,
+          }}
+        >
+          Monitor Everything
+        </h3>
+
+        <p
+          style={{
+            color: "#94a3b8",
+            lineHeight: 1.7,
+          }}
+        >
+          Track deployments, view status updates, and stay informed about what
+          is happening across your projects.
+        </p>
+      </div>
+
+      <div
+        style={{
+          background: "#0f172a",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 16,
+          padding: 28,
+        }}
+      >
+        <div style={{ fontSize: 30, marginBottom: 14 }}>✨</div>
+
+        <h3
+          style={{
+            marginBottom: 12,
+            fontSize: 20,
+            fontWeight: 700,
+          }}
+        >
+          Beginner Friendly
+        </h3>
+
+        <p
+          style={{
+            color: "#94a3b8",
+            lineHeight: 1.7,
+          }}
+        >
+          Designed for founders, indie hackers, and small teams who want a
+          simple way to manage software projects without DevOps complexity.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* ROADMAP SECTION */}
         <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 20px" }}>
@@ -338,7 +484,7 @@ export default function Landing() {
             <div style={{ flex: 1, minWidth: 280, background: "rgba(99,102,241,0.05)", border: "2px solid #6366f1", borderRadius: 16, padding: 32, position: "relative" }}>
               <span style={{ position: "absolute", top: 16, right: 16, background: "#6366f1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>COMING SOON</span>
               <h3 style={{ fontSize: 20, margin: 0, color: "#a5b4fc" }}>Pro SaaS</h3>
-              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$19<span style={{ fontSize: 14, color: "#64748b" }}>/mo</span></div>
+              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$5<span style={{ fontSize: 14, color: "#64748b" }}>/mo</span></div>
               <ul style={{ paddingLeft: 20, color: "#cbd5e1", lineHeight: 2 }}>
                 <li>Everything in the Free plan</li>
                 <li>Advanced server log tracking</li>
