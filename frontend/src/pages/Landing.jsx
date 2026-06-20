@@ -12,11 +12,10 @@ export default function Landing() {
       <div
         style={{
           minHeight: "100vh",
-          background:
-            "radial-gradient(circle at top right, rgba(99,102,241,0.18), transparent 30%), #0f172a",
+          background: "radial-gradient(circle at top right, rgba(99,102,241,0.15), transparent 35%), #0f172a",
           color: "white",
           fontFamily: "Inter, sans-serif",
-          overflow: "hidden",
+          overflowX: "hidden",
         }}
       >
         {/* NAVBAR */}
@@ -25,76 +24,52 @@ export default function Landing() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "20px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            backdropFilter: "blur(10px)",
+            padding: "20px 40px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            backdropFilter: "blur(12px)",
             position: "sticky",
             top: 0,
             zIndex: 100,
-            background: "rgba(15,23,42,0.75)",
+            background: "rgba(15,23,42,0.8)",
           }}
         >
           {/* LOGO */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
               src={logo}
               alt="LaunchAlly Logo"
-              style={{
-                width: 42,
-                height: 42,
-                objectFit: "contain",
-              }}
+              style={{ width: 38, height: 38, objectFit: "contain" }}
             />
-
-            <h1
-              style={{
-                margin: 0,
-                fontSize: 24,
-                fontWeight: 700,
-                letterSpacing: -0.5,
-              }}
-            >
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>
               LaunchAlly
             </h1>
           </div>
 
           {/* NAV LINKS */}
-          <div
-            style={{
-              display: "flex",
-              gap: 16,
-              alignItems: "center",
-            }}
-          >
+          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <Link
               to="/login"
               style={{
-                color: "white",
+                color: "#cbd5e1",
                 textDecoration: "none",
-                opacity: 0.85,
-                transition: "0.25s ease",
+                fontSize: 15,
+                fontWeight: 500,
+                transition: "0.2s ease",
               }}
             >
               Login
             </Link>
-
             <Link
               to="/register"
               style={{
                 background: "#6366f1",
-                padding: "12px 18px",
-                borderRadius: 10,
+                padding: "10px 20px",
+                borderRadius: 8,
                 color: "white",
                 textDecoration: "none",
+                fontSize: 15,
                 fontWeight: 600,
-                boxShadow: "0 10px 30px rgba(99,102,241,0.35)",
-                transition: "0.25s ease",
+                boxShadow: "0 4px 20px rgba(99,102,241,0.25)",
               }}
             >
               Get Started
@@ -107,377 +82,304 @@ export default function Landing() {
           style={{
             maxWidth: 1200,
             margin: "0 auto",
-            padding: "80px 20px",
+            padding: "100px 20px 60px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 60,
             flexWrap: "wrap",
-            position: "relative",
           }}
         >
-          {/* LEFT */}
+          {/* LEFT COLUMN */}
           <div style={{ flex: 1, minWidth: 320 }}>
             <div
               style={{
                 display: "inline-block",
-                background: "rgba(99,102,241,0.15)",
+                background: "rgba(99,102,241,0.1)",
                 color: "#a5b4fc",
-                padding: "8px 14px",
+                padding: "6px 14px",
                 borderRadius: 999,
-                fontSize: 14,
-                marginBottom: 24,
+                fontSize: 13,
+                fontWeight: 600,
+                marginBottom: 20,
                 border: "1px solid rgba(99,102,241,0.2)",
+                letterSpacing: "0.5px",
               }}
             >
-              Beginner-Friendly DevOps Platform
+              THE STARTUP DEPLOYMENT OPERATING SYSTEM
             </div>
 
             <h1
               style={{
-                fontSize: "clamp(42px, 8vw, 72px)",
-                lineHeight: 1,
-                marginBottom: 24,
-                fontWeight: 900,
-                letterSpacing: -2,
-                maxWidth: 700,
+                fontSize: "clamp(38px, 5vw, 56px)",
+                lineHeight: 1.1,
+                marginBottom: 20,
+                fontWeight: 800,
+                letterSpacing: -1.5,
               }}
             >
-              Launch applications, manage deployments, and collaborate with your team — all from one dashboard.
+              Deploy, monitor, and manage your startup apps from one place.
             </h1>
 
             <p
               style={{
-                fontSize: "clamp(16px, 3vw, 20px)",
-                lineHeight: 1.8,
-                color: "#cbd5e1",
-                maxWidth: 650,
-                marginBottom: 40,
+                fontSize: 18,
+                lineHeight: 1.6,
+                color: "#94a3b8",
+                marginBottom: 36,
+                maxWidth: 580,
               }}
             >
-              LaunchAlly helps developers and small teams launch applications, 
-              manage projects, monitor deployments, and collaborate from a single workspace.
+              LaunchAlly helps founders and small teams deploy applications, track deployments, manage projects, and collaborate without juggling five different tools.
             </p>
 
-            {/* BUTTONS */}
-            <div
-              style={{
-                display: "flex",
-                gap: 18,
-                flexWrap: "wrap",
-              }}
-            >
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <Link
                 to="/register"
                 style={{
                   background: "#6366f1",
-                  padding: "16px 26px",
-                  borderRadius: 12,
+                  padding: "14px 28px",
+                  borderRadius: 10,
                   color: "white",
                   textDecoration: "none",
-                  fontWeight: 700,
+                  fontWeight: 600,
                   fontSize: 16,
-                  boxShadow: "0 15px 35px rgba(99,102,241,0.35)",
-                  transition: "0.25s ease",
+                  boxShadow: "0 10px 25px rgba(99,102,241,0.3)",
                 }}
               >
-                Start Free
+                Deploy Free Now
               </Link>
-
               <button
                 onClick={() => setShowVideo(true)}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  padding: "16px 24px",
-                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  padding: "14px 24px",
+                  borderRadius: 10,
                   color: "white",
                   background: "rgba(255,255,255,0.03)",
                   fontWeight: 600,
                   fontSize: 16,
                   cursor: "pointer",
-                  transition: "0.25s ease",
                   backdropFilter: "blur(8px)",
                 }}
               >
-                ▶ Watch Demo
+                ▶ Watch 60s Demo
               </button>
-            </div>
-
-            {/* TRUST TEXT */}
-            <div
-              style={{
-                marginTop: 30,
-                color: "#94a3b8",
-                fontSize: 15,
-              }}
-            >
-              Launch applications, manage projects, and collaborate with your team — all from one dashboard.
             </div>
           </div>
 
-          {/* RIGHT SIDE CARD */}
+          {/* RIGHT COLUMN: INTERACTIVE APP CONTAINER */}
           <div
             style={{
               flex: 1,
               minWidth: 320,
-              background: "rgba(17,24,39,0.9)",
+              background: "rgba(30, 41, 59, 0.5)",
               border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24,
-              padding: 30,
-              boxShadow:
-                "0 25px 100px rgba(0,0,0,0.45), 0 0 80px rgba(99,102,241,0.15)",
-              position: "relative",
-              overflow: "hidden",
-              backdropFilter: "blur(16px)",
+              borderRadius: 20,
+              padding: 24,
+              boxShadow: "0 20px 50px rgba(0,0,0,0.3), 0 0 50px rgba(99,102,241,0.05)",
             }}
           >
-            {/* GLOW */}
-            <div
-              style={{
-                position: "absolute",
-                width: 300,
-                height: 300,
-                background: "rgba(99,102,241,0.15)",
-                filter: "blur(100px)",
-                top: -120,
-                right: -120,
-                borderRadius: "50%",
-              }}
-            />
-
-            {/* TOP BAR */}
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 24,
-                position: "relative",
-                zIndex: 2,
-              }}
-            >
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: "#ef4444",
-                }}
-              />
-
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: "#f59e0b",
-                }}
-              />
-
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: "#10b981",
-                }}
-              />
+            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
             </div>
 
-            {/* DEPLOYMENT UI MOCKUP */}
             <div
               style={{
                 background: "#0f172a",
-                padding: 22,
-                borderRadius: 18,
-                marginBottom: 18,
-                border: "1px solid rgba(255,255,255,0.05)",
-                position: "relative",
-                zIndex: 2,
+                padding: 20,
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.04)",
               }}
             >
-              <div
-                style={{
-                  fontWeight: 700,
-                  marginBottom: 12,
-                  fontSize: 18,
-                }}
-              >
-                Production Deployment
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontWeight: 700, fontSize: 16 }}>launchally-production-api</span>
+                <span style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", fontSize: 12, padding: "2px 8px", borderRadius: 999, fontWeight: 600 }}>Active</span>
               </div>
-
-              <div
-                style={{
-                  color: "#94a3b8",
-                  marginBottom: 16,
-                }}
-              >
-                launchally-api • main branch
+              <div style={{ color: "#64748b", fontSize: 13, marginBottom: 16 }}>branch: main • commit: #8f2da1</div>
+              
+              <div style={{ height: 6, background: "#1e293b", borderRadius: 999, overflow: "hidden", marginBottom: 10 }}>
+                <div style={{ width: "100%", height: "100%", background: "#6366f1" }} />
               </div>
-
-              <div
-                style={{
-                  height: 10,
-                  background: "#1e293b",
-                  borderRadius: 999,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: "82%",
-                    height: "100%",
-                    background:
-                      "linear-gradient(90deg, #6366f1, #8b5cf6)",
-                    boxShadow: "0 0 25px rgba(99,102,241,0.5)",
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  color: "#10b981",
-                  fontWeight: 600,
-                }}
-              >
-                Deployment successful
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#94a3b8" }}>
+                <span>Health Score: 100%</span>
+                <span>Latency: 42ms</span>
               </div>
             </div>
 
-            {/* STATS */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 16,
-                position: "relative",
-                zIndex: 2,
-              }}
-            >
-              <StatCard title="GitHub Integration" value="✓" />
-              <StatCard title="Team Workspaces" value="✓" />
-              <StatCard title="Deployments" value="✓" />
-              <StatCard title="Monitoring" value="✓" />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+              <div style={{ background: "rgba(15,23,42,0.4)", padding: 12, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
+                🎯 Workspace: <b>Founders-HQ</b>
+              </div>
+              <div style={{ background: "rgba(15,23,42,0.4)", padding: 12, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
+                👥 Team Sync: <b>Connected</b>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* FEATURES */}
-        <section
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "40px 20px",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "clamp(32px, 6vw, 48px)",
-              marginBottom: 18,
-              textAlign: "center",
-              fontWeight: 800,
-            }}
-          >
-            Everything your DevOps workflow needs
-          </h2>
+        {/* AUDIENCE TARGETING STRIP */}
+        <section style={{ borderY: "1px solid rgba(255,255,255,0.05)", background: "rgba(15,23,42,0.4)", padding: "24px 20px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyItems: "center", justifyContent: "center", gap: "clamp(20px, 5vw, 60px)", flexWrap: "wrap", color: "#64748b", fontWeight: 600 }}>
+            <span style={{ color: "#94a3b8" }}>BUILT FOR:</span>
+            <span>✓ Indie Hackers</span>
+            <span>✓ SaaS Founders</span>
+            <span>✓ Startup Teams</span>
+            <span>✓ Freelancers & Agencies</span>
+          </div>
+        </section>
 
-          <p
-            style={{
-              color: "#94a3b8",
-              textAlign: "center",
-              fontSize: "clamp(16px, 3vw, 18px)",
-              marginBottom: 60,
-            }}
-          >
-            Simple enough for beginners. Powerful enough for growing teams.
+        {/* CONCRETE VALUE FEATURES */}
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 20px" }}>
+          <h2 style={{ fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 12, letterSpacing: -1 }}>
+            Run your startup infrastructure without the complexity
+          </h2>
+          <p style={{ color: "#94a3b8", textAlign: "center", fontSize: 16, marginBottom: 60 }}>
+            Stop configuration hopping. Manage your assets directly.
           </p>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: 24,
-            }}
-          >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
             <FeatureCard
-              title="One-click Deployments"
-              text="Deploy applications instantly with streamlined workflows."
+              icon="🚀"
+              title="Deploy your GitHub projects"
+              text="Connect any repository and instantly boot up live deployments through a single structural control room dashboard."
             />
-
             <FeatureCard
-              title="Real-time Monitoring"
-              text="Track deployment health and project performance live."
+              icon="📈"
+              title="Monitor deployments live"
+              text="Track build success states, historical variables, uptime status, and active deployment environments with deep specificity."
             />
-
             <FeatureCard
-              title="Team Collaboration"
-              text="Invite teammates and manage projects together."
+              icon="📁"
+              title="Manage startup projects"
+              text="Keep your production projects, contextual test databases, and dynamic teams cleanly divided into structural workspaces."
             />
-
             <FeatureCard
-              title="Simple Project Management"
-              text="Organize deployments and infrastructure from one dashboard."
+              icon="🤝"
+              title="Collaborate with teammates"
+              text="Invite developers, managers, or project founders to specific workspaces with fine-grained technical access constraints."
             />
           </div>
         </section>
 
-        {/* CTA SECTION */}
-        <section
-          style={{
-            maxWidth: 1200,
-            margin: "80px auto 0",
-            padding: "60px 20px",
-          }}
-        >
-          <div
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.12))",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 30,
-              padding: "60px 30px",
-              textAlign: "center",
-              backdropFilter: "blur(14px)",
-            }}
-          >
-            <h2
-              style={{
-                fontSize: "clamp(34px, 6vw, 54px)",
-                marginBottom: 20,
-                fontWeight: 800,
-              }}
-            >
-              Ready to simplify deployments?
+        {/* THE "WHY USE US" COMPARISON TABLE */}
+        <section style={{ background: "rgba(30,41,59,0.2)", borderTop: "1px solid rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.04)", padding: "100px 20px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 16, letterSpacing: -1 }}>
+              Why LaunchAlly?
             </h2>
-
-            <p
-              style={{
-                color: "#cbd5e1",
-                maxWidth: 700,
-                margin: "0 auto 35px",
-                lineHeight: 1.8,
-                fontSize: 18,
-              }}
-            >
-              Join developers building and managing applications
-              with a cleaner, more beginner-friendly DevOps workflow.
+            <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48, fontSize: 16 }}>
+              How founders use alternative stacks compared to the optimized dynamic dashboard.
             </p>
 
+            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: 20, background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ fontWeight: 700, color: "#64748b" }}>THE FRAGMENTED WAY</div>
+                <div style={{ fontWeight: 700, color: "#6366f1" }}>THE LAUNCHALLY WAY</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ color: "#94a3b8" }}>❌ GitHub for code storage</div>
+                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ One unified pipeline control map</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20, borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ color: "#94a3b8" }}>❌ Vercel + Railway to host separate files</div>
+                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ Direct environment control monitoring</div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: 20 }}>
+                <div style={{ color: "#94a3b8" }}>❌ Notion + Spreadsheets to map architecture</div>
+                <div style={{ color: "#f8fafc", fontWeight: 500 }}>✓ Built-in intuitive collaborative workspaces</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ROADMAP SECTION */}
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 20px" }}>
+          <h2 style={{ fontSize: 32, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>
+            Product Roadmap
+          </h2>
+          <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48 }}>
+            We're building fast. Here's what's dropping next into your operating system workspace.
+          </p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+            <RoadmapCard step="01" status="Now Live" title="GitHub Continuous Workspaces" desc="Push updates automatically with production build maps." />
+            <RoadmapCard step="02" status="Q3 2026" title="AI Error Analysis" desc="Instant intelligent debugging recommendations on pipeline breakages." />
+            <RoadmapCard step="03" status="Q3 2026" title="Incident Alerts" desc="Immediate diagnostic telemetry pings routed straight to your communication webhooks." />
+            <RoadmapCard step="04" status="Q4 2026" title="Metrics Monitoring" desc="Advanced real-time server tracking directly inside the terminal viewer." />
+          </div>
+        </section>
+
+        {/* PRICING */}
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px 100px" }}>
+          <h2 style={{ fontSize: 32, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>
+            Transparent Plans for Every Stage
+          </h2>
+          <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48 }}>
+            Start managing infrastructure for free, upgrade smoothly as your operation shifts up.
+          </p>
+
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+            {/* FREE TIER */}
+            <div style={{ flex: 1, minWidth: 280, background: "rgba(17,24,39,0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 32 }}>
+              <h3 style={{ fontSize: 20, margin: 0 }}>Free Tier</h3>
+              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$0</div>
+              <ul style={{ paddingLeft: 20, color: "#94a3b8", lineHeight: 2 }}>
+                <li>Unlimited project layouts</li>
+                <li>Shared workspace organization</li>
+                <li>Basic repository connection tracking</li>
+                <li>Real-time build status updates</li>
+              </ul>
+            </div>
+
+            {/* PRO TIER */}
+            <div style={{ flex: 1, minWidth: 280, background: "rgba(99,102,241,0.05)", border: "2px solid #6366f1", borderRadius: 16, padding: 32, position: "relative" }}>
+              <span style={{ position: "absolute", top: 16, right: 16, background: "#6366f1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>COMING SOON</span>
+              <h3 style={{ fontSize: 20, margin: 0, color: "#a5b4fc" }}>Pro SaaS</h3>
+              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$19<span style={{ fontSize: 14, color: "#64748b" }}>/mo</span></div>
+              <ul style={{ paddingLeft: 20, color: "#cbd5e1", lineHeight: 2 }}>
+                <li>Everything in the Free plan</li>
+                <li>Advanced server log tracking</li>
+                <li>AI Deployment troubleshooting analyzer</li>
+                <li>Priority operational stack support</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px 80px" }}>
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(15,23,42,0.6))",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 24,
+              padding: "60px 40px",
+              textAlign: "center",
+            }}
+          >
+            <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
+              Take Command of Your Launch Ops Today
+            </h2>
+            <p style={{ color: "#cbd5e1", maxWidth: 600, margin: "0 auto 32px", fontSize: 16, lineHeight: 1.6 }}>
+              Stop jumping between five tabs to monitor one application codebase. Bring structure to your launch process.
+            </p>
             <Link
               to="/register"
               style={{
                 display: "inline-block",
                 background: "#6366f1",
-                padding: "18px 30px",
-                borderRadius: 14,
+                padding: "16px 32px",
+                borderRadius: 10,
                 color: "white",
                 textDecoration: "none",
                 fontWeight: 700,
-                fontSize: 17,
-                boxShadow: "0 15px 40px rgba(99,102,241,0.35)",
+                boxShadow: "0 10px 30px rgba(99,102,241,0.3)",
               }}
             >
-              Create Free Account
+              Build Workspace for Free
             </Link>
           </div>
         </section>
@@ -485,67 +387,58 @@ export default function Landing() {
         {/* FOOTER */}
         <footer
           style={{
-            marginTop: 80,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            padding: "24px 20px",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            padding: "32px 20px",
             textAlign: "center",
-            color: "#94a3b8",
+            color: "#64748b",
+            fontSize: 14,
           }}
         >
-          © {new Date().getFullYear()} LaunchAlly. All rights reserved.
+          © {new Date().getFullYear()} LaunchAlly. Dedicated to streamlined operational clarity.
         </footer>
       </div>
 
-      {/* VIDEO MODAL */}
+      {/* VIDEO MODAL CONTAINER */}
       {showVideo && (
         <div
           onClick={() => setShowVideo(false)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.9)",
+            background: "rgba(15,23,42,0.95)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             zIndex: 9999,
             padding: 20,
-            backdropFilter: "blur(10px)",
+            backdropFilter: "blur(8px)",
           }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: 1100,
-              position: "relative",
-            }}
-          >
-            {/* CLOSE BUTTON */}
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 960, position: "relative" }}>
             <button
               onClick={() => setShowVideo(false)}
               style={{
                 position: "absolute",
-                top: -40,
+                top: -45,
                 right: 0,
                 background: "transparent",
                 border: "none",
                 color: "white",
-                fontSize: 32,
+                fontSize: 36,
                 cursor: "pointer",
               }}
             >
               ×
             </button>
-
             <video
               controls
               autoPlay
               style={{
                 width: "100%",
-                borderRadius: 20,
+                borderRadius: 16,
                 border: "1px solid rgba(255,255,255,0.1)",
                 background: "black",
-                boxShadow: "0 30px 100px rgba(0,0,0,0.5)",
+                boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
               }}
             >
               <source src={demoVideo} type="video/mp4" />
@@ -557,71 +450,38 @@ export default function Landing() {
   );
 }
 
-function FeatureCard({ title, text }) {
+{/* REFACTORED CLEAN COMPONENTS */}
+function FeatureCard({ icon, title, text }) {
   return (
     <div
       style={{
-        background: "rgba(17,24,39,0.8)",
-        padding: 28,
-        borderRadius: 20,
-        border: "1px solid rgba(255,255,255,0.08)",
-        transition: "0.25s ease",
-        backdropFilter: "blur(10px)",
+        background: "rgba(30, 41, 59, 0.3)",
+        padding: 32,
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.05)",
+        transition: "all 0.2s ease-in-out",
       }}
     >
-      <h3
-        style={{
-          marginTop: 0,
-          marginBottom: 14,
-          fontSize: 22,
-          fontWeight: 700,
-        }}
-      >
+      <div style={{ fontSize: 28, marginBottom: 16 }}>{icon}</div>
+      <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 18, fontWeight: 700, color: "#f8fafc" }}>
         {title}
       </h3>
-
-      <p
-        style={{
-          color: "#94a3b8",
-          lineHeight: 1.7,
-          margin: 0,
-        }}
-      >
+      <p style={{ color: "#94a3b8", lineHeight: 1.6, margin: 0, fontSize: 14 }}>
         {text}
       </p>
     </div>
   );
 }
 
-function StatCard({ title, value }) {
+function RoadmapCard({ step, status, title, desc }) {
   return (
-    <div
-      style={{
-        background: "rgba(17,24,39,0.75)",
-        padding: 20,
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.05)",
-        backdropFilter: "blur(10px)",
-      }}
-    >
-      <div
-        style={{
-          color: "#94a3b8",
-          marginBottom: 8,
-          fontSize: 14,
-        }}
-      >
-        {title}
+    <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.05)", padding: 24, borderRadius: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 12, color: "#6366f1", fontWeight: 700 }}>{step}</span>
+        <span style={{ fontSize: 11, background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4, color: "#cbd5e1" }}>{status}</span>
       </div>
-
-      <div
-        style={{
-          fontSize: 28,
-          fontWeight: 700,
-        }}
-      >
-        {value}
-      </div>
+      <h4 style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 700 }}>{title}</h4>
+      <p style={{ margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{desc}</p>
     </div>
   );
 }
