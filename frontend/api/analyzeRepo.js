@@ -555,7 +555,13 @@ export default async function analyzeRepo(repoInput) {
     SUCCESS
     ==========================
     */
-
+console.log("========== LaunchAlly ==========");
+console.log("Framework:", framework);
+console.log("Detected:", detected);
+console.log("Package:", packageJson.name);
+console.log("Build:", buildCommand);
+console.log("Output:", outputDirectory);
+console.log("===============================");
     return {
       valid: true,
 
