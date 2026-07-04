@@ -222,73 +222,43 @@ export default async function handler(
      `.trim(),
 });
 
-    const match =
-      repoUrl.match(
-        /github\.com\/([^\/]+)\/([^\/]+)/i
-      );
+    const analysis = await analyzeRepo(repoUrl);
 
-    if (!match) {
-      throw new Error(
-        "Invalid GitHub repository URL"
-      );
-    }
+console.log("[ANALYSIS]", analysis);
 
-    const owner =
-      match[1];
+if (!analysis.valid) {
+  throw new Error(analysis.reason);
+}
 
-    const repo =
-      match[2]
-        .replace(
-          ".git",
-          ""
-        );
+if (!analysis.deployable) {
+  throw new Error(analysis.reason);
+}
 
-    console.log(
-      "[CHECKING REPO]",
-      owner,
-      repo
-    );
+const owner = analysis.owner;
+const repo = analysis.repo;
 
-    const githubRes =
-      await fetch(
-        `https://api.github.com/repos/${owner}/${repo}`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${process.env.GITHUB_TOKEN}`,
-          },
-        }
-      );
+const githubRes = await fetch(
+  `https://api.github.com/repos/${owner}/${repo}`,
+  {
+    headers: {
+      Accept: "application/vnd.github+json",
+      ...(process.env.GITHUB_TOKEN && {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      }),
+    },
+  }
+);
 
-    const github =
-      await githubRes.json();
+if (!githubRes.ok) {
+  const error = await githubRes.json().catch(() => ({}));
 
-    if (
-      !githubRes.ok ||
-      github.archived
-    ) {
-      throw new Error(
-        "Repository unavailable"
-      );
-    }
+  throw new Error(
+    error.message || "Unable to access GitHub repository."
+  );
+}
 
-    const analysis =
-      await analyzeRepo(
-        repoUrl
-      );
+const github = await githubRes.json();
 
-    console.log(
-      analysis
-    );
-
-    if (
-      !analysis?.deployable
-    ) {
-      throw new Error(
-        analysis?.reason ||
-        "Repository not deployable"
-      );
-    }
 
     await updateDeployment(
      tempDeploymentId,
