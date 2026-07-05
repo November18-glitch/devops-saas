@@ -300,40 +300,25 @@ const github = await githubRes.json();
      !!process.env.VITE_SUPABASE_ANON_KEY
     );
 
+const vercelFramework =
+  analysis.framework === "react" &&
+  analysis.outputDirectory === "dist"
+    ? "vite"
+    : analysis.framework;
+
 const vercelPayload = {
-
-  name:
-   `${projectName
-   .toLowerCase()
-   .replace(
-    /\s+/g,
-    "-"
-   )}-${Date.now()}`,
-
+  name: `${projectName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
   gitSource: {
     type: "github",
     repoId: github.id,
-    ref:
-      github.default_branch ||
-      "main",
+    ref: github.default_branch || "main",
   },
-
   projectSettings: {
-    framework:
-      analysis.framework,
-
-    ...(rootDirectory
-      ? { rootDirectory }
-      : {}),
-
-    installCommand:
-      analysis.installCommand,
-
-    buildCommand:
-      analysis.buildCommand,
-
-    outputDirectory:
-      analysis.outputDirectory,
+    framework: vercelFramework,
+    ...(rootDirectory ? { rootDirectory } : {}),
+    installCommand: analysis.installCommand,
+    buildCommand: analysis.buildCommand,
+    outputDirectory: analysis.outputDirectory,
   },
 };
 
