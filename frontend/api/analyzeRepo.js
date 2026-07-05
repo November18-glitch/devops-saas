@@ -10,19 +10,22 @@ const PACKAGE_LOCATIONS = [
 ];
 
 const FRAMEWORKS = {
-  next: {
-    name: "nextjs",
-    output: ".next"
-  },
-
-  vite: {
-    name: "vite",
-    output: "dist"
+  next:{
+   dependency:"next",
+   name:"nextjs",
+   output:".next"
   },
 
   react: {
-    name: "create-react-app",
-    output: "build"
+   dependency:"react",
+   name:"react",
+   output:"dist"
+  },
+
+  vite:{
+   dependency:"vite",
+   name:"vite",
+   output:"dist"
   },
 
   vue: {
@@ -184,28 +187,19 @@ async function fetchRepository(owner, repo) {
   };
 }
 
-async function fetchPackageJson(owner, repo, branch) {
-  for (const location of PACKAGE_LOCATIONS) {
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${location}`
-    );
+async function fetchRepositoryTree(owner, repo, branch) {
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+    {
+      headers: githubHeaders()
+    }
+  );
 
-    if (!res.ok) continue;
+  if (!res.ok) return [];
 
-    try {
-      const json = await res.json();
+  const json = await res.json();
 
-      return {
-        found: true,
-        path: location,
-        json
-      };
-    } catch {}
-  }
-
-  return {
-    found: false
-  };
+  return json.tree || [];
 }
 
 function calculateConfidence({
@@ -270,6 +264,19 @@ function chooseDeploymentStrategy({
       return "manual";
   }
 }
+async function downloadPackageJson(owner, repo, branch, path) {
+  const res = await fetch(
+    `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`
+  );
+
+  if (!res.ok) return null;
+
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
 export default async function analyzeRepo(repoInput) {
   try {
@@ -305,13 +312,40 @@ export default async function analyzeRepo(repoInput) {
 
     const repoData = repository.data;
 
-    const packageResult =
-      await fetchPackageJson(
-        owner,
-        repo,
-        repoData.default_branch
-      );
-          if (!packageResult.found) {
+    const repositoryTree =
+     await fetchRepositoryTree(
+     owner,
+     repo,
+     repoData.default_branch
+    );
+
+    const packageFiles = repositoryTree.filter(
+     file =>
+     file.type === "blob" &&
+     file.path.endsWith("package.json")
+    );
+    packageFiles.sort((a, b) => {
+
+  const score = path => {
+
+    if (path === "package.json") return 100;
+
+    if (path.includes("frontend")) return 90;
+
+    if (path.includes("client")) return 90;
+
+    if (path.includes("app")) return 85;
+
+    if (path.includes("web")) return 80;
+
+    return 10;
+
+  };
+
+  return score(b.path) - score(a.path);
+
+});
+    if (!packageFiles.length) {
       return {
         valid: true,
         deployable: false,
@@ -327,10 +361,47 @@ export default async function analyzeRepo(repoInput) {
       };
     }
 
-    const packageJson = packageResult.json;
+let packageJson = null;
+let packagePath = null;
 
+for (const file of packageFiles) {
+
+  const json = await downloadPackageJson(
+    owner,
+    repo,
+    repoData.default_branch,
+    file.path
+  );
+
+  if (!json) continue;
+
+  if (
+    json.scripts?.build &&
+    (
+        json.dependencies ||
+        json.devDependencies
+    )
+   ) {
+    packageJson = json;
+    packagePath = file.path;
+    break;
+  }
+
+}
+
+if (!packageJson) {
+
+  return {
+    valid: true,
+    deployable: false,
+    owner,
+    repo,
+    reason: "No deployable package.json found."
+  };
+
+}
     const detected = [
-      packageResult.path
+     packagePath
     ];
 
     const warnings = [];
@@ -457,26 +528,26 @@ DETECT MONOREPOS / LIBRARIES
     let framework = null;
     let outputDirectory = "dist";
 
-    for (const dependency of Object.keys(FRAMEWORKS)) {
+    for (const frameworkInfo of FRAMEWORKS) {
 
-      if (deps[dependency]) {
+ if (deps[frameworkInfo.dependency]) {
 
-        framework =
-          FRAMEWORKS[dependency].name;
+   framework = frameworkInfo.name;
 
-        outputDirectory =
-          FRAMEWORKS[dependency].output;
+   outputDirectory = frameworkInfo.output;
 
-        detected.push(framework);
+   detected.push(framework);
 
-        break;
-      }
-    }
+   break;
+  }
+
+}
+
     /*
-==========================
-REPOSITORY TYPE
-==========================
-*/
+    ==========================
+    REPOSITORY TYPE
+    ==========================
+    */
 
 let repositoryType = "application";
 
