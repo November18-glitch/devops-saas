@@ -383,9 +383,14 @@ export default async function analyzeRepo(repoInput) {
       ...(packageJson.dependencies || {}),
       ...(packageJson.devDependencies || {})
     };
+    /*
+====================================
+DETECT MONOREPOS / LIBRARIES
+====================================
+*/
 
     let framework = null;
-    let outputDirectory = null;
+    let outputDirectory = "dist";
 
     for (const dependency of Object.keys(FRAMEWORKS)) {
 
@@ -402,7 +407,47 @@ export default async function analyzeRepo(repoInput) {
         break;
       }
     }
+    /*
+==========================
+REPOSITORY TYPE
+==========================
+*/
 
+let repositoryType = "application";
+
+// package / library
+if (
+    packageJson.name?.startsWith("@") ||
+    packageJson.private === false ||
+    packageJson.keywords?.includes("library") ||
+    packageJson.keywords?.includes("plugin")
+) {
+    repositoryType = "library";
+}
+
+// CLI
+if (
+    packageJson.bin
+) {
+    repositoryType = "cli";
+}
+
+// starter/template
+if (
+    repoData.is_template ||
+    repo.toLowerCase().includes("template") ||
+    repo.toLowerCase().includes("starter") ||
+    repo.toLowerCase().includes("boilerplate")
+) {
+    repositoryType = "template";
+}
+
+// plugin
+if (
+    repo.toLowerCase().includes("plugin")
+) {
+    repositoryType = "plugin";
+} 
     /*
     ==========================
     FALLBACK DETECTION
@@ -518,7 +563,7 @@ export default async function analyzeRepo(repoInput) {
         warnings,
 
         reason:
-          "Unsupported framework. LaunchAlly currently supports Next.js, React, Vite, Vue, Nuxt, Astro, Angular, Svelte, Express and NestJS."
+         "This repository doesn't appear to be a deployable web application. LaunchAlly currently supports Next.js, React, Vite, Vue, Nuxt, Astro, Angular, Svelte, Express, NestJS and Fastify projects.",
       };
     }
 
@@ -570,6 +615,8 @@ console.log("===============================");
       owner,
 
       repo,
+
+      repositoryType,
 
       defaultBranch:
         repoData.default_branch,
