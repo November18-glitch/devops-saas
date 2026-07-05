@@ -208,6 +208,69 @@ async function fetchPackageJson(owner, repo, branch) {
   };
 }
 
+function calculateConfidence({
+  framework,
+  repositoryType,
+  buildCommand,
+  packageJson,
+  warnings
+}) {
+  let score = 0;
+
+  if (framework) score += 35;
+  if (buildCommand) score += 25;
+  if (packageJson.name) score += 10;
+  if (packageJson.description) score += 5;
+  if (packageJson.license) score += 5;
+
+  if (repositoryType === "application") score += 20;
+
+  if (repositoryType === "template") score += 15;
+
+  if (repositoryType === "library") score -= 35;
+
+  if (repositoryType === "plugin") score -= 40;
+
+  if (repositoryType === "cli") score -= 50;
+
+  score -= warnings.length * 2;
+
+  score = Math.max(0, Math.min(score, 100));
+
+  return score;
+}
+
+function chooseDeploymentStrategy({
+  framework,
+  repositoryType
+}) {
+  if (
+    repositoryType !== "application" &&
+    repositoryType !== "template"
+  ) {
+    return "unsupported";
+  }
+
+  switch (framework) {
+    case "nextjs":
+    case "vite":
+    case "vue":
+    case "astro":
+    case "nuxt":
+    case "react":
+    case "create-react-app":
+      return "vercel";
+
+    case "express":
+    case "fastify":
+    case "nestjs":
+      return "node";
+
+    default:
+      return "manual";
+  }
+}
+
 export default async function analyzeRepo(repoInput) {
   try {
 
@@ -415,39 +478,52 @@ REPOSITORY TYPE
 
 let repositoryType = "application";
 
-// package / library
+const lowerName =
+  (packageJson.name || "").toLowerCase();
+
+const lowerDescription =
+  (packageJson.description || "").toLowerCase();
+
 if (
-    packageJson.name?.startsWith("@") ||
-    packageJson.private === false ||
-    packageJson.keywords?.includes("library") ||
-    packageJson.keywords?.includes("plugin")
+  packageJson.bin
 ) {
-    repositoryType = "library";
+  repositoryType = "cli";
 }
 
-// CLI
-if (
-    packageJson.bin
+else if (
+  repo.toLowerCase().includes("plugin") ||
+  lowerName.includes("plugin") ||
+  packageJson.keywords?.includes("plugin")
 ) {
-    repositoryType = "cli";
+  repositoryType = "plugin";
 }
 
-// starter/template
-if (
-    repoData.is_template ||
-    repo.toLowerCase().includes("template") ||
-    repo.toLowerCase().includes("starter") ||
-    repo.toLowerCase().includes("boilerplate")
+else if (
+  lowerDescription.includes("framework") ||
+  packageJson.keywords?.includes("framework")
 ) {
-    repositoryType = "template";
+  repositoryType = "library";
 }
 
-// plugin
-if (
-    repo.toLowerCase().includes("plugin")
+else if (
+  packageJson.private === false &&
+  (
+    packageJson.main ||
+    packageJson.module ||
+    packageJson.exports
+  )
 ) {
-    repositoryType = "plugin";
-} 
+  repositoryType = "library";
+}
+
+else if (
+  repoData.is_template ||
+  repo.toLowerCase().includes("template") ||
+  repo.toLowerCase().includes("starter") ||
+  repo.toLowerCase().includes("boilerplate")
+) {
+  repositoryType = "template";
+}
     /*
     ==========================
     FALLBACK DETECTION
@@ -518,6 +594,8 @@ if (
     */
 
     let nodeVersion = null;
+
+    
 
     if (packageJson.engines?.node) {
 
@@ -594,6 +672,36 @@ if (
         "Looks like a JavaScript Next.js project."
       );
     }
+    const confidence = calculateConfidence({
+     framework,
+     repositoryType,
+     buildCommand,
+     packageJson,
+     warnings
+    });
+
+     let confidenceLabel;
+
+     if (confidence >= 90) {
+      confidenceLabel = "Excellent";
+    }
+     else if (confidence >= 75) {
+      confidenceLabel = "High";
+    }
+     else if (confidence >= 60) {
+      confidenceLabel = "Medium";
+    }
+     else {
+      confidenceLabel = "Low";
+    }
+
+    const deploymentStrategy = chooseDeploymentStrategy({
+     framework,
+     repositoryType
+    });
+
+    detected.push(`${confidenceLabel} (${confidence}%)`);
+    detected.push(deploymentStrategy);
 
     /*
     ==========================
@@ -617,6 +725,12 @@ console.log("===============================");
       repo,
 
       repositoryType,
+
+      confidence,
+
+      deploymentStrategy,
+
+      confidenceLabel,
 
       defaultBranch:
         repoData.default_branch,
