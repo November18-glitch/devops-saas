@@ -528,20 +528,21 @@ DETECT MONOREPOS / LIBRARIES
     let framework = null;
     let outputDirectory = "dist";
 
-    for (const frameworkInfo of FRAMEWORKS) {
+    for (const dependency of Object.keys(FRAMEWORKS)) {
 
- if (deps[frameworkInfo.dependency]) {
+     if (deps[dependency]) {
 
-   framework = frameworkInfo.name;
+      framework = FRAMEWORKS[dependency].name;
 
-   outputDirectory = frameworkInfo.output;
+      outputDirectory = FRAMEWORKS[dependency].output;
 
-   detected.push(framework);
+      detected.push(framework);
 
-   break;
-  }
+     break;
 
-}
+     }
+
+    }
 
     /*
     ==========================
