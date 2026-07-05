@@ -391,6 +391,8 @@ export default async function analyzeRepo(repoInput) {
 
     const scripts =
       packageJson.scripts || {};
+    
+      console.log(packageJson.scripts);
 
     let buildCommand = null;
 
