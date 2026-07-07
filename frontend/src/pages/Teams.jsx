@@ -10,7 +10,8 @@ export default function Teams() {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState(null);
   const [user, setUser] = useState(null);
 
   // 🔥 LOAD USER
@@ -83,7 +84,35 @@ export default function Teams() {
       setCreating(false);
     }
   };
+const handleInvite = async () => {
+  if (!inviteEmail || !selectedTeam) return;
 
+  const { data: session } = await supabase.auth.getSession();
+
+  const res = await fetch("/api/inviteMember", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.session.access_token}`,
+    },
+    body: JSON.stringify({
+      teamId: selectedTeam,
+      email: inviteEmail,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert("Invitation sent!");
+
+  setInviteEmail("");
+  setSelectedTeam(null);
+};
   const handleOpenTeam = (teamId) => {
     navigate(`/projects?teamId=${teamId}`);
   };
@@ -135,13 +164,34 @@ export default function Teams() {
                 </p>
 
                 <div className="team-actions">
-                  <button
-                    className="secondary"
-                    onClick={() => handleOpenTeam(team.id)}
-                  >
-                    Open
-                  </button>
-                </div>
+  <button
+    className="secondary"
+    onClick={() => handleOpenTeam(team.id)}
+  >
+    Open
+  </button>
+
+  <button
+    className="secondary"
+    onClick={() => setSelectedTeam(team.id)}
+  >
+    Invite
+  </button>
+</div>
+
+{selectedTeam === team.id && (
+  <div className="invite-box">
+    <input
+      placeholder="member@email.com"
+      value={inviteEmail}
+      onChange={(e) => setInviteEmail(e.target.value)}
+    />
+
+    <button onClick={handleInvite}>
+      Send Invite
+    </button>
+  </div>
+)}
               </div>
             ))}
           </div>

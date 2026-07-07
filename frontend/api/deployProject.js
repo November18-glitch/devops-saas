@@ -222,6 +222,57 @@ export default async function handler(
      `.trim(),
 });
 
+/*
+==========================
+FREE PLAN DEPLOYMENT LIMIT
+==========================
+*/
+
+const { data: team } = await supabase
+  .from("teams")
+  .select("owner_id")
+  .eq("id", teamId)
+  .single();
+
+const { data: owner } = await supabase
+  .from("users")
+  .select("plan")
+  .eq("id", team.owner_id)
+  .single();
+
+if ((owner?.plan || "FREE") === "FREE") {
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0,0,0,0);
+
+  const { count } = await supabase
+    .from("deployments")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .eq("team_id", teamId)
+    .gte(
+      "created_at",
+      startOfMonth.toISOString()
+    );
+
+  if (count >= 5) {
+    return res.status(403).json({
+      error:
+      "Free plan allows only 5 deployments per month."
+    });
+  }
+
+}
+
+/*
+==========================
+REPOSITORY ANALYSIS
+==========================
+*/
+
     const analysis = await analyzeRepo(repoUrl);
 
 console.log("[ANALYSIS]", analysis);
