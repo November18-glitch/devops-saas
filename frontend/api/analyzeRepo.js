@@ -436,6 +436,35 @@ if (!packageJson) {
       installCommand = "bun install";
     }
 
+/*
+==========================
+LOCKFILE DETECTION
+==========================
+*/
+
+const paths = repositoryTree.map(f => f.path);
+
+if (
+    packageManager === "pnpm" &&
+    !paths.includes("pnpm-lock.yaml")
+) {
+    warnings.push("Missing pnpm-lock.yaml");
+}
+
+if (
+    packageManager === "npm" &&
+    !paths.includes("package-lock.json")
+) {
+    warnings.push("Missing package-lock.json");
+}
+
+if (
+    packageManager === "yarn" &&
+    !paths.includes("yarn.lock")
+) {
+    warnings.push("Missing yarn.lock");
+}
+
     /*
     ==========================
     MONOREPO
@@ -679,6 +708,25 @@ else if (
       detected.push(
         `node ${nodeVersion}`
       );
+    }
+
+    if (packageManager === "pnpm" && !nodeVersion) {
+    warnings.push(
+        "pnpm project has no Node.js engine specified."
+    );
+    }
+
+    if (
+      nodeVersion &&
+      (
+        nodeVersion.includes("14") ||
+        nodeVersion.includes("15") ||
+        nodeVersion.includes("16")
+      )
+    ) {
+      warnings.push(
+        "Project targets an older Node.js version."
+    );
     }
         /*
     ==========================
