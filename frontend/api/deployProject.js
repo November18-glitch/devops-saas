@@ -207,20 +207,7 @@ export default async function handler(
         });
     }
 
-    await supabase
-     .from("deployments")
-     .insert({
-     deployment_id: tempDeploymentId,
-     project_id: projectId,
-     team_id: teamId,
-     status: "ANALYZING",
-     logs: `
-     🔎 Checking repository...
-
-     Repository:
-     ${repoUrl}
-     `.trim(),
-});
+    
 
 /*
 ==========================
@@ -266,7 +253,20 @@ if ((owner?.plan || "FREE") === "FREE") {
   }
 
 }
+await supabase
+     .from("deployments")
+     .insert({
+     deployment_id: tempDeploymentId,
+     project_id: projectId,
+     team_id: teamId,
+     status: "ANALYZING",
+     logs: `
+     🔎 Checking repository...
 
+     Repository:
+     ${repoUrl}
+     `.trim(),
+});
 /*
 ==========================
 REPOSITORY ANALYSIS

@@ -68,7 +68,6 @@ role:invite.role,
 status:"active"
 
 });
-
 await supabase
 .from("team_invites")
 .update({

@@ -44,6 +44,29 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    const { data: userPlan } = await supabase
+  .from("users")
+  .select("plan")
+  .eq("id", user.id)
+  .single();
+
+if ((userPlan?.plan || "FREE") === "FREE") {
+
+  const { count } = await supabase
+    .from("teams")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq("owner_id", user.id);
+
+  if (count >= 1) {
+    return res.status(403).json({
+      error: "Free plan allows only one team.",
+    });
+  }
+}
+
     const { name } = req.body;
 
     if (!name) {

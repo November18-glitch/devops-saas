@@ -100,6 +100,20 @@ export default async function handler(req, res) {
       });
     }
 
+    await fetch(
+  `${req.headers.origin}/api/sendInviteEmail`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      token: inviteToken,
+    }),
+  }
+);
+
     res.status(200).json({
       success: true,
       token: inviteToken
