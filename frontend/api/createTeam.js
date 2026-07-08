@@ -5,29 +5,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const { data: userPlan } = await supabase
-  .from("users")
-  .select("plan")
-  .eq("id", user.id)
-  .single();
-
-if ((userPlan?.plan || "FREE") === "FREE") {
-
-  const { count } = await supabase
-    .from("teams")
-    .select("*", {
-      count: "exact",
-      head: true
-    })
-    .eq("owner_id", user.id);
-
-  if (count >= 1) {
-    return res.status(403).json({
-      error: "Free plan allows only one team."
-    });
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
