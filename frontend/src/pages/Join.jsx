@@ -25,14 +25,28 @@ export default function Join() {
       return;
       }
 
-      const {
-       data: { user },
-       } = await supabase.auth.getUser();
+      let {
+  data: { user },
+} = await supabase.auth.getUser();
 
-       if (!user) {
-        window.location.href = "/login";
-       return;
-      }
+// Wait a few seconds after signup/login
+if (!user) {
+  for (let i = 0; i < 10; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+
+    if (user) break;
+  }
+}
+
+if (!user) {
+  window.location.replace(
+    `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
+  );
+  return;
+}
 
        if (user.email !== invite.email) {
         alert("This invitation was sent to another email address.");
@@ -47,27 +61,34 @@ export default function Join() {
         .maybeSingle();
 
        if (existing) {
-        window.location.href = "/teams";
+        window.location.replace("/teams");
        return;
        }
 
-      await supabase.from("team_members").insert({
-       team_id: invite.team_id,
-       user_id: user.id,
-       email: user.email,
-       role: invite.role,
-       status: "active"
-      });
+      const { error: memberError } = await supabase
+  .from("team_members")
+  .insert({
+    team_id: invite.team_id,
+    user_id: user.id,
+    email: user.email,
+    role: invite.role,
+    status: "active",
+  });
 
-      await supabase
-        .from("team_invites")
-        .update({
-          accepted: true,
-          status: "accepted"
-        })
-        .eq("id", invite.id);
+if (memberError) {
+  alert(memberError.message);
+  return;
+}
 
-      window.location.href = "/teams";
+await supabase
+  .from("team_invites")
+  .update({
+    accepted: true,
+    status: "accepted",
+  })
+  .eq("id", invite.id);
+
+      window.location.replace("/teams");
 
     }
 
