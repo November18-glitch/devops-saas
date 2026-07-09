@@ -42,9 +42,11 @@ if (!user) {
 }
 
 if (!user) {
-  window.location.replace(
-    `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
-  );
+  const redirect = encodeURIComponent(`/join?token=${token}`);
+
+   window.location.replace(
+    `/login?redirect=${redirect}`
+   );
   return;
 }
 

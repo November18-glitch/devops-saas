@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,15 @@ export default function Login() {
     }
 
     // smooth redirect
-    navigate("/dashboard");
+    const params = new URLSearchParams(location.search);
+
+    const redirect =
+     params.get("redirect");
+
+    navigate(
+     redirect || "/dashboard",
+     { replace: true }
+    );
   };
 
   return (
@@ -96,7 +105,11 @@ export default function Login() {
 
         <p style={styles.footer}>
           Don’t have an account?{" "}
-          <Link to="/register">Register</Link>
+          <Link
+             to={`/register${location.search}`}
+            >
+            Register
+          </Link>
         </p>
       </div>
     </div>

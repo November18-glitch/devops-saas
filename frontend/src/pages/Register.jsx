@@ -1,10 +1,12 @@
 import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import logo from "../assets/logo.png";
 
 export default function Register() {
+  const location = useLocation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,8 +52,13 @@ export default function Register() {
       });
     }
 
-    setSuccess(true);
-  };
+    const redirect =
+     new URLSearchParams(location.search)
+     .get("redirect");
+
+     window.location.href =
+     redirect || "/login";
+    };
 
   if (success) {
     return (
