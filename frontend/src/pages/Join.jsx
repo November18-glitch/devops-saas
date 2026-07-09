@@ -49,9 +49,18 @@ if (!user) {
 }
 
        if (user.email !== invite.email) {
-        alert("This invitation was sent to another email address.");
-       return;
-      }
+         alert(
+           `This invite was sent to ${invite.email}.\n\nPlease sign out and sign in with that account.`
+          );
+
+          await supabase.auth.signOut();
+
+          window.location.href =
+           "/login?redirect=" +
+          encodeURIComponent(`/join?token=${token}`);
+
+          return;
+       }
 
       const { data: existing } = await supabase
         .from("team_members")
