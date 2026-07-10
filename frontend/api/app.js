@@ -463,6 +463,12 @@ export default async function handler(req, res) {
         },
       } =
         await authSupabase.auth.getUser();
+      
+       if (!user) {
+        return res.status(401).json({
+        error: "Unauthorized",
+       });
+      }
 
       const {
         data,

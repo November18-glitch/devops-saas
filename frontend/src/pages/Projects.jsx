@@ -41,13 +41,28 @@ export default function Projects() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const { data: session } = await supabase.auth.getSession();
+        let session = (await supabase.auth.getSession()).data.session;
 
-        const res = await fetch("/api/app?action=getTeams", {
-          headers: {
-            Authorization: `Bearer ${session.session?.access_token}`,
-          },
-        });
+if (!session) {
+  for (let i = 0; i < 10; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+
+    session = (await supabase.auth.getSession()).data.session;
+
+    if (session) break;
+  }
+}
+
+if (!session) {
+  console.error("No Supabase session.");
+  return;
+}
+
+const res = await fetch("/api/app?action=getTeams", {
+  headers: {
+    Authorization: `Bearer ${session.access_token}`,
+  },
+});
 
         const data = await res.json();
 
