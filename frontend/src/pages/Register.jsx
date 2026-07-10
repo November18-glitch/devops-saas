@@ -24,6 +24,7 @@ export default function Register() {
 
     const params = new URLSearchParams(window.location.search);
     const inviteToken = params.get("invite");
+    const redirectParam = params.get("redirect");
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -32,9 +33,9 @@ export default function Register() {
         data: {
           username,
         },
-
-        emailRedirectTo:
-          "https://launchally.org/auth/callback",
+        emailRedirectTo: `https://launchally.org/auth/callback${
+          redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ""
+        }`,
       },
     });
 
@@ -45,19 +46,11 @@ export default function Register() {
       return;
     }
 
-    // accept invite
-    if (inviteToken) {
-      await supabase.rpc("accept_invite", {
-        invite_token: inviteToken,
-      });
-    }
-
     const redirect =
      new URLSearchParams(location.search)
      .get("redirect");
 
-     window.location.href =
-     redirect || "/login";
+     setSuccess(true);
     };
 
   if (success) {
@@ -81,9 +74,14 @@ export default function Register() {
           </div>
 
           <p style={styles.successText}>
-            We sent you a confirmation email.
+            📧 We've sent you a confirmation email.
+
             <br />
-            Please verify your account before signing in.
+            Open your inbox.
+            <br />
+            Click Confirm Email.
+            <br />
+            Return here and log in.
           </p>
 
           <Link to="/login" style={styles.loginButton}>
