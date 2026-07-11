@@ -12,7 +12,9 @@ export default async function handler(req, res) {
 
     const { email, token } = req.body
 
-    const joinUrl = `https://launchally.org/join?token=${token}`
+    const joinUrl =
+     `https://launchally.org/register?redirect=` +
+      encodeURIComponent(`/join?token=${token}`);
 
     const data = await resend.emails.send({
       from: "LaunchAlly <invite@mail.launchally.org>",

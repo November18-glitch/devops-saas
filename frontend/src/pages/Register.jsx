@@ -80,8 +80,6 @@ export default function Register() {
             Open your inbox.
             <br />
             Click Confirm Email.
-            <br />
-            Return here and log in.
           </p>
 
           <Link to="/login" style={styles.loginButton}>
