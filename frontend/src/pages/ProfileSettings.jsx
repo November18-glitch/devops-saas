@@ -27,7 +27,7 @@ export default function ProfileSettings() {
       setEmail(auth.user.email);
 
       const { data } = await supabase
-        .from("profiles")
+        .from("users")
         .select("*")
         .eq("id", auth.user.id)
         .single();
@@ -97,7 +97,7 @@ export default function ProfileSettings() {
 
     // Update DB
     await supabase
-      .from("profiles")
+      .from("users")
       .update({ avatar_url: publicUrl })
       .eq("id", user.id);
 
@@ -128,7 +128,7 @@ export default function ProfileSettings() {
   if (!user) return;
 
   await supabase
-    .from("profiles")
+    .from("users")
     .update({ full_name: fullName })
     .eq("id", user.id);
 

@@ -19,7 +19,7 @@ export default function Header() {
       setAvatar(currentUser.user_metadata?.avatar_url || null);
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("users")
         .select("full_name")
         .eq("id", currentUser.id)
         .single();

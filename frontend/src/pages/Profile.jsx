@@ -13,7 +13,7 @@ export default function Profile() {
       if (!user) return;
 
       const { data } = await supabase
-        .from("profiles")
+        .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
