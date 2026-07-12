@@ -90,21 +90,29 @@ if (!user) {
        return;
        }
 
-      const { error: memberError } = await supabase
+      const { data: existingMember } = await supabase
   .from("team_members")
-  .insert({
-    team_id: invite.team_id,
-    user_id: user.id,
-    email: user.email,
-    role: invite.role,
-    status: "active",
-  });
+  .select("id")
+  .eq("team_id", invite.team_id)
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  console.log("MEMBER ERROR:", memberError);
+if (!existingMember) {
+  const { error: memberError } = await supabase
+    .from("team_members")
+    .insert({
+      team_id: invite.team_id,
+      user_id: user.id,
+      email: user.email,
+      role: invite.role || "member",
+      status: "active",
+    });
 
-if (memberError) {
-  alert(memberError.message);
-  return;
+  if (memberError) {
+    console.error(memberError);
+    alert(memberError.message);
+    return;
+  }
 }
 
 await supabase
