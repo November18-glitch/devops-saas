@@ -9,10 +9,13 @@ export default function Join() {
   useEffect(() => {
 
     async function joinTeam() {
+      console.log("JOIN PAGE OPENED");
 
       let token =
        params.get("token") ||
        localStorage.getItem("inviteToken");
+
+       console.log("TOKEN:", token);
 
       if (!token) return;
 
@@ -25,6 +28,8 @@ export default function Join() {
         .eq("token", token)
         .single();
 
+        console.log("INVITE:", invite);
+
       if (!invite || invite.accepted) {
         alert("This invitation is no longer valid.");
       return;
@@ -34,6 +39,7 @@ export default function Join() {
   data: { user },
 } = await supabase.auth.getUser();
 
+console.log("USER:", user);
 // Wait a few seconds after signup/login
 if (!user) {
   for (let i = 0; i < 10; i++) {
@@ -93,6 +99,8 @@ if (!user) {
     role: invite.role,
     status: "active",
   });
+
+  console.log("MEMBER ERROR:", memberError);
 
 if (memberError) {
   alert(memberError.message);
