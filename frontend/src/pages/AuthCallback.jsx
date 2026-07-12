@@ -8,11 +8,10 @@ export default function AuthCallback() {
 
   useEffect(() => {
     async function handleAuth() {
-
       const code = params.get("code");
 
       if (!code) {
-        navigate("/login");
+        window.location.replace("/login");
         return;
       }
 
@@ -21,24 +20,15 @@ export default function AuthCallback() {
 
       if (error) {
         console.error(error);
-        navigate("/login");
+        window.location.replace("/login");
         return;
       }
 
-      const redirect = params.get("redirect");
-
-      if (redirect) {
-        window.location.replace(
-          decodeURIComponent(redirect)
-        );
-      } else {
-        window.location.replace("/dashboard");
-      }
-
+      window.location.replace("/login");
     }
 
     handleAuth();
-  }, []);
+  }, [params]);
 
   return <div>Signing you in...</div>;
 }

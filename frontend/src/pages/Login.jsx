@@ -37,9 +37,8 @@ export default function Login() {
     const redirect =
      params.get("redirect");
 
-    navigate(
-     redirect || "/dashboard",
-     { replace: true }
+    window.location.replace(
+     redirect || "/dashboard"
     );
   };
 

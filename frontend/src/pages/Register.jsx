@@ -33,9 +33,9 @@ export default function Register() {
         data: {
           username,
         },
-        emailRedirectTo: `https://launchally.org/auth/callback${
-          redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ""
-        }`,
+        emailRedirectTo: `https://launchally.org/auth/callback?redirect=${encodeURIComponent(
+         redirectParam || "/dashboard"
+       )}`,
       },
     });
 
