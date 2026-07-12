@@ -28,14 +28,11 @@ export default function AuthCallback() {
       const redirect = params.get("redirect");
 
       if (redirect) {
-        navigate(
-          decodeURIComponent(redirect),
-          { replace: true }
+        window.location.replace(
+          decodeURIComponent(redirect)
         );
       } else {
-        navigate("/dashboard", {
-          replace: true,
-        });
+        window.location.replace("/dashboard");
       }
 
     }

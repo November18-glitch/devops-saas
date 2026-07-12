@@ -10,9 +10,14 @@ export default function Join() {
 
     async function joinTeam() {
 
-      const token = params.get("token");
+      let token =
+       params.get("token") ||
+       localStorage.getItem("inviteToken");
 
       if (!token) return;
+
+      // Save it in case the user has to log in/register
+       localStorage.setItem("inviteToken", token);
 
       const { data: invite } = await supabase
         .from("team_invites")
@@ -44,8 +49,11 @@ if (!user) {
 if (!user) {
   const redirect = encodeURIComponent(`/join?token=${token}`);
 
+   localStorage.setItem("inviteToken", token);
+
    window.location.replace(
-    `/login?redirect=${redirect}`
+   "/login?redirect=" +
+    encodeURIComponent("/join")
    );
   return;
 }
@@ -98,6 +106,8 @@ await supabase
     status: "accepted",
   })
   .eq("id", invite.id);
+
+  localStorage.removeItem("inviteToken");
 
       window.location.replace("/teams");
 
