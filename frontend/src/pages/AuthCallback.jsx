@@ -11,7 +11,7 @@ export default function AuthCallback() {
       const code = params.get("code");
 
       if (!code) {
-        window.location.replace("/login");
+        navigate("/login");
         return;
       }
 
@@ -19,16 +19,23 @@ export default function AuthCallback() {
         await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
-        console.error(error);
-        window.location.replace("/login");
+        navigate("/login");
         return;
       }
 
-      window.location.replace("/login");
+      const redirect =
+        params.get("redirect");
+
+      navigate(
+        redirect
+          ? decodeURIComponent(redirect)
+          : "/dashboard",
+        { replace: true }
+      );
     }
 
     handleAuth();
-  }, [params]);
+  }, []);
 
   return <div>Signing you in...</div>;
 }

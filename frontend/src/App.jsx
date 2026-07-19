@@ -88,26 +88,16 @@ export default function App() {
       />
 
       <Route
-        path="/login"
-        element={
-          session ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <Login />
-          )
-        }
+       path="/login"
+       element={<Login />}
       />
 
       <Route
-        path="/register"
-        element={
-          session ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <Register />
-          )
-        }
+       path="/register"
+       element={<Register />}
       />
+
+<Route path="/join" element={<Join />} />
 
       {/* PROTECTED */}
       {session && (
@@ -118,7 +108,6 @@ export default function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId" element={<ProjectPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/join" element={<Join />} />
           <Route
             path="/profile-settings"
             element={<ProfileSettings />}
