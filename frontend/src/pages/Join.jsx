@@ -86,7 +86,8 @@ if (!user) {
         .maybeSingle();
 
        if (existing) {
-        window.location.replace("/teams");
+        console.log("SUCCESS - inserted member");
+        alert("Inserted member successfully");
        return;
        }
 
@@ -125,7 +126,8 @@ await supabase
 
   localStorage.removeItem("inviteToken");
 
-      window.location.replace("/teams");
+      console.log("SUCCESS - inserted member");
+      alert("Inserted member successfully");
 
     }
 
