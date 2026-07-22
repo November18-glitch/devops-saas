@@ -15,7 +15,12 @@ export default function Join() {
        params.get("token") ||
        localStorage.getItem("inviteToken");
 
-       console.log("TOKEN:", token);
+       if (token?.startsWith("/join?token=")) {
+        token = token.replace("/join?token=", "");
+      }
+
+      console.log("FINAL TOKEN:", token);
+       alert(token);
 
       if (!token) return;
 
