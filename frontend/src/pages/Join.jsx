@@ -135,6 +135,15 @@ await supabase
 
   }, []);
 
-  return <div>Joining team...</div>;
-
+  return (
+  <div
+    style={{
+      fontSize: 40,
+      color: "red",
+      padding: 100,
+    }}
+  >
+    JOIN PAGE
+  </div>
+);
 }
