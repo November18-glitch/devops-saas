@@ -12,8 +12,7 @@ export default function Join() {
       console.log("JOIN PAGE OPENED");
 
       let token =
-       params.get("token") ||
-       localStorage.getItem("inviteToken");
+       params.get("token")
 
        if (token?.startsWith("/join?token=")) {
         token = token.replace("/join?token=", "");
@@ -24,8 +23,6 @@ export default function Join() {
 
       if (!token) return;
 
-      // Save it in case the user has to log in/register
-       localStorage.setItem("inviteToken", token);
 
       const { data: invite } = await supabase
         .from("team_invites")
@@ -60,11 +57,9 @@ if (!user) {
 if (!user) {
   const redirect = encodeURIComponent(`/join?token=${token}`);
 
-   localStorage.setItem("inviteToken", token);
-
    window.location.replace(
-   "/login?redirect=" +
-    encodeURIComponent("/join")
+    "/login?redirect=" +
+    encodeURIComponent(`/join?token=${token}`)
    );
   return;
 }
@@ -104,15 +99,20 @@ if (!user) {
   .maybeSingle();
 
 if (!existingMember) {
-  const { error: memberError } = await supabase
-    .from("team_members")
-    .insert({
-      team_id: invite.team_id,
-      user_id: user.id,
-      email: user.email,
-      role: invite.role || "member",
-      status: "active",
-    });
+  const { data, error: memberError } =
+await supabase
+.from("team_members")
+.insert({
+  team_id: invite.team_id,
+  user_id: user.id,
+  email: user.email,
+  role: invite.role || "member",
+  status: "active",
+})
+.select();
+
+console.log("INSERT RESULT", data);
+console.log("INSERT ERROR", memberError);
 
   if (memberError) {
     console.error(memberError);
@@ -128,8 +128,6 @@ await supabase
     status: "accepted",
   })
   .eq("id", invite.id);
-
-  localStorage.removeItem("inviteToken");
 
       console.log("SUCCESS - inserted member");
       alert("Inserted member successfully");
