@@ -53,6 +53,15 @@ export default function Register() {
      setSuccess(true);
     };
 
+    const handleGoogleLogin = async () => {
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: "https://launchally.org/auth/callback",
+    },
+  });
+};
+
   if (success) {
     return (
       <div style={styles.page}>
@@ -122,6 +131,26 @@ export default function Register() {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="yourname"
           />
+          <button
+  type="button"
+  onClick={handleGoogleLogin}
+  style={styles.googleButton}
+>
+  <img
+    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+    alt="Google"
+    style={{
+      width: 20,
+      height: 20,
+      marginRight: 10,
+    }}
+  />
+  Continue with Google
+</button>
+
+<div style={styles.divider}>
+  <span>or</span>
+</div>
 
           <label style={styles.label}>Email address</label>
 
@@ -273,4 +302,26 @@ const styles = {
     fontSize: 14,
     color: "#64748b",
   },
+  googleButton: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  padding: 14,
+  borderRadius: 10,
+  border: "1px solid #d1d5db",
+  background: "#fff",
+  fontWeight: 600,
+  fontSize: 15,
+  cursor: "pointer",
+  marginBottom: 18,
+},
+
+divider: {
+  display: "flex",
+  justifyContent: "center",
+  marginBottom: 18,
+  color: "#64748b",
+  fontSize: 14,
+},
 };
