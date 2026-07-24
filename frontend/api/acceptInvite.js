@@ -5,92 +5,88 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export default async function handler(req,res){
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-if(req.method!=="POST"){
-return res.status(405).json({
-error:"Method not allowed"
-});
-}
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
 
-try{
+    const {
+      data: { user },
+    } = await supabase.auth.getUser(token);
 
-const authToken=
-req.headers.authorization?.replace(
-"Bearer ",
-""
-);
+    if (!user) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
 
-const {
-data:{user}
-}=await supabase.auth.getUser(authToken);
+    const { inviteToken } = req.body;
 
-if(!user){
-return res.status(401).json({
-error:"Unauthorized"
-});
-}
+    const { data: invite, error: inviteError } = await supabase
+      .from("team_invites")
+      .select("*")
+      .eq("token", inviteToken)
+      .single();
 
-const {token}=req.body;
+    if (inviteError || !invite) {
+      return res.status(404).json({
+        error: "Invite not found",
+      });
+    }
 
-const {
-data:invite
-}=await supabase
-.from("team_invites")
-.select("*")
-.eq("token",token)
-.single();
+    if (invite.accepted) {
+      return res.status(400).json({
+        error: "Invite already accepted",
+      });
+    }
 
-if(!invite){
-return res.status(404).json({
-error:"Invite not found"
-});
-}
+    if (invite.email !== user.email) {
+      return res.status(403).json({
+        error: "Wrong account",
+      });
+    }
 
-if(invite.accepted){
-return res.status(400).json({
-error:"Invite already accepted"
-});
-}
+    const { data: existing } = await supabase
+      .from("team_members")
+      .select("id")
+      .eq("team_id", invite.team_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-await supabase
-.from("team_members")
-.insert({
+    if (!existing) {
+      const { error } = await supabase
+        .from("team_members")
+        .insert({
+          team_id: invite.team_id,
+          user_id: user.id,
+          email: user.email,
+          role: invite.role,
+          status: "active",
+        });
 
-team_id:invite.team_id,
+      if (error) {
+        return res.status(500).json(error);
+      }
+    }
 
-user_id:user.id,
+    await supabase
+      .from("team_invites")
+      .update({
+        accepted: true,
+        status: "accepted",
+      })
+      .eq("id", invite.id);
 
-email:user.email,
+    return res.status(200).json({
+      success: true,
+    });
 
-role:invite.role,
-
-status:"active"
-
-});
-await supabase
-.from("team_invites")
-.update({
-
-accepted:true,
-
-status:"accepted"
-
-})
-.eq("id",invite.id);
-
-return res.status(200).json({
-success:true
-});
-
-}
-
-catch(err){
-
-return res.status(500).json({
-error:err.message
-});
-
-}
-
+  } catch (err) {
+    return res.status(500).json({
+      error: err.message,
+    });
+  }
 }
