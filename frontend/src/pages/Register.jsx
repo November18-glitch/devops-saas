@@ -121,75 +121,78 @@ export default function Register() {
         </p>
 
         <form onSubmit={handleRegister} style={styles.form}>
-          <label style={styles.label}>Username</label>
 
-          <input
-            autoComplete="username"
-            required
-            style={styles.input}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="yourname"
-          />
-          <button
-  type="button"
-  onClick={handleGoogleLogin}
-  style={styles.googleButton}
->
-  <img
-    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-    alt="Google"
-    style={{
-      width: 20,
-      height: 20,
-      marginRight: 10,
-    }}
+  <button
+    type="button"
+    onClick={handleGoogleLogin}
+    style={styles.googleButton}
+  >
+    <img
+      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+      alt="Google"
+      style={{
+        width: 20,
+        height: 20,
+        marginRight: 10,
+      }}
+    />
+    Continue with Google
+  </button>
+
+  <div style={styles.divider}>
+    <span>or</span>
+  </div>
+
+  <label style={styles.label}>Username</label>
+
+  <input
+    autoComplete="username"
+    required
+    style={styles.input}
+    value={username}
+    onChange={(e) => setUsername(e.target.value)}
+    placeholder="yourname"
   />
-  Continue with Google
-</button>
 
-<div style={styles.divider}>
-  <span>or</span>
-</div>
+  <label style={styles.label}>Email address</label>
 
-          <label style={styles.label}>Email address</label>
+  <input
+    type="email"
+    autoComplete="email"
+    required
+    style={styles.input}
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    placeholder="you@example.com"
+  />
 
-          <input
-            type="email"
-            autoComplete="email"
-            required
-            style={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
+  <label style={styles.label}>Password</label>
 
-          <label style={styles.label}>Password</label>
+  <input
+    type="password"
+    autoComplete="new-password"
+    required
+    minLength={6}
+    style={styles.input}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Minimum 6 characters"
+  />
 
-          <input
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minimum 6 characters"
-          />
+  {error && <p style={styles.error}>{error}</p>}
 
-          {error && <p style={styles.error}>{error}</p>}
+  <button
+    style={{
+      ...styles.button,
+      opacity: loading ? 0.7 : 1,
+      cursor: loading ? "not-allowed" : "pointer",
+    }}
+    disabled={loading}
+  >
+    {loading ? "Creating account..." : "Register"}
+  </button>
 
-          <button
-            style={{
-              ...styles.button,
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-            disabled={loading}
-          >
-            {loading ? "Creating account..." : "Register"}
-          </button>
-        </form>
+</form>
 
         <p style={styles.footer}>
           Already have an account?{" "}
