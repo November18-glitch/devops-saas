@@ -8,6 +8,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log("METHOD:", req.method);
+    console.log("HEADERS:", req.headers);
+    console.log("BODY:", req.body);
+
+
     const body =
   typeof req.body === "string"
     ? JSON.parse(req.body)
