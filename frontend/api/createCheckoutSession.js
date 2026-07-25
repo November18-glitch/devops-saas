@@ -8,7 +8,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email } = req.body;
+    const body =
+  typeof req.body === "string"
+    ? JSON.parse(req.body)
+    : req.body;
+
+const { email } = body;
     const session = await stripe.checkout.sessions.create({
   mode: "subscription",
 

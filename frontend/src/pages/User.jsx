@@ -21,7 +21,8 @@ export default function User() {
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Stripe error");
+      console.error(data);
+      alert(data.error || "Stripe error");
     }
   };
 
@@ -30,9 +31,7 @@ export default function User() {
       <h1>LaunchAlly 🚀</h1>
       <p>CI/CD + monitoring + team collaboration</p>
 
-      <button onClick={handleCheckout}>
-        Upgrade to Pro
-      </button>
+      <button onClick={handleCheckout}>Upgrade to Pro</button>
     </div>
   );
 }
