@@ -8,7 +8,7 @@ app.use(express.json());
 
 const stripe = new Stripe("sk_test_YOUR_NEW_KEY");
 
-app.post("/create-checkout-session", async (req, res) => {
+app.post("/createCheckoutSession", async (req, res) => {
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],

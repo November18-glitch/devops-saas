@@ -75,7 +75,7 @@ export default function Dashboard() {
 
   const handleCheckout = async () => {
     try {
-      const res = await fetch("/api/create-checkout-session", {
+      const res = await fetch("/api/createCheckoutSession", {
         method: "POST",
       });
       const data = await res.json();

@@ -23,7 +23,7 @@ export default function Layout() {
   // ✅ FIXED PRO BUTTON
   const handleUpgrade = async () => {
     try {
-      const res = await fetch("/api/create-checkout-session", {
+      const res = await fetch("/api/createCheckoutSession", {
         method: "POST",
       });
 
