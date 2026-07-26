@@ -2,34 +2,25 @@ import { supabase } from "../lib/supabase";
 
 export default function User() {
   const handleCheckout = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    const payload = {
-  email: user.email,
+  const res = await fetch("/api/createCheckoutSession", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    alert(data.error || "Stripe error");
+  }
 };
-
-console.log("PAYLOAD:", payload);
-
-const res = await fetch("/api/createCheckoutSession", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-  },
-  body: JSON.stringify(payload),
-});
-
-    const data = await res.json();
-
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      console.error(data);
-      alert(data.error || "Stripe error");
-    }
-  };
 
   return (
     <div>
