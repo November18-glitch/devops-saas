@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
 const token =
   req.headers.authorization?.replace("Bearer ", "");
-
+    console.log("AUTH HEADER:", req.headers.authorization);
     const {
       data: { user },
       error,
