@@ -6,15 +6,20 @@ export default function User() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const res = await fetch("/api/createCheckoutSession", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: user.email,
-      }),
-    });
+    const payload = {
+  email: user.email,
+};
+
+console.log("PAYLOAD:", payload);
+
+const res = await fetch("/api/createCheckoutSession", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
 
     const data = await res.json();
 

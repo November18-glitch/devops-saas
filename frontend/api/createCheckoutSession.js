@@ -1,3 +1,4 @@
+console.log("=== NEW CHECKOUT FILE ===");
 import Stripe from "stripe";
 
 export default async function handler(req, res) {
@@ -8,9 +9,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log("METHOD:", req.method);
-    console.log("HEADERS:", req.headers);
     console.log("BODY:", req.body);
+    console.log("RAW REQ:", Object.keys(req));
 
 
     const body =
