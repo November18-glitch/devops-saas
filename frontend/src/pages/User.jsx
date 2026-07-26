@@ -5,6 +5,11 @@ export default function User() {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+console.log(session);
 
   const res = await fetch("/api/createCheckoutSession", {
     method: "POST",
