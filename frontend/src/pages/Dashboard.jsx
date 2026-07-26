@@ -74,16 +74,35 @@ export default function Dashboard() {
   };
 
   const handleCheckout = async () => {
-    try {
-      const res = await fetch("/api/createCheckoutSession", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (data?.url) window.location.href = data.url;
-    } catch (e) {
-      console.error("Billing checkout failed:", e);
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      alert("Please log in first.");
+      return;
     }
-  };
+
+    const res = await fetch("/api/createCheckoutSession", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      console.error(data);
+      alert(data.error || "Stripe error");
+    }
+  } catch (err) {
+    console.error("Billing checkout failed:", err);
+  }
+};
 
   if (loading) {
     return (
