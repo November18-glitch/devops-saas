@@ -22,20 +22,30 @@ export default function Layout() {
 
   // ✅ FIXED PRO BUTTON
   const handleUpgrade = async () => {
-    try {
-      const res = await fetch("/api/createCheckoutSession", {
-        method: "POST",
-      });
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      const data = await res.json();
+    const res = await fetch("/api/createCheckoutSession", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
 
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("Checkout failed:", err);
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      console.error(data);
+      alert(data.error);
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
