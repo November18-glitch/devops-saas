@@ -8,6 +8,7 @@ export default function ProfileSettings() {
   const [email, setEmail] = useState("");
 
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [plan, setPlan] = useState("FREE");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
@@ -35,6 +36,7 @@ export default function ProfileSettings() {
       if (data) {
         setFullName(data.full_name || "");
         setAvatarUrl(data.avatar_url || "");
+        setPlan(data.plan || "FREE");
       }
     };
 
@@ -189,6 +191,26 @@ export default function ProfileSettings() {
       }}
     >
       <h2 style={{ marginBottom: 20 }}>Profile Settings</h2>
+
+      <div
+  style={{
+    background: "#f8fafc",
+    border: "1px solid #e5e7eb",
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 24,
+  }}
+>
+  <strong>Current Plan:</strong>{" "}
+  <span
+    style={{
+      color: plan === "PRO" ? "#16a34a" : "#6366f1",
+      fontWeight: 700,
+    }}
+  >
+    {plan}
+  </span>
+</div>
 
       <div style={{ display: "flex", gap: 40 }}>
         {/* LEFT COLUMN */}

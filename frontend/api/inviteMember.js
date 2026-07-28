@@ -64,13 +64,12 @@ export default async function handler(req, res) {
     if ((owner?.plan || "FREE") === "FREE") {
 
       const { count } = await supabase
-        .from("team_members")
-        .select("*", {
-          count: "exact",
-          head: true
-        })
-        .eq("team_id", teamId)
-        .eq("status", "active");
+  .from("team_members")
+  .select("*", {
+    count: "exact",
+    head: true,
+  })
+  .eq("team_id", teamId);
 
       if (count >= 3) {
         return res.status(403).json({

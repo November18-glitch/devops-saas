@@ -19,11 +19,23 @@ export default function Projects() {
   const [newRepoUrl, setNewRepoUrl] = useState("");
 
   const [user, setUser] = useState(null);
+  const [plan, setPlan] = useState("FREE");
 
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
+
       setUser(data.user);
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("plan")
+          .eq("id", data.user.id)
+          .single();
+
+        setPlan(profile?.plan || "FREE");
+      }
     };
 
     loadUser();
@@ -145,6 +157,11 @@ const res = await fetch("/api/app?action=getTeams", {
     }
 
     if (!user) return alert("User not loaded yet");
+    if (plan === "FREE" && projects.length >= 1) {
+     return alert(
+      "Free plan allows only 1 project.\nUpgrade to Pro for unlimited projects."
+     );
+     }
 
     const res = await fetch("/api/app?action=createProject", {
       method: "POST",
