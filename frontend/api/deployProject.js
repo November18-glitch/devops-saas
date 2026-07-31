@@ -285,11 +285,11 @@ if (!analysis.deployable) {
   throw new Error(analysis.reason);
 }
 
-const owner = analysis.owner;
+const githubOwner = analysis.owner;
 const repo = analysis.repo;
 
 const githubRes = await fetch(
-  `https://api.github.com/repos/${owner}/${repo}`,
+  `https://api.github.com/repos/${githubOwner}/${repo}`,
   {
     headers: {
       Accept: "application/vnd.github+json",
