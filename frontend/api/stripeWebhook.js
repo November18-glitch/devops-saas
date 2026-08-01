@@ -93,11 +93,13 @@ export default async function handler(req, res) {
       if (!email) break;
 
       await supabase
-        .from("users")
-        .update({
-          plan: "FREE",
-        })
-        .eq("email", email);
+       .from("users")
+       .update({
+       plan: "PRO",
+       stripe_customer_id: session.customer,
+       stripe_subscription_id: session.subscription,
+       })
+       .eq("email", email);
 
       console.log("Subscription cancelled:", email);
 

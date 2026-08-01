@@ -14,7 +14,6 @@ export default function ProfileSettings() {
 
   const [newPassword, setNewPassword] = useState("");
   const [uploading, setUploading] = useState(false);
-
   // ----------------------------------
   // LOAD USER + PROFILE
   // ----------------------------------
@@ -36,7 +35,7 @@ export default function ProfileSettings() {
       if (data) {
         setFullName(data.full_name || "");
         setAvatarUrl(data.avatar_url || "");
-        setPlan(data.plan || "FREE");
+        setPlan(data.plan);
       }
     };
 
@@ -176,6 +175,27 @@ export default function ProfileSettings() {
     }
   };
 
+  const openBillingPortal = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const res = await fetch("/api/createBillingPortal", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    alert(data.error);
+  }
+};
+
   // ----------------------------------
   // UI (UNCHANGED DESIGN)
   // ----------------------------------
@@ -202,14 +222,22 @@ export default function ProfileSettings() {
   }}
 >
   <strong>Current Plan:</strong>{" "}
-  <span
+  {plan === "PRO" && (
+  <button
+    onClick={openBillingPortal}
     style={{
-      color: plan === "PRO" ? "#16a34a" : "#6366f1",
-      fontWeight: 700,
+      marginTop: 15,
+      padding: "10px 18px",
+      border: "none",
+      borderRadius: 8,
+      background: "#111827",
+      color: "#fff",
+      cursor: "pointer",
     }}
   >
-    {plan}
-  </span>
+    Manage Subscription
+  </button>
+)}
 </div>
 
       <div style={{ display: "flex", gap: 40 }}>

@@ -8,12 +8,29 @@ import logo from "../assets/logo.png";
 export default function Layout() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [plan, setPlan] = useState("FREE");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-  }, []);
+  async function loadUser() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    setUser(user);
+
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("users")
+      .select("plan")
+      .eq("id", user.id)
+      .single();
+
+    setPlan(data?.plan || "FREE");
+  }
+
+  loadUser();
+}, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -140,21 +157,36 @@ export default function Layout() {
             Unlock unlimited deployments and premium features.
           </div>
 
-          <button
-            onClick={handleUpgrade}
-            style={{
-              width: "100%",
-              padding: "10px 14px",
-              border: "none",
-              borderRadius: 10,
-              background: "white",
-              color: "#1b1b1b",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Upgrade to Pro
-          </button>
+          {plan === "PRO" ? (
+  <div
+    style={{
+      textAlign: "center",
+      fontWeight: 700,
+      background: "#22c55e",
+      color: "white",
+      padding: 10,
+      borderRadius: 10,
+    }}
+  >
+    ✅ You're Pro
+  </div>
+) : (
+  <button
+    onClick={handleUpgrade}
+    style={{
+      width: "100%",
+      padding: "10px 14px",
+      border: "none",
+      borderRadius: 10,
+      background: "white",
+      color: "#1b1b1b",
+      fontWeight: 700,
+      cursor: "pointer",
+    }}
+  >
+    Upgrade to Pro
+  </button>
+)}
         </div>
       </aside>
 
