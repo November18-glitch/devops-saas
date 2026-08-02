@@ -16,6 +16,27 @@ export default async function handler(req, res) {
       });
     }
 
+        /*
+    =========================
+    GET USER PLAN
+    =========================
+    */
+
+    if (action === "getUserPlan") {
+
+   const { userId } = req.query;
+
+   const { data } = await supabase
+      .from("users")
+      .select("plan")
+      .eq("id", userId)
+      .single();
+
+   return res.json({
+      plan: data?.plan || "FREE"
+   });
+}
+
     /*
     =========================
     CREATE PROJECT
