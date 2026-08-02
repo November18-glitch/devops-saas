@@ -121,6 +121,8 @@ export default async function handler(req, res) {
             team_id: teamId,
             user_id: userId,
 
+            env_vars: req.body.envVars,
+
             deployable:
              analysis.deployable ?? false,
 

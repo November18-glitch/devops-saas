@@ -193,6 +193,12 @@ export default async function handler(
       projectId,
     } = req.body;
 
+    const { data: project } = await supabase
+  .from("projects")
+  .select("env_vars")
+  .eq("id", projectId)
+  .single();
+
     if (
       !repoUrl ||
       !projectName ||
@@ -359,11 +365,13 @@ const vercelFramework =
 
 const vercelPayload = {
   name: `${projectName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+
   gitSource: {
     type: "github",
     repoId: github.id,
     ref: github.default_branch || "main",
   },
+
   projectSettings: {
     framework: vercelFramework,
     ...(rootDirectory ? { rootDirectory } : {}),
@@ -371,6 +379,14 @@ const vercelPayload = {
     buildCommand: analysis.buildCommand,
     outputDirectory: analysis.outputDirectory,
   },
+
+  env: Object.entries(project?.env_vars || {}).map(
+    ([key, value]) => ({
+      key,
+      value,
+      target: ["production"],
+    })
+  ),
 };
 
 console.log(

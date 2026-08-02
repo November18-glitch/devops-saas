@@ -14,6 +14,12 @@ export default function Projects() {
 
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
+  const [envVars, setEnvVars] = useState([
+  {
+    key: "",
+    value: "",
+  },
+]);
 
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
@@ -111,6 +117,21 @@ const res = await fetch("/api/app?action=getTeams", {
         setProjects(loadedProjects);
 
         if (loadedProjects.length > 0) {
+         const first = loadedProjects[0];
+
+          if (first.env_vars) {
+           setEnvVars(
+            Object.entries(first.env_vars).map(
+            ([key, value]) => ({
+             key,
+             value,
+            })
+           )
+          );
+        }
+      }
+
+        if (loadedProjects.length > 0) {
           setSelectedProject(loadedProjects[0].id);
         } else {
           setSelectedProject("");
@@ -163,6 +184,14 @@ const res = await fetch("/api/app?action=getTeams", {
      );
      }
 
+     const formattedEnv = {};
+
+      envVars.forEach((env) => {
+      if (env.key.trim()) {
+       formattedEnv[env.key] = env.value;
+      }
+     });
+
     const res = await fetch("/api/app?action=createProject", {
       method: "POST",
       headers: {
@@ -173,6 +202,7 @@ const res = await fetch("/api/app?action=getTeams", {
         repoUrl: newRepoUrl,
         teamId: selectedTeam,
         userId: user.id,
+        envVars: formattedEnv,
       }),
     });
 
@@ -184,6 +214,13 @@ const res = await fetch("/api/app?action=getTeams", {
 
     setNewProjectName("");
     setNewRepoUrl("");
+
+    setEnvVars([
+     {
+       key: "",
+       value: "",
+     },
+    ]);
 
     setSelectedProject(data.project.id);
 
@@ -435,6 +472,65 @@ ${data.analysis?.detected?.join(", ") || "None"}
             onChange={(e) => setNewRepoUrl(e.target.value)}
           />
 
+          <h3>Environment Variables</h3>
+
+{envVars.map((env, index) => (
+  <div
+    key={index}
+    style={{
+      display: "flex",
+      gap: 10,
+      marginBottom: 10,
+    }}
+  >
+    <input
+      placeholder="KEY"
+      value={env.key}
+      onChange={(e) => {
+        const updated = [...envVars];
+        updated[index].key = e.target.value;
+        setEnvVars(updated);
+      }}
+      style={{ flex: 1 }}
+    />
+
+    <input
+      placeholder="VALUE"
+      value={env.value}
+      onChange={(e) => {
+        const updated = [...envVars];
+        updated[index].value = e.target.value;
+        setEnvVars(updated);
+      }}
+      style={{ flex: 2 }}
+    />
+
+    <button
+      onClick={() => {
+        setEnvVars(
+          envVars.filter((_, i) => i !== index)
+        );
+      }}
+    >
+      ✕
+    </button>
+  </div>
+))}
+
+<button
+  onClick={() =>
+    setEnvVars([
+      ...envVars,
+      {
+        key: "",
+        value: "",
+      },
+    ])
+  }
+>
+  + Add Variable
+</button>
+
           <button style={primary} onClick={handleCreateProject}>
             ➕ Create Project
           </button>
@@ -481,7 +577,31 @@ ${data.analysis?.detected?.join(", ") || "None"}
           <select
             style={input}
             value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
+            onChange={(e) => {
+  const id = e.target.value;
+
+  setSelectedProject(id);
+
+  const project = projects.find((p) => p.id === id);
+
+  if (project?.env_vars) {
+    setEnvVars(
+      Object.entries(project.env_vars).map(
+        ([key, value]) => ({
+          key,
+          value,
+        })
+      )
+    );
+  } else {
+    setEnvVars([
+      {
+        key: "",
+        value: "",
+      },
+    ]);
+  }
+}}
           >
             <option value="">Select Project</option>
 
