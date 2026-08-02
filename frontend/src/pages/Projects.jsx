@@ -474,7 +474,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
 
           <h3>Environment Variables</h3>
 
-{envVars.map((env, index) => (
+          {envVars.map((env, index) => (
   <div
     key={index}
     style={{
