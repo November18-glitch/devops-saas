@@ -569,7 +569,6 @@ ${data.analysis?.detected?.join(", ") || "None"}
         >
           Delete
         </button>
-      )
     </div>
   ))}
 </div>
