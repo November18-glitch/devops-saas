@@ -106,7 +106,7 @@ export default function Landing() {
                 letterSpacing: "0.5px",
               }}
             >
-              Deploy apps without DevOps complexity
+              ⚡ Launch your app in minutes — no DevOps required
             </div>
 
             <h1
@@ -118,7 +118,8 @@ export default function Landing() {
                 letterSpacing: -1.5,
               }}
             >
-              Deploy and manage your app without learning DevOps.
+              Deploy your full-stack app in minutes.
+              No servers. No DevOps. No headaches.
             </h1>
 
             <p
@@ -130,7 +131,7 @@ export default function Landing() {
                 maxWidth: 580,
               }}
             >
-              LaunchAlly helps startups launch and operate applications without needing a dedicated DevOps engineer.
+              Connect your GitHub repository, configure your environment variables, and deploy your application from one simple dashboard.
             </p>
 
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -147,7 +148,7 @@ export default function Landing() {
                   boxShadow: "0 10px 25px rgba(99,102,241,0.3)",
                 }}
               >
-                Deploy Free Now
+                Start Deploying Free
               </Link>
               <button
                 onClick={() => setShowVideo(true)}
@@ -163,10 +164,27 @@ export default function Landing() {
                   backdropFilter: "blur(8px)",
                 }}
               >
-                ▶ Watch 60s Demo
+                ▶ See How It Works
               </button>
             </div>
           </div>
+
+          <div
+  style={{
+    marginTop: 30,
+    display: "flex",
+    gap: 24,
+    flexWrap: "wrap",
+    color: "#94a3b8",
+    fontSize: 15,
+  }}
+>
+  <span>⚡ Deploy in under 2 minutes</span>
+
+  <span>🔒 Secure GitHub OAuth</span>
+
+  <span>🌍 Production-ready deployments</span>
+</div>
 
           {/* RIGHT COLUMN: INTERACTIVE APP CONTAINER */}
           <div
@@ -187,27 +205,97 @@ export default function Landing() {
             </div>
 
             <div
-              style={{
-                background: "#0f172a",
-                padding: 20,
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.04)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontWeight: 700, fontSize: 16 }}>launchally-production-api</span>
-                <span style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", fontSize: 12, padding: "2px 8px", borderRadius: 999, fontWeight: 600 }}>Active</span>
-              </div>
-              <div style={{ color: "#64748b", fontSize: 13, marginBottom: 16 }}>branch: main • commit: #8f2da1</div>
-              
-              <div style={{ height: 6, background: "#1e293b", borderRadius: 999, overflow: "hidden", marginBottom: 10 }}>
-                <div style={{ width: "100%", height: "100%", background: "#6366f1" }} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#94a3b8" }}>
-                <span>Health Score: 100%</span>
-                <span>Latency: 42ms</span>
-              </div>
-            </div>
+  style={{
+    background: "#0f172a",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.05)",
+    overflow: "hidden",
+  }}
+>
+  {/* Header */}
+  <div
+    style={{
+      padding: "16px 20px",
+      borderBottom: "1px solid rgba(255,255,255,0.05)",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    <strong>Deployment #42</strong>
+
+    <span
+      style={{
+        color: "#22c55e",
+        background: "rgba(34,197,94,.12)",
+        padding: "4px 10px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 600,
+      }}
+    >
+      SUCCESS
+    </span>
+  </div>
+
+  <div style={{ padding: 20 }}>
+
+    <DashboardRow label="Repository" value="my-company/api" />
+    <DashboardRow label="Branch" value="main" />
+    <DashboardRow label="Environment" value="Production" />
+    <DashboardRow label="Latest Commit" value="e812af4" />
+
+    <div
+      style={{
+        marginTop: 20,
+        background: "#020617",
+        borderRadius: 10,
+        padding: 16,
+        fontFamily: "monospace",
+        fontSize: 13,
+        lineHeight: 1.8,
+        color: "#94a3b8",
+      }}
+    >
+      ✓ Installing dependencies<br />
+      ✓ Building application<br />
+      ✓ Creating Docker image<br />
+      ✓ Deploying container<br />
+      <span style={{ color: "#22c55e" }}>
+        ✓ Deployment completed
+      </span>
+    </div>
+
+    <div
+      style={{
+        marginTop: 20,
+        background: "rgba(99,102,241,.08)",
+        borderRadius: 10,
+        padding: 14,
+      }}
+    >
+      <div
+        style={{
+          color: "#64748b",
+          fontSize: 12,
+        }}
+      >
+        LIVE URL
+      </div>
+
+      <div
+        style={{
+          marginTop: 4,
+          color: "#a5b4fc",
+          fontWeight: 600,
+        }}
+      >
+        https://myapp.launchally.app
+      </div>
+    </div>
+
+  </div>
+</div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
               <div style={{ background: "rgba(15,23,42,0.4)", padding: 12, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
@@ -243,23 +331,23 @@ export default function Landing() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
             <FeatureCard
               icon="🚀"
-              title="Deploy your GitHub projects"
-              text="Connect any repository and instantly boot up live deployments through a single structural control room dashboard."
+              title="Connect GitHub"
+              text="Paste your repository and LaunchAlly prepares everything automatically."
             />
             <FeatureCard
               icon="📈"
-              title="Monitor deployments live"
-              text="Track build success states, historical variables, uptime status, and active deployment environments with deep specificity."
+              title="Track Deployments"
+              text="See build logs, deployment status, and your live URL in one place."
             />
             <FeatureCard
               icon="📁"
-              title="Manage startup projects"
-              text="Keep your production projects, contextual test databases, and dynamic teams cleanly divided into structural workspaces."
+              title="Manage Projects"
+              text="Keep repositories, deployments and environments organized inside your workspace."
             />
             <FeatureCard
               icon="🤝"
-              title="Collaborate with teammates"
-              text="Invite developers, managers, or project founders to specific workspaces with fine-grained technical access constraints."
+              title="Work Together"
+              text="Invite teammates and manage projects together from a shared workspace."
             />
           </div>
         </section>
@@ -331,7 +419,7 @@ export default function Landing() {
             fontWeight: 700,
           }}
         >
-          Deploy Faster
+          One-Click Deployments
         </h3>
 
         <p
@@ -362,7 +450,7 @@ export default function Landing() {
             fontWeight: 700,
           }}
         >
-          Built For Teams
+          Team Workspaces
         </h3>
 
         <p
@@ -393,7 +481,7 @@ export default function Landing() {
             fontWeight: 700,
           }}
         >
-          Monitor Everything
+          Deployment Insights
         </h3>
 
         <p
@@ -424,7 +512,7 @@ export default function Landing() {
             fontWeight: 700,
           }}
         >
-          Beginner Friendly
+          No DevOps Experience Needed
         </h3>
 
         <p
@@ -440,23 +528,70 @@ export default function Landing() {
     </div>
   </div>
 </section>
+        <section
+  style={{
+    maxWidth: 1100,
+    margin: "0 auto",
+    padding: "80px 20px",
+  }}
+>
 
-        {/* ROADMAP SECTION */}
-        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 20px" }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>
-            Product Roadmap
-          </h2>
-          <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48 }}>
-            We're building fast. Here's what's dropping next into your operating system workspace.
-          </p>
+<h2
+style={{
+fontSize:36,
+fontWeight:800,
+textAlign:"center",
+marginBottom:16,
+}}
+>
+Deploy in 4 Simple Steps
+</h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-            <RoadmapCard step="01" status="Now Live" title="GitHub Continuous Workspaces" desc="Push updates automatically with production build maps." />
-            <RoadmapCard step="02" status="Q3 2026" title="AI Error Analysis" desc="Instant intelligent debugging recommendations on pipeline breakages." />
-            <RoadmapCard step="03" status="Q3 2026" title="Incident Alerts" desc="Immediate diagnostic telemetry pings routed straight to your communication webhooks." />
-            <RoadmapCard step="04" status="Q4 2026" title="Metrics Monitoring" desc="Advanced real-time server tracking directly inside the terminal viewer." />
-          </div>
-        </section>
+<p
+style={{
+textAlign:"center",
+color:"#94a3b8",
+marginBottom:60,
+}}
+>
+Launch your application from GitHub to production in just a few clicks.
+</p>
+
+<div
+style={{
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+gap:24,
+}}
+>
+
+<Step
+number="1"
+title="Connect GitHub"
+text="Authorize LaunchAlly and choose your repository."
+/>
+
+<Step
+number="2"
+title="Configure Variables"
+text="Add your environment variables securely."
+/>
+
+<Step
+number="3"
+title="Click Deploy"
+text="LaunchAlly builds and deploys your application automatically."
+/>
+
+<Step
+number="4"
+title="Share Your URL"
+text="Your production application is live and ready to use."
+/>
+
+</div>
+
+</section>
 
         {/* PRICING */}
         <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px 100px" }}>
@@ -473,23 +608,23 @@ export default function Landing() {
               <h3 style={{ fontSize: 20, margin: 0 }}>Free Tier</h3>
               <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$0</div>
               <ul style={{ paddingLeft: 20, color: "#94a3b8", lineHeight: 2 }}>
-                <li>Unlimited project layouts</li>
-                <li>Shared workspace organization</li>
-                <li>Basic repository connection tracking</li>
-                <li>Real-time build status updates</li>
+                <li>1 Project</li>
+                <li>up to 5 Deployments</li>
+                <li>Team workspaces</li>
+                <li>Deployment logs</li>
               </ul>
             </div>
 
             {/* PRO TIER */}
             <div style={{ flex: 1, minWidth: 280, background: "rgba(99,102,241,0.05)", border: "2px solid #6366f1", borderRadius: 16, padding: 32, position: "relative" }}>
-              <span style={{ position: "absolute", top: 16, right: 16, background: "#6366f1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>COMING SOON</span>
+              <span style={{ position: "absolute", top: 16, right: 16, background: "#6366f1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>⭐ Most Popular</span>
               <h3 style={{ fontSize: 20, margin: 0, color: "#a5b4fc" }}>Pro SaaS</h3>
               <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$5<span style={{ fontSize: 14, color: "#64748b" }}>/mo</span></div>
               <ul style={{ paddingLeft: 20, color: "#cbd5e1", lineHeight: 2 }}>
-                <li>Everything in the Free plan</li>
-                <li>Advanced server log tracking</li>
-                <li>AI Deployment troubleshooting analyzer</li>
-                <li>Priority operational stack support</li>
+                <li>Unlimited projects</li>
+                <li>Unlimited Deployments</li>
+                <li>Team Invites</li>
+                <li>AI-powered Debugging</li>
               </ul>
             </div>
           </div>
@@ -507,7 +642,7 @@ export default function Landing() {
             }}
           >
             <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
-              Take Command of Your Launch Ops Today
+              Ready to Deploy Your Next Project?
             </h2>
             <p style={{ color: "#cbd5e1", maxWidth: 600, margin: "0 auto 32px", fontSize: 16, lineHeight: 1.6 }}>
               Stop jumping between five tabs to monitor one application codebase. Bring structure to your launch process.
@@ -525,7 +660,7 @@ export default function Landing() {
                 boxShadow: "0 10px 30px rgba(99,102,241,0.3)",
               }}
             >
-              Build Workspace for Free
+              Start Deploying Free
             </Link>
           </div>
         </section>
@@ -540,7 +675,7 @@ export default function Landing() {
             fontSize: 14,
           }}
         >
-          © {new Date().getFullYear()} LaunchAlly. Dedicated to streamlined operational clarity.
+          © {new Date().getFullYear()} LaunchAlly. Deploy applications without DevOps complexity.
         </footer>
       </div>
 
@@ -619,15 +754,62 @@ function FeatureCard({ icon, title, text }) {
   );
 }
 
-function RoadmapCard({ step, status, title, desc }) {
+function DashboardRow({ label, value }) {
   return (
-    <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.05)", padding: 24, borderRadius: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <span style={{ fontSize: 12, color: "#6366f1", fontWeight: 700 }}>{step}</span>
-        <span style={{ fontSize: 11, background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: 4, color: "#cbd5e1" }}>{status}</span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        marginBottom: 12,
+        color: "#cbd5e1",
+        fontSize: 14,
+      }}
+    >
+      <span style={{ color: "#64748b" }}>
+        {label}
+      </span>
+
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function Step({ number, title, text }) {
+  return (
+    <div
+      style={{
+        background: "rgba(30,41,59,.35)",
+        borderRadius: 16,
+        padding: 28,
+        border: "1px solid rgba(255,255,255,.05)",
+      }}
+    >
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: "50%",
+          background: "#6366f1",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          marginBottom: 18,
+        }}
+      >
+        {number}
       </div>
-      <h4 style={{ margin: "0 0 8px 0", fontSize: 16, fontWeight: 700 }}>{title}</h4>
-      <p style={{ margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.5 }}>{desc}</p>
+
+      <h3>{title}</h3>
+
+      <p
+        style={{
+          color: "#94a3b8",
+          lineHeight: 1.6,
+        }}
+      >
+        {text}
+      </p>
     </div>
   );
 }
