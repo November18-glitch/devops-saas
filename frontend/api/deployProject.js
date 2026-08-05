@@ -373,12 +373,16 @@ const vercelPayload = {
   },
 
   projectSettings: {
-    framework: vercelFramework,
-    ...(rootDirectory ? { rootDirectory } : {}),
-    installCommand: analysis.installCommand,
-    buildCommand: analysis.buildCommand,
-    outputDirectory: analysis.outputDirectory,
-  },
+  framework: vercelFramework,
+  ...(rootDirectory ? { rootDirectory } : {}),
+  installCommand: analysis.installCommand,
+  ...(analysis.buildCommand
+      ? { buildCommand: analysis.buildCommand }
+      : {}),
+  ...(analysis.outputDirectory
+      ? { outputDirectory: analysis.outputDirectory }
+      : {})
+},
 
   env: Object.entries(project?.env_vars || {}).map(
     ([key, value]) => ({

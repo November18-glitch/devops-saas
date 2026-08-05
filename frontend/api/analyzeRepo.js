@@ -522,21 +522,28 @@ if (
     }
 
     if (!buildCommand) {
-      return {
-        valid: true,
-        deployable: false,
-        owner,
-        repo,
-        defaultBranch:
-          repoData.default_branch,
-        packageManager,
-        installCommand,
-        reason:
-          "No build script found.",
-        detected,
-        warnings
-      };
-    }
+  // Backend apps like Express don't need a build step.
+  if (
+    deps.express ||
+    deps.fastify ||
+    deps["@nestjs/core"]
+  ) {
+    buildCommand = null;
+  } else {
+    return {
+      valid: true,
+      deployable: false,
+      owner,
+      repo,
+      defaultBranch: repoData.default_branch,
+      packageManager,
+      installCommand,
+      reason: "No build script found.",
+      detected,
+      warnings
+    };
+  }
+}
 
     /*
     ==========================
