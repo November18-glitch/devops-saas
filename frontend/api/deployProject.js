@@ -384,13 +384,17 @@ const vercelPayload = {
       : {})
 },
 
-  env: Object.entries(project?.env_vars || {}).map(
-    ([key, value]) => ({
+  env: Object.fromEntries(
+  Object.entries(project?.env_vars || {}).map(
+    ([key, value]) => [
       key,
-      value,
-      target: ["production"],
-    })
-  ),
+      {
+        value,
+        target: ["production"]
+      }
+    ]
+  )
+),
 };
 
 console.log(
