@@ -384,17 +384,7 @@ const vercelPayload = {
       : {})
 },
 
-  env: Object.fromEntries(
-  Object.entries(project?.env_vars || {}).map(
-    ([key, value]) => [
-      key,
-      {
-        value,
-        target: ["production"]
-      }
-    ]
-  )
-),
+  env: project?.env_vars || {},
 };
 
 console.log(
@@ -406,8 +396,7 @@ console.log(
   )
 ); 
     console.log(
-      "[VERCEL PAYLOAD]",
-      vercelPayload
+     JSON.stringify(vercelPayload, null, 2)
     );
 
     const vercelRes =
