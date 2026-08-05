@@ -505,11 +505,16 @@ if (
     */
 
     const scripts =
-      packageJson.scripts || {};
-    
-      console.log(packageJson.scripts);
+     packageJson.scripts || {};
 
-    let buildCommand = null;
+    const deps = {
+     ...(packageJson.dependencies || {}),
+     ...(packageJson.devDependencies || {})
+    };
+
+     console.log(packageJson.scripts);
+
+     let buildCommand = null;
 
     if (scripts.build) {
       buildCommand =
@@ -537,14 +542,17 @@ if (
     }
 
     if (!buildCommand) {
-  // Backend apps like Express don't need a build step.
+
   if (
     deps.express ||
     deps.fastify ||
     deps["@nestjs/core"]
   ) {
+
     buildCommand = null;
+
   } else {
+
     return {
       valid: true,
       deployable: false,
@@ -557,19 +565,9 @@ if (
       detected,
       warnings
     };
+
   }
 }
-
-    /*
-    ==========================
-    FRAMEWORK DETECTION
-    ==========================
-    */
-
-    const deps = {
-      ...(packageJson.dependencies || {}),
-      ...(packageJson.devDependencies || {})
-    };
     /*
 ====================================
 DETECT MONOREPOS / LIBRARIES
