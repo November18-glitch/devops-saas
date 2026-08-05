@@ -375,13 +375,28 @@ for (const file of packageFiles) {
 
   if (!json) continue;
 
+  const deps = {
+    ...(json.dependencies || {}),
+    ...(json.devDependencies || {})
+  };
+
+  const isBackend =
+    deps.express ||
+    deps.fastify ||
+    deps["@nestjs/core"];
+
+  const hasBuild = Boolean(
+    json.scripts?.build ||
+    json.scripts?.["build:prod"] ||
+    json.scripts?.generate ||
+    json.scripts?.export ||
+    json.scripts?.["vercel-build"]
+  );
+
   if (
-    json.scripts?.build &&
-    (
-        json.dependencies ||
-        json.devDependencies
-    )
-   ) {
+    (hasBuild || isBackend) &&
+    (json.dependencies || json.devDependencies)
+  ) {
     packageJson = json;
     packagePath = file.path;
     break;
