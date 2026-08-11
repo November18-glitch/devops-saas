@@ -1,134 +1,138 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Join() {
   const [params] = useSearchParams();
-  const [message, setMessage] = useState("Joining team...");
+  const navigate = useNavigate();
+
+  const [status, setStatus] = useState("Joining team...");
 
   useEffect(() => {
     let cancelled = false;
 
     async function joinTeam() {
-      try {
-        console.log("========== JOIN PAGE ==========");
+      console.log("🔥 JOIN PAGE OPENED");
 
-        // -----------------------------------
-        // 1. GET TOKEN FROM URL
-        // -----------------------------------
+      let token = params.get("token");
 
-        let token = params.get("token");
+      console.log("RAW TOKEN:", token);
 
-        if (token?.startsWith("/join?token=")) {
-          token = token.replace("/join?token=", "");
-        }
+      if (token?.startsWith("/join?token=")) {
+        token = token.replace("/join?token=", "");
+      }
 
-        if (token) {
-          token = decodeURIComponent(token);
-        }
+      console.log("FINAL TOKEN:", token);
 
-        token = token?.trim();
+      if (!token) {
+        console.error("❌ No invite token");
+        setStatus("Invalid invitation link.");
+        return;
+      }
 
-        console.log("INVITE TOKEN:", token);
+      /*
+      ========================================
+      GET CURRENT SESSION
+      ========================================
+      */
 
-        if (!token) {
-          console.error("No invite token found.");
+      let {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-          if (!cancelled) {
-            setMessage("Invalid invitation link.");
-          }
+      console.log(
+        "SESSION:",
+        session
+          ? "FOUND"
+          : "NOT FOUND"
+      );
 
-          return;
-        }
+      /*
+      ========================================
+      WAIT FOR AUTH SESSION
+      ========================================
+      */
 
-        // -----------------------------------
-        // 2. CHECK SESSION
-        // -----------------------------------
-
-        let {
-          data: { session },
-        } = await supabase.auth.getSession();
-
+      if (!session) {
         console.log(
-          "SESSION:",
-          session
-            ? {
-                userId: session.user?.id,
-                email: session.user?.email,
-              }
-            : null
+          "⏳ Waiting for authentication session..."
         );
 
-        // -----------------------------------
-        // 3. IF NOT LOGGED IN → LOGIN
-        // -----------------------------------
+        for (let i = 0; i < 10; i++) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 500)
+          );
 
-        if (!session) {
+          const result =
+            await supabase.auth.getSession();
+
+          session = result.data.session;
+
           console.log(
-            "No session. Redirecting to login..."
+            `AUTH RETRY ${i + 1}:`,
+            session
+              ? "FOUND"
+              : "NOT FOUND"
           );
 
-          const redirect =
-            `/join?token=${encodeURIComponent(token)}`;
-
-          window.location.replace(
-            "/login?redirect=" +
-              encodeURIComponent(redirect)
-          );
-
-          return;
-        }
-
-        // -----------------------------------
-        // 4. MAKE SURE SESSION IS FRESH
-        // -----------------------------------
-
-        const {
-          data: refreshedSessionData,
-        } = await supabase.auth.refreshSession();
-
-        if (refreshedSessionData?.session) {
-          session =
-            refreshedSessionData.session;
-        }
-
-        console.log(
-          "AUTHENTICATED USER:",
-          {
-            id: session.user?.id,
-            email: session.user?.email,
+          if (session) {
+            break;
           }
-        );
-
-        if (!session.user) {
-          console.error(
-            "Session exists but no user exists."
-          );
-
-          window.location.replace(
-            "/login?redirect=" +
-              encodeURIComponent(
-                `/join?token=${token}`
-              )
-          );
-
-          return;
         }
+      }
 
-        // -----------------------------------
-        // 5. CALL BACKEND
-        // -----------------------------------
+      /*
+      ========================================
+      NO SESSION → LOGIN
+      ========================================
+      */
 
-        if (!cancelled) {
-          setMessage("Accepting invitation...");
-        }
-
+      if (!session) {
         console.log(
-          "CALLING /api/acceptInvite"
+          "❌ No session. Redirecting to login."
         );
 
-        const response = await fetch(
-          "/api/acceptInvite",
+        const redirect =
+          `/join?token=${encodeURIComponent(token)}`;
+
+        window.location.replace(
+          `/login?redirect=${encodeURIComponent(
+            redirect
+          )}`
+        );
+
+        return;
+      }
+
+      console.log(
+        "✅ AUTHENTICATED USER:",
+        session.user?.email
+      );
+
+      /*
+      ========================================
+      CALL BACKEND
+      ========================================
+      */
+
+      setStatus("Accepting invitation...");
+
+      const apiUrl =
+        `${window.location.origin}/api/acceptInvite`;
+
+      console.log(
+        "🚀 POSTING TO:",
+        apiUrl
+      );
+
+      console.log(
+        "ACCESS TOKEN PRESENT:",
+        !!session.access_token
+      );
+
+      const response =
+        await fetch(
+          apiUrl,
           {
             method: "POST",
 
@@ -146,96 +150,80 @@ export default function Join() {
           }
         );
 
-        // -----------------------------------
-        // 6. READ RESPONSE
-        // -----------------------------------
+      console.log(
+        "📡 ACCEPT INVITE STATUS:",
+        response.status
+      );
 
-        let result = {};
+      const text =
+        await response.text();
 
-        try {
-          result = await response.json();
-        } catch {
-          result = {
-            error:
-              "Invalid response from server.",
-          };
-        }
+      console.log(
+        "📡 ACCEPT INVITE RAW RESPONSE:",
+        text
+      );
 
-        console.log(
-          "ACCEPT INVITE RESPONSE:",
-          {
-            status: response.status,
-            ok: response.ok,
-            result,
-          }
-        );
+      let result;
 
-        if (!response.ok) {
-          console.error(
-            "ACCEPT INVITE FAILED:",
-            result
-          );
-
-          if (!cancelled) {
-            setMessage(
-              result.error ||
-                "Could not accept invitation."
-            );
-          }
-
-          return;
-        }
-
-        // -----------------------------------
-        // 7. SUCCESS
-        // -----------------------------------
-
-        console.log(
-          "========== TEAM JOIN SUCCESS =========="
-        );
-
-        console.log(
-          "Team ID:",
-          result.teamId
-        );
-
-        console.log(
-          "Member ID:",
-          result.memberId
-        );
-
-        console.log(
-          "Invite ID:",
-          result.inviteId
-        );
-
-        if (!cancelled) {
-          setMessage(
-            "🎉 You joined the team!"
-          );
-        }
-
-        // Give Supabase a moment to update
-        // the auth/client state before redirect.
-        await new Promise((resolve) =>
-          setTimeout(resolve, 500)
-        );
-
-        window.location.replace("/");
-
-      } catch (error) {
-        console.error(
-          "JOIN PAGE ERROR:",
-          error
-        );
-
-        if (!cancelled) {
-          setMessage(
-            error?.message ||
-              "Something went wrong while joining the team."
-          );
-        }
+      try {
+        result = JSON.parse(text);
+      } catch {
+        result = {
+          error: text,
+        };
       }
+
+      console.log(
+        "📡 ACCEPT INVITE RESULT:",
+        result
+      );
+
+      if (!response.ok) {
+        console.error(
+          "❌ ACCEPT INVITE FAILED:",
+          result
+        );
+
+        setStatus(
+          result.error ||
+          "Could not accept invitation."
+        );
+
+        return;
+      }
+
+      console.log(
+        "🎉 TEAM JOIN SUCCESS:",
+        result
+      );
+
+      if (!cancelled) {
+        setStatus(
+          "🎉 You joined the team!"
+        );
+      }
+
+      /*
+      ========================================
+      GIVE SUPABASE A MOMENT
+      ========================================
+      */
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 500)
+      );
+
+      /*
+      ========================================
+      GO HOME
+      ========================================
+      */
+
+      console.log(
+        "🏠 Redirecting to dashboard..."
+      );
+
+      window.location.replace("/");
     }
 
     joinTeam();
@@ -252,22 +240,13 @@ export default function Join() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexDirection: "column",
+        fontSize: 24,
         padding: 40,
         textAlign: "center",
       }}
     >
-      <div>
-        <h1>LaunchAlly</h1>
-
-        <p
-          style={{
-            fontSize: 20,
-            marginTop: 20,
-          }}
-        >
-          {message}
-        </p>
-      </div>
+      <div>{status}</div>
     </div>
   );
 }
