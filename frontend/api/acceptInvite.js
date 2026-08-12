@@ -6,40 +6,46 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  console.log("🔥🔥🔥 ACCEPT INVITE REACHED 🔥🔥🔥");
-  console.log("METHOD:", req.method);
-  console.log("BODY:", req.body);
-  console.log(
-    "AUTH:",
-    req.headers.authorization ? "PRESENT" : "MISSING"
-  );
+  console.log("========== ACCEPT INVITE ==========");
 
   if (req.method !== "POST") {
+    console.log("METHOD:", req.method);
+
     return res.status(405).json({
       error: "Method not allowed",
-      method: req.method,
     });
   }
 
   try {
-    const token =
-      req.headers.authorization?.replace("Bearer ", "");
+    const authHeader =
+      req.headers.authorization || "";
+
+    const accessToken =
+      authHeader.replace("Bearer ", "");
 
     console.log(
-      "TOKEN PRESENT:",
-      !!token
+      "AUTH TOKEN PRESENT:",
+      !!accessToken
     );
 
-    if (!token) {
+    if (!accessToken) {
       return res.status(401).json({
         error: "Missing authorization token",
       });
     }
 
+    /*
+    ========================================
+    AUTH USER
+    ========================================
+    */
+
     const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
+      data: authData,
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
+    const user = authData?.user;
 
     console.log(
       "AUTH USER:",
@@ -51,14 +57,14 @@ export default async function handler(req, res) {
       user?.email || null
     );
 
-    if (userError) {
+    if (authError) {
       console.error(
         "AUTH ERROR:",
-        userError
+        authError
       );
 
       return res.status(401).json({
-        error: userError.message,
+        error: authError.message,
       });
     }
 
@@ -68,8 +74,15 @@ export default async function handler(req, res) {
       });
     }
 
-    const { inviteToken } =
-      req.body || {};
+    /*
+    ========================================
+    INVITE TOKEN
+    ========================================
+    */
+
+    const {
+      inviteToken,
+    } = req.body || {};
 
     console.log(
       "INVITE TOKEN PRESENT:",
@@ -82,6 +95,12 @@ export default async function handler(req, res) {
       });
     }
 
+    /*
+    ========================================
+    FIND INVITE
+    ========================================
+    */
+
     const {
       data: invite,
       error: inviteError,
@@ -89,10 +108,15 @@ export default async function handler(req, res) {
       .from("team_invites")
       .select("*")
       .eq("token", inviteToken)
-      .single();
+      .maybeSingle();
 
     console.log(
-      "INVITE:",
+      "INVITE LOOKUP ERROR:",
+      inviteError
+    );
+
+    console.log(
+      "INVITE FOUND:",
       invite
         ? {
             id: invite.id,
@@ -106,10 +130,10 @@ export default async function handler(req, res) {
     );
 
     if (inviteError) {
-      console.error(
-        "INVITE LOOKUP ERROR:",
-        inviteError
-      );
+      return res.status(500).json({
+        error:
+          inviteError.message,
+      });
     }
 
     if (!invite) {
@@ -118,20 +142,28 @@ export default async function handler(req, res) {
       });
     }
 
-    if (invite.accepted) {
+    /*
+    ========================================
+    VALIDATE INVITE
+    ========================================
+    */
+
+    if (invite.accepted === true) {
       return res.status(400).json({
         error: "Invite already accepted",
       });
     }
 
     if (
-      invite.email?.toLowerCase() !==
-      user.email?.toLowerCase()
+      invite.email?.trim().toLowerCase() !==
+      user.email?.trim().toLowerCase()
     ) {
       console.log(
-        "EMAIL MISMATCH:",
-        invite.email,
-        user.email
+        "EMAIL MISMATCH",
+        {
+          inviteEmail: invite.email,
+          userEmail: user.email,
+        }
       );
 
       return res.status(403).json({
@@ -139,43 +171,55 @@ export default async function handler(req, res) {
       });
     }
 
+    /*
+    ========================================
+    CHECK EXISTING MEMBER
+    ========================================
+    */
+
     const {
-      data: existing,
+      data: existingMember,
       error: existingError,
     } = await supabase
       .from("team_members")
-      .select("id")
+      .select("id, team_id, user_id, email, role, status")
       .eq("team_id", invite.team_id)
       .eq("user_id", user.id)
       .maybeSingle();
 
     console.log(
+      "EXISTING MEMBER ERROR:",
+      existingError
+    );
+
+    console.log(
       "EXISTING MEMBER:",
-      existing
+      existingMember
     );
 
     if (existingError) {
-      console.error(
-        "EXISTING MEMBER ERROR:",
-        existingError
-      );
-
       return res.status(500).json({
         error:
           existingError.message,
       });
     }
 
-    let member = existing;
+    /*
+    ========================================
+    INSERT MEMBER
+    ========================================
+    */
+
+    let member = existingMember;
 
     if (!member) {
       console.log(
-        "INSERTING TEAM MEMBER..."
+        "🔥 INSERTING TEAM MEMBER"
       );
 
       const {
-        data,
-        error: memberError,
+        data: insertedMember,
+        error: insertError,
       } = await supabase
         .from("team_members")
         .insert({
@@ -188,31 +232,45 @@ export default async function handler(req, res) {
         .select()
         .single();
 
-      if (memberError) {
-        console.error(
-          "MEMBER INSERT ERROR:",
-          memberError
-        );
+      console.log(
+        "INSERTED MEMBER:",
+        insertedMember
+      );
 
+      console.log(
+        "INSERT ERROR:",
+        insertError
+      );
+
+      if (insertError) {
         return res.status(500).json({
           error:
-            memberError.message,
+            insertError.message,
+          code:
+            insertError.code || null,
+          details:
+            insertError.details || null,
+          hint:
+            insertError.hint || null,
         });
       }
 
-      member = data;
-
-      console.log(
-        "✅ MEMBER CREATED:",
-        member
-      );
+      member = insertedMember;
     }
 
+    /*
+    ========================================
+    UPDATE INVITE
+    ========================================
+    */
+
     console.log(
-      "MARKING INVITE ACCEPTED..."
+      "🔥 UPDATING INVITE:",
+      invite.id
     );
 
     const {
+      data: updatedInvite,
       error: updateError,
     } = await supabase
       .from("team_invites")
@@ -220,29 +278,124 @@ export default async function handler(req, res) {
         accepted: true,
         status: "accepted",
       })
-      .eq("id", invite.id);
+      .eq("id", invite.id)
+      .select()
+      .single();
+
+    console.log(
+      "UPDATED INVITE:",
+      updatedInvite
+    );
+
+    console.log(
+      "UPDATE ERROR:",
+      updateError
+    );
 
     if (updateError) {
+      return res.status(500).json({
+        error:
+          updateError.message,
+        code:
+          updateError.code || null,
+        details:
+          updateError.details || null,
+        hint:
+          updateError.hint || null,
+      });
+    }
+
+    /*
+    ========================================
+    VERIFY MEMBER
+    ========================================
+    */
+
+    const {
+      data: verifyMember,
+      error: verifyMemberError,
+    } = await supabase
+      .from("team_members")
+      .select("*")
+      .eq("team_id", invite.team_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    console.log(
+      "VERIFY MEMBER:",
+      verifyMember
+    );
+
+    console.log(
+      "VERIFY MEMBER ERROR:",
+      verifyMemberError
+    );
+
+    /*
+    ========================================
+    VERIFY INVITE
+    ========================================
+    */
+
+    const {
+      data: verifyInvite,
+      error: verifyInviteError,
+    } = await supabase
+      .from("team_invites")
+      .select("*")
+      .eq("id", invite.id)
+      .single();
+
+    console.log(
+      "VERIFY INVITE:",
+      verifyInvite
+    );
+
+    console.log(
+      "VERIFY INVITE ERROR:",
+      verifyInviteError
+    );
+
+    /*
+    ========================================
+    FINAL VALIDATION
+    ========================================
+    */
+
+    if (!verifyMember) {
       console.error(
-        "INVITE UPDATE ERROR:",
-        updateError
+        "❌ MEMBER INSERT DID NOT PERSIST"
       );
 
       return res.status(500).json({
         error:
-          updateError.message,
+          "Team member was not persisted.",
+      });
+    }
+
+    if (
+      !verifyInvite ||
+      verifyInvite.accepted !== true
+    ) {
+      console.error(
+        "❌ INVITE UPDATE DID NOT PERSIST"
+      );
+
+      return res.status(500).json({
+        error:
+          "Invite was not marked accepted.",
       });
     }
 
     console.log(
-      "🎉 INVITE ACCEPTED SUCCESSFULLY"
+      "🎉🎉🎉 FULL INVITE ACCEPTANCE SUCCESS 🎉🎉🎉"
     );
 
     return res.status(200).json({
       success: true,
       teamId: invite.team_id,
-      memberId: member.id,
-      inviteId: invite.id,
+      member: verifyMember,
+      invite: verifyInvite,
     });
 
   } catch (err) {
