@@ -16,26 +16,37 @@ export default async function handler(req, res) {
       });
     }
 
-        /*
+    /*
     =========================
     GET USER PLAN
     =========================
     */
 
     if (action === "getUserPlan") {
+      const { userId } = req.query;
 
-   const { userId } = req.query;
+      if (!userId) {
+        return res.status(400).json({
+          error: "Missing userId",
+        });
+      }
 
-   const { data } = await supabase
-      .from("users")
-      .select("plan")
-      .eq("id", userId)
-      .single();
+      const { data, error } = await supabase
+        .from("users")
+        .select("plan")
+        .eq("id", userId)
+        .single();
 
-   return res.json({
-      plan: data?.plan || "FREE"
-   });
-}
+      if (error) {
+        return res.status(500).json({
+          error: error.message,
+        });
+      }
+
+      return res.status(200).json({
+        plan: data?.plan || "FREE",
+      });
+    }
 
     /*
     =========================
@@ -84,35 +95,24 @@ export default async function handler(req, res) {
       }
 
       const userPlan =
-        user?.plan ||
-        "FREE";
+        user?.plan || "FREE";
 
-      if (
-        userPlan ===
-        "FREE"
-      ) {
-        const {
-          count,
-        } =
-          await supabase
-            .from("projects")
-            .select(
-              "*",
-              {
-                count:
-                  "exact",
-                head: true,
-              }
-            )
-            .eq(
-              "team_id",
-              teamId
-            );
+      /*
+      =========================
+      FREE PROJECT LIMIT
+      =========================
+      */
 
-        if (
-          count >=
-          1
-        ) {
+      if (userPlan === "FREE") {
+        const { count } = await supabase
+          .from("projects")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .eq("team_id", teamId);
+
+        if (count >= 1) {
           return res.status(403).json({
             error:
               "Free plan allows only 1 project.",
@@ -120,57 +120,72 @@ export default async function handler(req, res) {
         }
       }
 
+      /*
+      =========================
+      ANALYZE REPOSITORY
+      =========================
+      */
+
       const analysis =
-       await analyzeRepo(
-       repoUrl
-      );
+        await analyzeRepo(repoUrl);
+
+      /*
+      =========================
+      CREATE PROJECT
+      =========================
+      */
 
       const {
         data,
         error,
-      } =
-        await supabase
-          .from("projects")
-          .insert({
-            name,
-            repo_url: repoUrl,
-            repo_type: "github",
+      } = await supabase
+        .from("projects")
+        .insert({
+          name,
+          repo_url: repoUrl,
+          repo_type: "github",
 
-            default_branch:
-             analysis.defaultBranch || "main",
+          default_branch:
+            analysis.defaultBranch ||
+            "main",
 
-            team_id: teamId,
-            user_id: userId,
+          team_id: teamId,
+          user_id: userId,
 
-            env_vars: req.body.envVars,
+          env_vars:
+            req.body.envVars || {},
 
-            deployable:
-             analysis.deployable ?? false,
+          deployable:
+            analysis.deployable ??
+            false,
 
-            framework:
-             analysis.framework || null,
+          framework:
+            analysis.framework ||
+            null,
 
-            analysis_reason:
-             analysis.reason || null,
-          })
-          .select()
-          .single();
+          analysis_reason:
+            analysis.reason ||
+            null,
+        })
+        .select()
+        .single();
 
-      if (
-        error
-      ) {
+      if (error) {
+        console.error(
+          "[CREATE PROJECT ERROR]",
+          error
+        );
+
         return res.status(500).json({
           error:
+            error.message ||
             "Failed to create project",
         });
       }
 
-      return res
-        .status(200)
-        .json({
-          project:
-            data,
-        });
+      return res.status(200).json({
+        project: data,
+      });
     }
 
     /*
@@ -179,74 +194,79 @@ export default async function handler(req, res) {
     =========================
     */
 
-    if (
-      action ===
-      "deleteTeam"
-    ) {
-      if (
-        req.method !==
-        "POST"
-      ) {
-        return res
-          .status(405)
-          .json({
-            error:
-              "Method not allowed",
-          });
+    if (action === "deleteTeam") {
+      if (req.method !== "POST") {
+        return res.status(405).json({
+          error: "Method not allowed",
+        });
       }
 
-      const {
-        teamId,
-      } =
+      const { teamId } =
         req.body;
 
-      if (
-        !teamId
-      ) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Missing teamId",
-          });
+      if (!teamId) {
+        return res.status(400).json({
+          error: "Missing teamId",
+        });
       }
 
-      await supabase
-        .from(
-          "team_members"
-        )
-        .delete()
-        .eq(
-          "team_id",
-          teamId
-        );
+      /*
+      Delete members
+      */
 
-      await supabase
-        .from(
-          "projects"
-        )
+      const {
+        error: memberDeleteError,
+      } = await supabase
+        .from("team_members")
         .delete()
-        .eq(
-          "team_id",
-          teamId
-        );
+        .eq("team_id", teamId);
 
-      await supabase
-        .from(
-          "teams"
-        )
-        .delete()
-        .eq(
-          "id",
-          teamId
-        );
-
-      return res
-        .status(200)
-        .json({
-          success:
-            true,
+      if (memberDeleteError) {
+        return res.status(500).json({
+          error:
+            memberDeleteError.message,
         });
+      }
+
+      /*
+      Delete projects
+      */
+
+      const {
+        error: projectDeleteError,
+      } = await supabase
+        .from("projects")
+        .delete()
+        .eq("team_id", teamId);
+
+      if (projectDeleteError) {
+        return res.status(500).json({
+          error:
+            projectDeleteError.message,
+        });
+      }
+
+      /*
+      Delete team
+      */
+
+      const {
+        error: teamDeleteError,
+      } = await supabase
+        .from("teams")
+        .delete()
+        .eq("id", teamId);
+
+      if (teamDeleteError) {
+        return res.status(500).json({
+          error:
+            teamDeleteError.message,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+      });
     }
 
     /*
@@ -255,33 +275,24 @@ export default async function handler(req, res) {
     =========================
     */
 
-    if (
-      action ===
-      "getDeployments"
-    ) {
+    if (action === "getDeployments") {
       const {
         teamId,
         projectId,
-      } =
-        req.query;
+      } = req.query;
 
       let query =
         supabase
-          .from(
-            "deployments"
-          )
+          .from("deployments")
           .select("*")
           .order(
             "created_at",
             {
-              ascending:
-                false,
+              ascending: false,
             }
           );
 
-      if (
-        projectId
-      ) {
+      if (projectId) {
         query =
           query.eq(
             "project_id",
@@ -289,9 +300,7 @@ export default async function handler(req, res) {
           );
       }
 
-      if (
-        teamId
-      ) {
+      if (teamId) {
         query =
           query.eq(
             "team_id",
@@ -302,26 +311,19 @@ export default async function handler(req, res) {
       const {
         data,
         error,
-      } =
-        await query;
+      } = await query;
 
-      if (
-        error
-      ) {
-        return res
-          .status(500)
-          .json({
-            error:
-              "Failed to fetch deployments",
-          });
+      if (error) {
+        return res.status(500).json({
+          error:
+            "Failed to fetch deployments",
+        });
       }
 
-      return res
-        .status(200)
-        .json({
-          deployments:
-            data,
-        });
+      return res.status(200).json({
+        deployments:
+          data || [],
+      });
     }
 
     /*
@@ -330,47 +332,35 @@ export default async function handler(req, res) {
     =========================
     */
 
-    if (
-      action ===
-      "getProjectById"
-    ) {
-      const {
-        id,
-      } =
+    if (action === "getProjectById") {
+      const { id } =
         req.query;
+
+      if (!id) {
+        return res.status(400).json({
+          error: "Missing project id",
+        });
+      }
 
       const {
         data,
         error,
-      } =
-        await supabase
-          .from(
-            "projects"
-          )
-          .select("*")
-          .eq(
-            "id",
-            id
-          )
-          .single();
+      } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-      if (
-        error
-      ) {
-        return res
-          .status(500)
-          .json({
-            error:
-              error.message,
-          });
+      if (error) {
+        return res.status(500).json({
+          error:
+            error.message,
+        });
       }
 
-      return res
-        .status(200)
-        .json({
-          project:
-            data,
-        });
+      return res.status(200).json({
+        project: data,
+      });
     }
 
     /*
@@ -379,64 +369,41 @@ export default async function handler(req, res) {
     =========================
     */
 
-    if (
-      action ===
-      "getProjects"
-    ) {
-      const {
-        teamId,
-      } =
+    if (action === "getProjects") {
+      const { teamId } =
         req.query;
 
-      if (
-        !teamId
-      ) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Missing teamId",
-          });
+      if (!teamId) {
+        return res.status(400).json({
+          error: "Missing teamId",
+        });
       }
 
       const {
         data,
         error,
-      } =
-        await supabase
-          .from(
-            "projects"
-          )
-          .select("*")
-          .eq(
-            "team_id",
-            teamId
-          )
-          .order(
-            "created_at",
-            {
-              ascending:
-                false,
-            }
-          );
+      } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("team_id", teamId)
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
 
-      if (
-        error
-      ) {
-        return res
-          .status(500)
-          .json({
-            error:
-              "Failed to fetch projects",
-          });
+      if (error) {
+        return res.status(500).json({
+          error:
+            "Failed to fetch projects",
+        });
       }
 
-      return res
-        .status(200)
-        .json({
-          projects:
-            data,
-        });
+      return res.status(200).json({
+        projects:
+          data || [],
+      });
     }
 
     /*
@@ -445,98 +412,195 @@ export default async function handler(req, res) {
     =========================
     */
 
-    if (
-      action ===
-      "getTeams"
-    ) {
-      const token =
-        req.headers.authorization?.replace(
-          "Bearer ",
-          ""
-        );
+    if (action === "getTeams") {
+      try {
+        /*
+        Get access token
+        */
 
-      if (
-        !token
-      ) {
-        return res
-          .status(401)
-          .json({
-            error:
-              "No token",
+        const token =
+          req.headers.authorization
+            ?.replace(
+              "Bearer ",
+              ""
+            );
+
+        if (!token) {
+          return res.status(401).json({
+            error: "No token",
           });
-      }
+        }
 
-      const authSupabase =
-        createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_ANON_KEY,
-          {
-            global: {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
+        /*
+        Authenticate user
+        */
+
+        const authSupabase =
+          createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY,
+            {
+              global: {
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
               },
-            },
-          }
-        );
-
-      const {
-        data: {
-          user,
-        },
-      } =
-        await authSupabase.auth.getUser();
-      
-       if (!user) {
-        return res.status(401).json({
-        error: "Unauthorized",
-       });
-      }
-
-      const {
-        data,
-      } =
-        await authSupabase
-          .from(
-            "team_members"
-          )
-          .select(`
-            team_id,
-            teams (*)
-          `)
-          .eq(
-            "user_id",
-            user.id
+            }
           );
 
-      return res
-        .status(200)
-        .json({
-          teams:
-            data.map(
-              (
-                x
-              ) =>
-                x.teams
-            ),
+        const {
+          data: {
+            user,
+          },
+          error: authError,
+        } =
+          await authSupabase
+            .auth
+            .getUser();
+
+        if (
+          authError ||
+          !user
+        ) {
+          console.error(
+            "[GET TEAMS] AUTH ERROR:",
+            authError
+          );
+
+          return res.status(401).json({
+            error:
+              "Unauthorized",
+          });
+        }
+
+        console.log(
+          "[GET TEAMS] USER:",
+          user.id,
+          user.email
+        );
+
+        /*
+        ========================================
+        GET MEMBERSHIPS
+        ========================================
+        */
+
+        const {
+          data: members,
+          error: memberError,
+        } =
+          await supabase
+            .from("team_members")
+            .select(
+              `
+              id,
+              team_id,
+              user_id,
+              role,
+              email,
+              status,
+              teams (
+                id,
+                name,
+                owner_id,
+                created_at
+              )
+              `
+            )
+            .eq(
+              "user_id",
+              user.id
+            );
+
+        console.log(
+          "[GET TEAMS] RAW MEMBERS:",
+          JSON.stringify(
+            members,
+            null,
+            2
+          )
+        );
+
+        if (memberError) {
+          console.error(
+            "[GET TEAMS] MEMBER ERROR:",
+            memberError
+          );
+
+          return res.status(500).json({
+            error:
+              "Failed to fetch teams",
+          });
+        }
+
+        /*
+        ========================================
+        IMPORTANT:
+        RETURN THE ACTUAL TEAM OBJECTS
+        ========================================
+        */
+
+        const teams =
+          (members || [])
+            .map(
+              (member) =>
+                member?.teams
+            )
+            .filter(
+              (team) =>
+                team !== null &&
+                team !== undefined
+            );
+
+        console.log(
+          "[GET TEAMS] FINAL TEAMS:",
+          JSON.stringify(
+            teams,
+            null,
+            2
+          )
+        );
+
+        return res.status(200).json({
+          teams,
         });
+
+      } catch (error) {
+        console.error(
+          "[GET TEAMS] ERROR:",
+          error
+        );
+
+        return res.status(500).json({
+          error:
+            error.message ||
+            "Internal server error",
+        });
+      }
     }
 
-    return res
-      .status(404)
-      .json({
-        error:
-          "Unknown action",
-      });
+    /*
+    =========================
+    UNKNOWN ACTION
+    =========================
+    */
+
+    return res.status(404).json({
+      error:
+        "Unknown action",
+    });
 
   } catch (err) {
-    console.error(err);
+    console.error(
+      "[APP ERROR]",
+      err
+    );
 
-    return res
-      .status(500)
-      .json({
-        error:
-          err.message,
-      });
+    return res.status(500).json({
+      error:
+        err.message ||
+        "Internal server error",
+    });
   }
 }
