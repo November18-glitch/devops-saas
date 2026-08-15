@@ -210,10 +210,6 @@ export default async function handler(req, res) {
         });
       }
 
-      /*
-      Delete members
-      */
-
       const {
         error: memberDeleteError,
       } = await supabase
@@ -228,10 +224,6 @@ export default async function handler(req, res) {
         });
       }
 
-      /*
-      Delete projects
-      */
-
       const {
         error: projectDeleteError,
       } = await supabase
@@ -245,10 +237,6 @@ export default async function handler(req, res) {
             projectDeleteError.message,
         });
       }
-
-      /*
-      Delete team
-      */
 
       const {
         error: teamDeleteError,
@@ -413,171 +401,131 @@ export default async function handler(req, res) {
     */
 
     if (action === "getTeams") {
-      try {
-        /*
-        Get access token
-        */
+      const token =
+        req.headers.authorization
+          ?.replace("Bearer ", "");
 
-        const token =
-          req.headers.authorization
-            ?.replace(
-              "Bearer ",
-              ""
-            );
-
-        if (!token) {
-          return res.status(401).json({
-            error: "No token",
-          });
-        }
-
-        /*
-        Authenticate user
-        */
-
-        const authSupabase =
-          createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY,
-            {
-              global: {
-                headers: {
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-              },
-            }
-          );
-
-        const {
-          data: {
-            user,
-          },
-          error: authError,
-        } =
-          await authSupabase
-            .auth
-            .getUser();
-
-        if (
-          authError ||
-          !user
-        ) {
-          console.error(
-            "[GET TEAMS] AUTH ERROR:",
-            authError
-          );
-
-          return res.status(401).json({
-            error:
-              "Unauthorized",
-          });
-        }
-
-        console.log(
-          "[GET TEAMS] USER:",
-          user.id,
-          user.email
-        );
-
-        /*
-        ========================================
-        GET MEMBERSHIPS
-        ========================================
-        */
-
-        const {
-          data: members,
-          error: memberError,
-        } =
-          await supabase
-            .from("team_members")
-            .select(
-              `
-              id,
-              team_id,
-              user_id,
-              role,
-              email,
-              status,
-              teams (
-                id,
-                name,
-                owner_id,
-                created_at
-              )
-              `
-            )
-            .eq(
-              "user_id",
-              user.id
-            );
-
-        console.log(
-          "[GET TEAMS] RAW MEMBERS:",
-          JSON.stringify(
-            members,
-            null,
-            2
-          )
-        );
-
-        if (memberError) {
-          console.error(
-            "[GET TEAMS] MEMBER ERROR:",
-            memberError
-          );
-
-          return res.status(500).json({
-            error:
-              "Failed to fetch teams",
-          });
-        }
-
-        /*
-        ========================================
-        IMPORTANT:
-        RETURN THE ACTUAL TEAM OBJECTS
-        ========================================
-        */
-
-        const teams =
-          (members || [])
-            .map(
-              (member) =>
-                member?.teams
-            )
-            .filter(
-              (team) =>
-                team !== null &&
-                team !== undefined
-            );
-
-        console.log(
-          "[GET TEAMS] FINAL TEAMS:",
-          JSON.stringify(
-            teams,
-            null,
-            2
-          )
-        );
-
-        return res.status(200).json({
-          teams,
+      if (!token) {
+        return res.status(401).json({
+          error: "No token",
         });
+      }
 
-      } catch (error) {
+      const authSupabase =
+        createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_ANON_KEY,
+          {
+            global: {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            },
+          }
+        );
+
+      const {
+        data: {
+          user,
+        },
+        error: authError,
+      } =
+        await authSupabase.auth.getUser();
+
+      if (authError || !user) {
         console.error(
-          "[GET TEAMS] ERROR:",
-          error
+          "[GET TEAMS] AUTH ERROR:",
+          authError
+        );
+
+        return res.status(401).json({
+          error: "Unauthorized",
+        });
+      }
+
+      console.log(
+        "[GET TEAMS] USER:",
+        user.id,
+        user.email
+      );
+
+      const {
+        data: members,
+        error: memberError,
+      } =
+        await supabase
+          .from("team_members")
+          .select(`
+            id,
+            team_id,
+            user_id,
+            role,
+            email,
+            status,
+            teams (
+              id,
+              name,
+              owner_id,
+              created_at
+            )
+          `)
+          .eq(
+            "user_id",
+            user.id
+          );
+
+      console.log(
+        "[GET TEAMS] RAW MEMBERS:",
+        JSON.stringify(
+          members,
+          null,
+          2
+        )
+      );
+
+      if (memberError) {
+        console.error(
+          "[GET TEAMS] MEMBER ERROR:",
+          memberError
         );
 
         return res.status(500).json({
           error:
-            error.message ||
-            "Internal server error",
+            "Failed to fetch teams",
         });
       }
+
+      /*
+      =========================
+      RETURN TEAM OBJECTS
+      =========================
+      */
+
+      const teams =
+        (members || [])
+          .map(
+            (member) =>
+              member?.teams
+          )
+          .filter(
+            (team) =>
+              team !== null &&
+              team !== undefined
+          );
+
+      console.log(
+        "[GET TEAMS] FINAL TEAMS:",
+        JSON.stringify(
+          teams,
+          null,
+          2
+        )
+      );
+
+      return res.status(200).json({
+        teams,
+      });
     }
 
     /*
