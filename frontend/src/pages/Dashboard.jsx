@@ -22,56 +22,235 @@ export default function Dashboard() {
   }, []);
 
   const loadDashboard = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth?.user;
+    // ========================================
+    // GET CURRENT USER SESSION
+    // ========================================
 
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      // 1. Fetch user's team associations
-      const { data: tmList, error: tmError } = await supabase
-        .from("team_members")
-        .select("*")
-        .eq("user_id", user.id);
-
-      // 2. AUTO ONBOARDING (If user has no team associations)
-      if (!tmList || tmList.length === 0) {
-        setTeam([]);
-        setProjects([]);
-        setDeployments([]);
-        setMembersCount(0);
-        setLoading(false);
-        return;
-      }
-      // 3. Map out verified IDs (fallback to dummy safe id if list is empty)
-      const teamIds = tmList.map((t) => t.team_id);
-      const safeTeamIds = teamIds.length > 0 ? teamIds : [0];
-
-      // 4. Run concurrent fetches for performance optimization
-      const [teamsRes, projectsRes, membersRes, deploymentsRes] = await Promise.all([
-        supabase.from("teams").select("*").in("id", safeTeamIds),
-        supabase.from("projects").select("*").in("team_id", safeTeamIds).order("created_at", { ascending: false }),
-        supabase.from("team_members").select("id").in("team_id", safeTeamIds),
-        supabase.from("deployments").select("*").in("team_id", safeTeamIds).order("created_at", { ascending: false }),
-      ]);
-
-      setTeam(teamsRes.data || []);
-      setProjects(projectsRes.data || []);
-      setMembersCount(membersRes.data?.length || 0);
-      setDeployments(deploymentsRes.data || []);
-
-    } catch (err) {
-      console.error("Dashboard core loop failure:", err);
+    if (!session) {
+      console.log("[DASHBOARD] No session");
+      setTeam([]);
+      setProjects([]);
       setDeployments([]);
-    } finally {
+      setMembersCount(0);
       setLoading(false);
+      return;
     }
-  };
+
+    console.log(
+      "[DASHBOARD] USER:",
+      session.user.id,
+      session.user.email
+    );
+
+    // ========================================
+    // GET TEAMS THROUGH OUR API
+    // ========================================
+    // IMPORTANT:
+    // We already know this API works because
+    // Vercel showed:
+    //
+    // [GET TEAMS] FINAL TEAMS:
+    // [
+    //   {
+    //     id: "...",
+    //     name: "LaunchAlly"
+    //   }
+    // ]
+    //
+    // So Dashboard should use that result directly.
+    // ========================================
+
+    const teamsResponse = await fetch(
+      "/api/app?action=getTeams",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
+
+    const teamsData = await teamsResponse.json();
+
+    console.log(
+      "[DASHBOARD] TEAMS RESPONSE:",
+      teamsData
+    );
+
+    if (!teamsResponse.ok) {
+      console.error(
+        "[DASHBOARD] GET TEAMS FAILED:",
+        teamsData
+      );
+
+      setTeam([]);
+      setProjects([]);
+      setDeployments([]);
+      setMembersCount(0);
+      setLoading(false);
+      return;
+    }
+
+    // These are the actual team objects returned
+    // by /api/app?action=getTeams
+    const loadedTeams = teamsData.teams || [];
+
+    console.log(
+      "[DASHBOARD] LOADED TEAMS:",
+      loadedTeams
+    );
+
+    setTeam(loadedTeams);
+
+    // ========================================
+    // NO TEAMS
+    // ========================================
+
+    if (loadedTeams.length === 0) {
+      console.log(
+        "[DASHBOARD] User has no teams"
+      );
+
+      setProjects([]);
+      setDeployments([]);
+      setMembersCount(0);
+      setLoading(false);
+      return;
+    }
+
+    // ========================================
+    // GET TEAM IDS
+    // ========================================
+
+    const teamIds = loadedTeams
+      .map((t) => t?.id)
+      .filter(Boolean);
+
+    console.log(
+      "[DASHBOARD] TEAM IDS:",
+      teamIds
+    );
+
+    if (teamIds.length === 0) {
+      setProjects([]);
+      setDeployments([]);
+      setMembersCount(0);
+      setLoading(false);
+      return;
+    }
+
+    // ========================================
+    // LOAD PROJECTS / MEMBERS / DEPLOYMENTS
+    // ========================================
+
+    const [
+      projectsResult,
+      membersResult,
+      deploymentsResult,
+    ] = await Promise.all([
+      supabase
+        .from("projects")
+        .select("*")
+        .in("team_id", teamIds)
+        .order("created_at", {
+          ascending: false,
+        }),
+
+      supabase
+        .from("team_members")
+        .select("id")
+        .in("team_id", teamIds),
+
+      supabase
+        .from("deployments")
+        .select("*")
+        .in("team_id", teamIds)
+        .order("created_at", {
+          ascending: false,
+        }),
+    ]);
+
+    // ========================================
+    // PROJECTS
+    // ========================================
+
+    if (projectsResult.error) {
+      console.error(
+        "[DASHBOARD] PROJECT ERROR:",
+        projectsResult.error
+      );
+
+      setProjects([]);
+    } else {
+      setProjects(projectsResult.data || []);
+    }
+
+    // ========================================
+    // MEMBERS
+    // ========================================
+
+    if (membersResult.error) {
+      console.error(
+        "[DASHBOARD] MEMBERS ERROR:",
+        membersResult.error
+      );
+
+      setMembersCount(0);
+    } else {
+      setMembersCount(
+        membersResult.data?.length || 0
+      );
+    }
+
+    // ========================================
+    // DEPLOYMENTS
+    // ========================================
+
+    if (deploymentsResult.error) {
+      console.error(
+        "[DASHBOARD] DEPLOYMENTS ERROR:",
+        deploymentsResult.error
+      );
+
+      setDeployments([]);
+    } else {
+      setDeployments(
+        deploymentsResult.data || []
+      );
+    }
+
+    console.log(
+      "[DASHBOARD] FINAL STATE:",
+      {
+        teams: loadedTeams,
+        projects: projectsResult.data || [],
+        members:
+          membersResult.data?.length || 0,
+        deployments:
+          deploymentsResult.data || [],
+      }
+    );
+  } catch (err) {
+    console.error(
+      "[DASHBOARD] CORE LOOP FAILURE:",
+      err
+    );
+
+    setTeam([]);
+    setProjects([]);
+    setDeployments([]);
+    setMembersCount(0);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCheckout = async () => {
   try {
