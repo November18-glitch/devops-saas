@@ -1,19 +1,18 @@
 import { supabase } from "../lib/supabase";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 
 import logo from "../assets/logo.png";
 
 export default function Register() {
   const location = useLocation();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [success, setSuccess] = useState(false);
 
   const handleRegister = async (e) => {
@@ -22,22 +21,39 @@ export default function Register() {
     setError(null);
     setLoading(true);
 
-    const params = new URLSearchParams(window.location.search);
-    const inviteToken = params.get("invite");
-    const redirectParam = params.get("redirect");
+    /*
+    ========================================
+    PRESERVE INVITATION REDIRECT
+    ========================================
+    */
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
+    const params = new URLSearchParams(location.search);
+
+    const redirectParam =
+      params.get("redirect");
+
+    /*
+    ========================================
+    CREATE ACCOUNT
+    ========================================
+    */
+
+    const { error } =
+      await supabase.auth.signUp({
+        email,
+        password,
+
+        options: {
+          data: {
+            username,
+          },
+
+          emailRedirectTo:
+            `https://launchally.org/auth/callback?redirect=${encodeURIComponent(
+              redirectParam || "/dashboard"
+            )}`,
         },
-        emailRedirectTo: `https://launchally.org/auth/callback?redirect=${encodeURIComponent(
-         redirectParam || "/dashboard"
-       )}`,
-      },
-    });
+      });
 
     setLoading(false);
 
@@ -46,27 +62,57 @@ export default function Register() {
       return;
     }
 
-    const redirect =
-     new URLSearchParams(location.search)
-     .get("redirect");
+    /*
+    ========================================
+    SHOW CONFIRMATION SCREEN
+    ========================================
+    */
 
-     setSuccess(true);
-    };
+    setSuccess(true);
+  };
 
-    const handleGoogleLogin = async () => {
-  await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: "https://launchally.org/auth/callback",
-    },
-  });
-};
+  /*
+  ========================================
+  GOOGLE SIGN IN
+  ========================================
+  */
+
+  const handleGoogleLogin = async () => {
+    const params =
+      new URLSearchParams(location.search);
+
+    const redirectParam =
+      params.get("redirect");
+
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+
+      options: {
+        redirectTo:
+          `https://launchally.org/auth/callback${
+            redirectParam
+              ? `?redirect=${encodeURIComponent(
+                  redirectParam
+                )}`
+              : ""
+          }`,
+      },
+    });
+  };
+
+  /*
+  ========================================
+  CONFIRMATION SCREEN
+  ========================================
+  */
 
   if (success) {
     return (
       <div style={styles.page}>
         <div style={styles.card}>
+
           <div style={styles.logoWrapper}>
+
             <img
               src={logo}
               alt="LaunchAlly"
@@ -80,6 +126,7 @@ export default function Register() {
             <h2 style={styles.title}>
               Check your email
             </h2>
+
           </div>
 
           <p style={styles.successText}>
@@ -87,22 +134,40 @@ export default function Register() {
 
             <br />
             Open your inbox.
+
             <br />
             Click Confirm Email.
           </p>
 
-          <Link to="/login" style={styles.loginButton}>
+          {/*
+          IMPORTANT:
+          Preserve the redirect when going to Login.
+          */}
+
+          <Link
+            to={`/login${location.search}`}
+            style={styles.loginButton}
+          >
             Go to Login
           </Link>
+
         </div>
       </div>
     );
   }
 
+  /*
+  ========================================
+  REGISTRATION PAGE
+  ========================================
+  */
+
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+
         <div style={styles.logoWrapper}>
+
           <img
             src={logo}
             alt="LaunchAlly"
@@ -113,91 +178,126 @@ export default function Register() {
             }}
           />
 
-          <h2 style={styles.title}>Create account</h2>
+          <h2 style={styles.title}>
+            Create account
+          </h2>
+
         </div>
 
         <p style={styles.subtitle}>
           Start deploying apps with LaunchAlly.
         </p>
 
-        <form onSubmit={handleRegister} style={styles.form}>
+        <form
+          onSubmit={handleRegister}
+          style={styles.form}
+        >
 
-  <button
-    type="button"
-    onClick={handleGoogleLogin}
-    style={styles.googleButton}
-  >
-    <img
-      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-      alt="Google"
-      style={{
-        width: 20,
-        height: 20,
-        marginRight: 10,
-      }}
-    />
-    Continue with Google
-  </button>
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            style={styles.googleButton}
+          >
 
-  <div style={styles.divider}>
-    <span>or</span>
-  </div>
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              style={{
+                width: 20,
+                height: 20,
+                marginRight: 10,
+              }}
+            />
 
-  <label style={styles.label}>Username</label>
+            Continue with Google
 
-  <input
-    autoComplete="username"
-    required
-    style={styles.input}
-    value={username}
-    onChange={(e) => setUsername(e.target.value)}
-    placeholder="yourname"
-  />
+          </button>
 
-  <label style={styles.label}>Email address</label>
+          <div style={styles.divider}>
+            <span>or</span>
+          </div>
 
-  <input
-    type="email"
-    autoComplete="email"
-    required
-    style={styles.input}
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    placeholder="you@example.com"
-  />
+          <label style={styles.label}>
+            Username
+          </label>
 
-  <label style={styles.label}>Password</label>
+          <input
+            autoComplete="username"
+            required
+            style={styles.input}
+            value={username}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
+            placeholder="yourname"
+          />
 
-  <input
-    type="password"
-    autoComplete="new-password"
-    required
-    minLength={6}
-    style={styles.input}
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    placeholder="Minimum 6 characters"
-  />
+          <label style={styles.label}>
+            Email address
+          </label>
 
-  {error && <p style={styles.error}>{error}</p>}
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            style={styles.input}
+            value={email}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
+            placeholder="you@example.com"
+          />
 
-  <button
-    style={{
-      ...styles.button,
-      opacity: loading ? 0.7 : 1,
-      cursor: loading ? "not-allowed" : "pointer",
-    }}
-    disabled={loading}
-  >
-    {loading ? "Creating account..." : "Register"}
-  </button>
+          <label style={styles.label}>
+            Password
+          </label>
 
-</form>
+          <input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={6}
+            style={styles.input}
+            value={password}
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
+            placeholder="Minimum 6 characters"
+          />
+
+          {error && (
+            <p style={styles.error}>
+              {error}
+            </p>
+          )}
+
+          <button
+            style={{
+              ...styles.button,
+              opacity: loading ? 0.7 : 1,
+              cursor: loading
+                ? "not-allowed"
+                : "pointer",
+            }}
+            disabled={loading}
+          >
+            {loading
+              ? "Creating account..."
+              : "Register"}
+          </button>
+
+        </form>
 
         <p style={styles.footer}>
           Already have an account?{" "}
-          <Link to="/login">Login</Link>
+
+          <Link
+            to={`/login${location.search}`}
+          >
+            Login
+          </Link>
         </p>
+
       </div>
     </div>
   );
@@ -219,8 +319,10 @@ const styles = {
     padding: 32,
     background: "#fff",
     borderRadius: 16,
-    boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-    border: "1px solid rgba(0,0,0,0.05)",
+    boxShadow:
+      "0 10px 40px rgba(0,0,0,0.08)",
+    border:
+      "1px solid rgba(0,0,0,0.05)",
   },
 
   logoWrapper: {
@@ -266,7 +368,8 @@ const styles = {
     padding: 12,
     marginBottom: 18,
     borderRadius: 10,
-    border: "1px solid #d1d5db",
+    border:
+      "1px solid #d1d5db",
     fontSize: 15,
     outline: "none",
   },
@@ -305,26 +408,28 @@ const styles = {
     fontSize: 14,
     color: "#64748b",
   },
-  googleButton: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  padding: 14,
-  borderRadius: 10,
-  border: "1px solid #d1d5db",
-  background: "#fff",
-  fontWeight: 600,
-  fontSize: 15,
-  cursor: "pointer",
-  marginBottom: 18,
-},
 
-divider: {
-  display: "flex",
-  justifyContent: "center",
-  marginBottom: 18,
-  color: "#64748b",
-  fontSize: 14,
-},
+  googleButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    padding: 14,
+    borderRadius: 10,
+    border:
+      "1px solid #d1d5db",
+    background: "#fff",
+    fontWeight: 600,
+    fontSize: 15,
+    cursor: "pointer",
+    marginBottom: 18,
+  },
+
+  divider: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: 18,
+    color: "#64748b",
+    fontSize: 14,
+  },
 };
