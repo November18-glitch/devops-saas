@@ -15,22 +15,8 @@ export default function AuthCallback() {
     async function handleAuth() {
       console.log("========== AUTH CALLBACK ==========");
 
-      /*
-      ========================================
-      GET AUTH CODE
-      ========================================
-      */
-
       const code = params.get("code");
-
-      /*
-      ========================================
-      GET REDIRECT
-      ========================================
-      */
-
-      const redirectParam =
-        params.get("redirect");
+      const redirectParam = params.get("redirect");
 
       console.log(
         "AUTH CODE PRESENT:",
@@ -44,45 +30,52 @@ export default function AuthCallback() {
 
       /*
       ========================================
-      NO CODE
+      EXCHANGE AUTH CODE
       ========================================
       */
 
-      if (!code) {
-        console.error(
-          "❌ AUTH CALLBACK: NO CODE"
+      if (code) {
+        const { error } =
+          await supabase.auth.exchangeCodeForSession(
+            code
+          );
+
+        if (error) {
+          console.error(
+            "❌ AUTH CALLBACK ERROR:",
+            error
+          );
+
+          navigate("/login", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        console.log(
+          "✅ AUTH SESSION CREATED"
         );
-
-        navigate("/login", {
-          replace: true,
-        });
-
-        return;
       }
 
       /*
       ========================================
-      EXCHANGE CODE FOR SESSION
+      GET CURRENT SESSION
       ========================================
       */
 
       const {
-        data,
-        error,
-      } =
-        await supabase.auth.exchangeCodeForSession(
-          code
-        );
+        data: { session },
+      } = await supabase.auth.getSession();
 
       console.log(
-        "SESSION CREATED:",
-        !!data?.session
+        "SESSION AFTER CALLBACK:",
+        !!session
       );
 
-      if (error) {
+      if (!session) {
         console.error(
-          "❌ AUTH CALLBACK ERROR:",
-          error
+          "❌ NO SESSION AFTER AUTH CALLBACK"
         );
 
         navigate("/login", {
@@ -94,12 +87,16 @@ export default function AuthCallback() {
 
       /*
       ========================================
-      DETERMINE DESTINATION
+      FIND WHERE TO GO
       ========================================
       */
 
-      let destination =
-        "/dashboard";
+      let destination = null;
+
+      /*
+      First priority:
+      explicit redirect from login/register
+      */
 
       if (redirectParam) {
         try {
@@ -113,24 +110,54 @@ export default function AuthCallback() {
         }
       }
 
+      /*
+      Second priority:
+      remembered invitation token
+      */
+
+      if (!destination) {
+        const pendingInviteToken =
+          localStorage.getItem(
+            "pendingInviteToken"
+          );
+
+        if (pendingInviteToken) {
+          destination =
+            `/join?token=${encodeURIComponent(
+              pendingInviteToken
+            )}`;
+
+          console.log(
+            "🎟️ FOUND PENDING INVITE:",
+            pendingInviteToken
+          );
+        }
+      }
+
+      /*
+      Final fallback:
+      normal dashboard
+      */
+
+      if (!destination) {
+        destination = "/dashboard";
+      }
+
       console.log(
-        "🚀 AUTH CALLBACK DESTINATION:",
+        "🚀 FINAL AUTH DESTINATION:",
         destination
       );
 
       /*
       ========================================
-      REDIRECT
+      GO THERE
       ========================================
       */
 
       if (!cancelled) {
-        navigate(
-          destination,
-          {
-            replace: true,
-          }
-        );
+        navigate(destination, {
+          replace: true,
+        });
       }
     }
 

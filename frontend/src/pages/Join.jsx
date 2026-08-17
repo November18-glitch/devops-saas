@@ -88,21 +88,28 @@ export default function Join() {
       */
 
       if (!session) {
-        console.log(
-          "❌ No session. Redirecting to login."
-        );
+  console.log(
+    "❌ No session. Redirecting to login."
+  );
 
-        const redirect =
-          `/join?token=${encodeURIComponent(token)}`;
+  const redirect =
+    `/join?token=${encodeURIComponent(token)}`;
 
-        window.location.replace(
-          `/login?redirect=${encodeURIComponent(
-            redirect
-          )}`
-        );
+  // Remember the invitation while the user
+  // goes through login/register/email confirmation.
+  localStorage.setItem(
+    "pendingInviteToken",
+    token
+  );
 
-        return;
-      }
+  window.location.replace(
+    `/login?redirect=${encodeURIComponent(
+      redirect
+    )}`
+  );
+
+  return;
+}
 
       console.log(
         "✅ AUTHENTICATED USER:",
