@@ -151,31 +151,25 @@ export default function Dashboard() {
     // ========================================
 
     const [
-      projectsResult,
-      membersResult,
-      deploymentsResult,
-    ] = await Promise.all([
-      supabase
-        .from("projects")
-        .select("*")
-        .in("team_id", teamIds)
-        .order("created_at", {
-          ascending: false,
-        }),
+  projectsResult,
+  deploymentsResult,
+] = await Promise.all([
+  supabase
+    .from("projects")
+    .select("*")
+    .in("team_id", teamIds)
+    .order("created_at", {
+      ascending: false,
+    }),
 
-      supabase
-        .from("team_members")
-        .select("id")
-        .in("team_id", teamIds),
-
-      supabase
-        .from("deployments")
-        .select("*")
-        .in("team_id", teamIds)
-        .order("created_at", {
-          ascending: false,
-        }),
-    ]);
+  supabase
+    .from("deployments")
+    .select("*")
+    .in("team_id", teamIds)
+    .order("created_at", {
+      ascending: false,
+    }),
+]);
 
     // ========================================
     // PROJECTS
@@ -193,21 +187,24 @@ export default function Dashboard() {
     }
 
     // ========================================
-    // MEMBERS
-    // ========================================
+// VERIFIED MEMBERS
+// ========================================
 
-    if (membersResult.error) {
-      console.error(
-        "[DASHBOARD] MEMBERS ERROR:",
-        membersResult.error
-      );
+const verifiedMembersTotal =
+  loadedTeams.reduce(
+    (total, currentTeam) =>
+      total + (currentTeam.membersCount || 0),
+    0
+  );
 
-      setMembersCount(0);
-    } else {
-      setMembersCount(
-        membersResult.data?.length || 0
-      );
-    }
+setMembersCount(
+  verifiedMembersTotal
+);
+
+console.log(
+  "[DASHBOARD] VERIFIED MEMBERS:",
+  verifiedMembersTotal
+);
 
     // ========================================
     // DEPLOYMENTS
@@ -232,7 +229,7 @@ export default function Dashboard() {
         teams: loadedTeams,
         projects: projectsResult.data || [],
         members:
-          membersResult.data?.length || 0,
+          verifiedMembersTotal,
         deployments:
           deploymentsResult.data || [],
       }

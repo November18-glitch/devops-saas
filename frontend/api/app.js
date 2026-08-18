@@ -395,138 +395,198 @@ export default async function handler(req, res) {
     }
 
     /*
-    =========================
-    GET TEAMS
-    =========================
-    */
+=========================
+GET TEAMS
+=========================
+*/
 
-    if (action === "getTeams") {
-      const token =
-        req.headers.authorization
-          ?.replace("Bearer ", "");
+if (action === "getTeams") {
+  const token =
+    req.headers.authorization?.replace("Bearer ", "");
 
-      if (!token) {
-        return res.status(401).json({
-          error: "No token",
-        });
-      }
+  if (!token) {
+    return res.status(401).json({
+      error: "No token",
+    });
+  }
 
-      const authSupabase =
-        createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_ANON_KEY,
-          {
-            global: {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            },
-          }
-        );
+  /*
+  =========================
+  VERIFY USER
+  =========================
+  */
 
-      const {
-        data: {
-          user,
+  const authSupabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        error: authError,
-      } =
-        await authSupabase.auth.getUser();
+      },
+    }
+  );
 
-      if (authError || !user) {
-        console.error(
-          "[GET TEAMS] AUTH ERROR:",
-          authError
-        );
+  const {
+    data: { user },
+    error: authError,
+  } = await authSupabase.auth.getUser();
 
-        return res.status(401).json({
-          error: "Unauthorized",
-        });
-      }
+  if (authError || !user) {
+    console.error(
+      "[GET TEAMS] AUTH ERROR:",
+      authError
+    );
 
-      console.log(
-        "[GET TEAMS] USER:",
-        user.id,
-        user.email
-      );
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
+  }
+
+  console.log(
+    "[GET TEAMS] USER:",
+    user.id,
+    user.email
+  );
+
+  /*
+  =========================
+  GET TEAM MEMBERSHIPS
+  =========================
+  */
+
+  const {
+    data: members,
+    error: memberError,
+  } = await supabase
+    .from("team_members")
+    .select(`
+      id,
+      team_id,
+      user_id,
+      role,
+      email,
+      status,
+      teams (
+        id,
+        name,
+        owner_id,
+        created_at
+      )
+    `)
+    .eq("user_id", user.id)
+    .eq("status", "active");
+
+  console.log(
+    "[GET TEAMS] RAW MEMBERS:",
+    JSON.stringify(
+      members,
+      null,
+      2
+    )
+  );
+
+  if (memberError) {
+    console.error(
+      "[GET TEAMS] MEMBER ERROR:",
+      memberError
+    );
+
+    return res.status(500).json({
+      error: "Failed to fetch teams",
+    });
+  }
+
+  /*
+  =========================
+  BUILD TEAM LIST
+  =========================
+  */
+
+  const baseTeams = (members || [])
+    .map((member) => member?.teams)
+    .filter(
+      (team) =>
+        team !== null &&
+        team !== undefined
+    );
+
+  /*
+  =========================
+  ADD VERIFIED MEMBER DATA
+  =========================
+  */
+
+  const teams = await Promise.all(
+    baseTeams.map(async (team) => {
 
       const {
-        data: members,
-        error: memberError,
-      } =
-        await supabase
-          .from("team_members")
-          .select(`
-            id,
-            team_id,
-            user_id,
-            role,
-            email,
-            status,
-            teams (
-              id,
-              name,
-              owner_id,
-              created_at
-            )
-          `)
-          .eq(
-            "user_id",
-            user.id
-          );
+        data: teamMembers,
+        error: teamMembersError,
+      } = await supabase
+        .from("team_members")
+        .select(`
+          id,
+          user_id,
+          role,
+          email,
+          status,
+          created_at
+        `)
+        .eq("team_id", team.id)
+        .eq("status", "active")
+        .order("created_at", {
+          ascending: true,
+        });
 
-      console.log(
-        "[GET TEAMS] RAW MEMBERS:",
-        JSON.stringify(
-          members,
-          null,
-          2
-        )
-      );
-
-      if (memberError) {
+      if (teamMembersError) {
         console.error(
-          "[GET TEAMS] MEMBER ERROR:",
-          memberError
+          "[GET TEAMS] TEAM MEMBER COUNT ERROR:",
+          teamMembersError
         );
 
-        return res.status(500).json({
-          error:
-            "Failed to fetch teams",
-        });
+        return {
+          ...team,
+          membersCount: 0,
+          members: [],
+        };
       }
 
-      /*
-      =========================
-      RETURN TEAM OBJECTS
-      =========================
-      */
+      return {
+        ...team,
 
-      const teams =
-        (members || [])
-          .map(
-            (member) =>
-              member?.teams
-          )
-          .filter(
-            (team) =>
-              team !== null &&
-              team !== undefined
-          );
+        /*
+        This is the important number.
+        Only ACTIVE / VERIFIED members count.
+        */
 
-      console.log(
-        "[GET TEAMS] FINAL TEAMS:",
-        JSON.stringify(
-          teams,
-          null,
-          2
-        )
-      );
+        membersCount:
+          teamMembers?.length || 0,
 
-      return res.status(200).json({
-        teams,
-      });
-    }
+        /*
+        Useful for Teams.jsx.
+        */
+
+        members:
+          teamMembers || [],
+      };
+    })
+  );
+
+  console.log(
+    "[GET TEAMS] FINAL TEAMS:",
+    JSON.stringify(
+      teams,
+      null,
+      2
+    )
+  );
+
+  return res.status(200).json({
+    teams,
+  });
+}
 
     /*
     =========================

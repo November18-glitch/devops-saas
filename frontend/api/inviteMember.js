@@ -63,20 +63,30 @@ export default async function handler(req, res) {
 
     if ((owner?.plan || "FREE") === "FREE") {
 
-      const { count } = await supabase
-  .from("team_members")
-  .select("*", {
-    count: "exact",
-    head: true,
-  })
-  .eq("team_id", teamId);
+  const { count, error: memberCountError } =
+    await supabase
+      .from("team_members")
+      .select("*", {
+        count: "exact",
+        head: true,
+      })
+      .eq("team_id", teamId)
+      .eq("status", "active");
 
-      if (count >= 3) {
-        return res.status(403).json({
-          error: "Free plan allows only 3 members."
-        });
-      }
-    }
+  if (memberCountError) {
+    return res.status(500).json({
+      error:
+        "Could not verify team member limit."
+    });
+  }
+
+  if ((count || 0) >= 3) {
+    return res.status(403).json({
+      error:
+        "Free plan allows a maximum of 3 verified members."
+    });
+  }
+}
 
     const inviteToken =
       crypto.randomUUID();

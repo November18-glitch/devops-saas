@@ -176,6 +176,37 @@ const handleInvite = async () => {
                 <p className="team-id">
                   {team.id.slice(0, 8)}...{team.id.slice(-4)}
                 </p>
+                <div className="team-members-summary">
+  <strong>
+    {team.membersCount || 0} / 3
+  </strong>{" "}
+  verified members
+</div>
+
+<div className="team-members-list">
+  {(team.members || []).map((member) => (
+    <div
+      key={member.id}
+      className="team-member-row"
+    >
+      <div>
+        <div className="member-email">
+          {member.email || "Unknown member"}
+        </div>
+
+        <div className="member-role">
+          {member.role === "owner"
+            ? "Owner"
+            : "Member"}
+        </div>
+      </div>
+
+      <span className="member-status">
+        ✓ Verified
+      </span>
+    </div>
+  ))}
+</div>
 
                 <div className="team-actions">
   <button
