@@ -394,7 +394,7 @@ export default async function handler(req, res) {
       });
     }
 
-    /*
+/*
 =========================
 GET TEAMS
 =========================
@@ -410,12 +410,6 @@ if (action === "getTeams") {
     });
   }
 
-  /*
-  =========================
-  VERIFY USER
-  =========================
-  */
-
   const authSupabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY,
@@ -429,7 +423,9 @@ if (action === "getTeams") {
   );
 
   const {
-    data: { user },
+    data: {
+      user,
+    },
     error: authError,
   } = await authSupabase.auth.getUser();
 
@@ -452,31 +448,34 @@ if (action === "getTeams") {
 
   /*
   =========================
-  GET TEAM MEMBERSHIPS
+  GET MEMBERSHIPS
   =========================
   */
 
   const {
     data: members,
     error: memberError,
-  } = await supabase
-    .from("team_members")
-    .select(`
-      id,
-      team_id,
-      user_id,
-      role,
-      email,
-      status,
-      teams (
+  } =
+    await supabase
+      .from("team_members")
+      .select(`
         id,
-        name,
-        owner_id,
-        created_at
-      )
-    `)
-    .eq("user_id", user.id)
-    .eq("status", "active");
+        team_id,
+        user_id,
+        role,
+        email,
+        status,
+        teams (
+          id,
+          name,
+          owner_id,
+          created_at
+        )
+      `)
+      .eq(
+        "user_id",
+        user.id
+      );
 
   console.log(
     "[GET TEAMS] RAW MEMBERS:",
@@ -494,99 +493,308 @@ if (action === "getTeams") {
     );
 
     return res.status(500).json({
-      error: "Failed to fetch teams",
+      error:
+        "Failed to fetch teams",
     });
   }
 
   /*
   =========================
-  BUILD TEAM LIST
+  GET TEAM OBJECTS
   =========================
   */
 
-  const baseTeams = (members || [])
-    .map((member) => member?.teams)
-    .filter(
-      (team) =>
-        team !== null &&
-        team !== undefined
-    );
+  const rawTeams =
+    (members || [])
+      .map(
+        (member) =>
+          member?.teams
+      )
+      .filter(Boolean);
 
   /*
   =========================
-  ADD VERIFIED MEMBER DATA
+  GET MEMBER COUNTS
   =========================
   */
 
-  const teams = await Promise.all(
-    baseTeams.map(async (team) => {
+  const teamIds =
+    rawTeams
+      .map((team) => team.id)
+      .filter(Boolean);
 
-      const {
-        data: teamMembers,
-        error: teamMembersError,
-      } = await supabase
-        .from("team_members")
-        .select(`
-          id,
-          user_id,
-          role,
-          email,
-          status,
-          created_at
-        `)
-        .eq("team_id", team.id)
-        .eq("status", "active")
-        .order("created_at", {
-          ascending: true,
-        });
+  let memberCounts = {};
 
-      if (teamMembersError) {
-        console.error(
-          "[GET TEAMS] TEAM MEMBER COUNT ERROR:",
-          teamMembersError
-        );
+  if (teamIds.length > 0) {
+    const {
+      data: allMembers,
+      error: allMembersError,
+    } = await supabase
+      .from("team_members")
+      .select(`
+        id,
+        team_id,
+        user_id,
+        role,
+        email,
+        status
+      `)
+      .in(
+        "team_id",
+        teamIds
+      )
+      .eq(
+        "status",
+        "active"
+      );
 
-        return {
-          ...team,
-          membersCount: 0,
-          members: [],
-        };
+    if (allMembersError) {
+      console.error(
+        "[GET TEAMS] MEMBER COUNT ERROR:",
+        allMembersError
+      );
+
+      return res.status(500).json({
+        error:
+          "Failed to fetch team members",
+      });
+    }
+
+    /*
+    =========================
+    BUILD COUNTS
+    =========================
+    */
+
+    for (const member of allMembers || []) {
+      if (!memberCounts[member.team_id]) {
+        memberCounts[member.team_id] = 0;
       }
 
-      return {
-        ...team,
+      memberCounts[member.team_id]++;
+    }
+  }
 
-        /*
-        This is the important number.
-        Only ACTIVE / VERIFIED members count.
-        */
+  /*
+  =========================
+  BUILD FINAL TEAMS
+  =========================
+  */
 
-        membersCount:
-          teamMembers?.length || 0,
+  const teams =
+    rawTeams.map((team) => ({
+      id: team.id,
+      name: team.name,
+      owner_id: team.owner_id,
+      created_at: team.created_at,
 
-        /*
-        Useful for Teams.jsx.
-        */
+      member_count:
+        memberCounts[team.id] || 0,
 
-        members:
-          teamMembers || [],
-      };
-    })
+      /*
+      FREE TEAM LIMIT
+      Owner counts as a member.
+      */
+
+      max_members: 3,
+
+      is_owner:
+        team.owner_id === user.id,
+    }));
+
+  /*
+  =========================
+  REMOVE DUPLICATE TEAMS
+  =========================
+  */
+
+  const uniqueTeams = Array.from(
+    new Map(
+      teams.map((team) => [
+        team.id,
+        team,
+      ])
+    ).values()
   );
 
   console.log(
     "[GET TEAMS] FINAL TEAMS:",
     JSON.stringify(
-      teams,
+      uniqueTeams,
       null,
       2
     )
   );
 
   return res.status(200).json({
-    teams,
+    teams: uniqueTeams,
   });
 }
+
+/*
+=========================
+REMOVE TEAM MEMBER
+=========================
+*/
+
+if (action === "removeMember") {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
+  }
+
+  const token =
+    req.headers.authorization?.replace(
+      "Bearer ",
+      ""
+    );
+
+  if (!token) {
+    return res.status(401).json({
+      error: "No token",
+    });
+  }
+
+  /*
+  =========================
+  AUTHENTICATE USER
+  =========================
+  */
+
+  const {
+    data: {
+      user,
+    },
+    error: authError,
+  } =
+    await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
+  }
+
+  const {
+    teamId,
+    memberId,
+  } = req.body;
+
+  if (!teamId || !memberId) {
+    return res.status(400).json({
+      error:
+        "Missing teamId or memberId",
+    });
+  }
+
+  /*
+  =========================
+  VERIFY TEAM OWNER
+  =========================
+  */
+
+  const {
+    data: team,
+    error: teamError,
+  } =
+    await supabase
+      .from("teams")
+      .select("id, owner_id")
+      .eq("id", teamId)
+      .single();
+
+  if (teamError || !team) {
+    return res.status(404).json({
+      error: "Team not found",
+    });
+  }
+
+  if (team.owner_id !== user.id) {
+    return res.status(403).json({
+      error:
+        "Only the team owner can remove members.",
+    });
+  }
+
+  /*
+  =========================
+  FIND MEMBER
+  =========================
+  */
+
+  const {
+    data: member,
+    error: memberError,
+  } =
+    await supabase
+      .from("team_members")
+      .select(`
+        id,
+        team_id,
+        user_id,
+        role,
+        email,
+        status
+      `)
+      .eq("id", memberId)
+      .eq("team_id", teamId)
+      .single();
+
+  if (memberError || !member) {
+    return res.status(404).json({
+      error: "Member not found",
+    });
+  }
+
+  /*
+  =========================
+  NEVER REMOVE OWNER
+  =========================
+  */
+
+  if (
+    member.user_id === team.owner_id ||
+    member.role === "owner"
+  ) {
+    return res.status(403).json({
+      error:
+        "The team owner cannot be removed.",
+    });
+  }
+
+  /*
+  =========================
+  DELETE MEMBER
+  =========================
+  */
+
+  const {
+    error: deleteError,
+  } =
+    await supabase
+      .from("team_members")
+      .delete()
+      .eq("id", memberId)
+      .eq("team_id", teamId);
+
+  if (deleteError) {
+    console.error(
+      "[REMOVE MEMBER] DELETE ERROR:",
+      deleteError
+    );
+
+    return res.status(500).json({
+      error:
+        "Failed to remove member.",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+  });
+}
+
 
     /*
     =========================

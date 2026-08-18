@@ -8,7 +8,6 @@ export default function Teams() {
 
   const [teamName, setTeamName] = useState("");
   const [teams, setTeams] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -17,7 +16,8 @@ export default function Teams() {
 
   const [user, setUser] = useState(null);
 
-  const [inviting, setInviting] = useState(false);
+  const [removingMember, setRemovingMember] =
+    useState(null);
 
   /*
   =========================
@@ -29,16 +29,8 @@ export default function Teams() {
     const loadUser = async () => {
       const {
         data,
-        error,
-      } = await supabase.auth.getUser();
-
-      if (error) {
-        console.error(
-          "[TEAMS] USER ERROR:",
-          error
-        );
-        return;
-      }
+      } =
+        await supabase.auth.getUser();
 
       setUser(data.user);
     };
@@ -52,10 +44,6 @@ export default function Teams() {
   =========================
   */
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
-
   const fetchTeams = async () => {
     try {
       setLoading(true);
@@ -66,13 +54,22 @@ export default function Teams() {
         ).data.session;
 
       /*
-      Wait for Supabase session if necessary.
+      Wait briefly if Supabase
+      is still restoring session.
       */
 
       if (!session) {
-        for (let i = 0; i < 10; i++) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, 500)
+        for (
+          let i = 0;
+          i < 10;
+          i++
+        ) {
+          await new Promise(
+            (resolve) =>
+              setTimeout(
+                resolve,
+                500
+              )
           );
 
           session =
@@ -80,43 +77,36 @@ export default function Teams() {
               await supabase.auth.getSession()
             ).data.session;
 
-          if (session) {
-            break;
-          }
+          if (session) break;
         }
       }
 
       if (!session) {
         console.error(
-          "[TEAMS] No Supabase session"
+          "No Supabase session."
         );
 
         setTeams([]);
         return;
       }
 
-      const response = await fetch(
-        "/api/app?action=getTeams",
-        {
-          method: "GET",
-          headers: {
-            Authorization:
-              `Bearer ${session.access_token}`,
-          },
-        }
-      );
+      const res =
+        await fetch(
+          "/api/app?action=getTeams",
+          {
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+          }
+        );
 
       const data =
-        await response.json();
+        await res.json();
 
-      console.log(
-        "[TEAMS] API RESPONSE:",
-        data
-      );
-
-      if (!response.ok) {
+      if (!res.ok) {
         console.error(
-          "[TEAMS] API ERROR:",
+          "GET TEAMS ERROR:",
           data
         );
 
@@ -124,22 +114,29 @@ export default function Teams() {
         return;
       }
 
+      console.log(
+        "[TEAMS] LOADED:",
+        data.teams
+      );
+
       setTeams(
         data.teams || []
       );
-
-    } catch (error) {
+    } catch (err) {
       console.error(
-        "[TEAMS] FETCH ERROR:",
-        error
+        "Failed to fetch teams",
+        err
       );
 
       setTeams([]);
-
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
 
   /*
   =========================
@@ -147,92 +144,88 @@ export default function Teams() {
   =========================
   */
 
-  const handleCreateTeam = async () => {
-    if (!teamName.trim()) {
-      alert(
-        "Please enter a team name."
-      );
-      return;
-    }
-
-    if (!user) {
-      alert(
-        "User is still loading."
-      );
-      return;
-    }
-
-    setCreating(true);
-
-    try {
-      const {
-        data: sessionData,
-      } = await supabase.auth.getSession();
-
-      const session =
-        sessionData?.session;
-
-      if (!session) {
+  const handleCreateTeam =
+    async () => {
+      if (!teamName.trim()) {
         alert(
-          "Your session has expired. Please log in again."
+          "Enter a team name"
         );
         return;
       }
 
-      const response =
-        await fetch(
-          "/api/createTeam",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${session.access_token}`,
-            },
-
-            body: JSON.stringify({
-              name: teamName.trim(),
-            }),
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
+      if (!user) {
         alert(
-          data.error ||
-          "Failed to create team."
+          "User not loaded"
         );
         return;
       }
 
-      /*
-      Refresh from backend instead of
-      manually constructing the team.
-      */
+      setCreating(true);
 
-      await fetchTeams();
+      try {
+        const {
+          data: session,
+        } =
+          await supabase.auth.getSession();
 
-      setTeamName("");
+        const res =
+          await fetch(
+            "/api/createTeam",
+            {
+              method: "POST",
 
-    } catch (error) {
-      console.error(
-        "[TEAMS] CREATE ERROR:",
-        error
-      );
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-      alert(
-        "Failed to create team."
-      );
+                Authorization:
+                  `Bearer ${session.session?.access_token}`,
+              },
 
-    } finally {
-      setCreating(false);
-    }
-  };
+              body: JSON.stringify({
+                name:
+                  teamName.trim(),
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          alert(
+            data.error ||
+              "Failed to create team"
+          );
+          return;
+        }
+
+        setTeams((prev) => [
+          data.team,
+          ...prev,
+        ]);
+
+        setTeamName("");
+
+        /*
+        Reload so the new team
+        immediately contains
+        member_count = 1.
+        */
+
+        await fetchTeams();
+      } catch (err) {
+        console.error(
+          err
+        );
+
+        alert(
+          "Failed to create team"
+        );
+      } finally {
+        setCreating(false);
+      }
+    };
 
   /*
   =========================
@@ -240,180 +233,223 @@ export default function Teams() {
   =========================
   */
 
-  const handleInvite = async (
-    team
-  ) => {
-    if (!inviteEmail.trim()) {
-      alert(
-        "Enter an email address."
-      );
-      return;
-    }
-
-    /*
-    Do not allow more than 3
-    verified members on FREE.
-    */
-
-    if (
-      (team.membersCount || 0) >= 3
-    ) {
-      alert(
-        "This team already has 3 verified members."
-      );
-      return;
-    }
-
-    setInviting(true);
-
-    try {
-      const {
-        data: sessionData,
-      } =
-        await supabase.auth.getSession();
-
-      const session =
-        sessionData?.session;
-
-      if (!session) {
-        alert(
-          "Your session has expired."
-        );
+  const handleInvite =
+    async (team) => {
+      if (
+        !inviteEmail.trim() ||
+        !team
+      ) {
         return;
       }
-
-      const response =
-        await fetch(
-          "/api/inviteMember",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${session.access_token}`,
-            },
-
-            body: JSON.stringify({
-              teamId: team.id,
-              email:
-                inviteEmail.trim(),
-            }),
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        alert(
-          data.error ||
-          "Failed to send invitation."
-        );
-        return;
-      }
-
-      alert(
-        "Invitation sent successfully!"
-      );
-
-      setInviteEmail("");
-      setSelectedTeam(null);
 
       /*
-      Refresh team information.
+      Client-side convenience check.
+      The server remains the real authority.
       */
 
-      await fetchTeams();
+      if (
+        team.member_count >=
+        team.max_members
+      ) {
+        alert(
+          "This team is full."
+        );
+        return;
+      }
 
-    } catch (error) {
-      console.error(
-        "[TEAMS] INVITE ERROR:",
-        error
-      );
+      try {
+        const {
+          data: session,
+        } =
+          await supabase.auth.getSession();
 
-      alert(
-        "Failed to send invitation."
-      );
+        if (!session.session) {
+          alert(
+            "Your session expired. Please log in again."
+          );
+          return;
+        }
 
-    } finally {
-      setInviting(false);
-    }
-  };
+        const res =
+          await fetch(
+            "/api/inviteMember",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${session.session.access_token}`,
+              },
+
+              body: JSON.stringify({
+                teamId:
+                  team.id,
+
+                email:
+                  inviteEmail.trim(),
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          alert(
+            data.error ||
+              "Failed to send invitation."
+          );
+          return;
+        }
+
+        alert(
+          "Invitation sent!"
+        );
+
+        setInviteEmail("");
+        setSelectedTeam(null);
+      } catch (err) {
+        console.error(
+          "[INVITE ERROR]",
+          err
+        );
+
+        alert(
+          "Failed to send invitation."
+        );
+      }
+    };
 
   /*
   =========================
-  OPEN TEAM
+  REMOVE MEMBER
   =========================
   */
 
-  const handleOpenTeam = (
-    teamId
-  ) => {
-    navigate(
-      `/projects?teamId=${teamId}`
-    );
-  };
+  const handleRemoveMember =
+    async (
+      teamId,
+      memberId
+    ) => {
+      const confirmed =
+        window.confirm(
+          "Remove this member from the team?"
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      setRemovingMember(
+        memberId
+      );
+
+      try {
+        const {
+          data: session,
+        } =
+          await supabase.auth.getSession();
+
+        if (!session.session) {
+          alert(
+            "Your session expired. Please log in again."
+          );
+          return;
+        }
+
+        const res =
+          await fetch(
+            "/api/app?action=removeMember",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${session.session.access_token}`,
+              },
+
+              body: JSON.stringify({
+                teamId,
+                memberId,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          alert(
+            data.error ||
+              "Failed to remove member."
+          );
+          return;
+        }
+
+        /*
+        Reload team data so
+        member_count updates.
+        */
+
+        await fetchTeams();
+
+      } catch (err) {
+        console.error(
+          "[REMOVE MEMBER ERROR]",
+          err
+        );
+
+        alert(
+          "Failed to remove member."
+        );
+      } finally {
+        setRemovingMember(null);
+      }
+    };
 
   /*
   =========================
-  LOADING
+  OPEN PROJECTS
   =========================
   */
 
-  if (loading) {
-    return (
-      <div className="teams-container">
-        <div className="teams-loading">
-          Loading your teams...
-        </div>
-      </div>
-    );
-  }
+  const handleOpenTeam =
+    (teamId) => {
+      navigate(
+        `/projects?teamId=${teamId}`
+      );
+    };
 
   /*
   =========================
-  PAGE
+  RENDER
   =========================
   */
 
   return (
     <div className="teams-container">
 
-      {/* HEADER */}
-
       <div className="teams-header">
-
-        <h1>
-          👥 Teams
-        </h1>
+        <h1>👥 Teams</h1>
 
         <p className="subtitle">
-          Manage workspaces,
-          members, invitations,
-          and collaboration.
+          Manage your teams and collaborate
+          on projects
         </p>
-
       </div>
 
       {/* CREATE TEAM */}
 
       <div className="teams-card">
-
-        <div className="section-heading">
-          <div>
-            <h3>
-              Create Team
-            </h3>
-
-            <p className="muted">
-              Start a new workspace
-              for your projects.
-            </p>
-          </div>
-        </div>
+        <h3>
+          Create Team
+        </h3>
 
         <div className="row">
 
@@ -439,239 +475,190 @@ export default function Teams() {
           </button>
 
         </div>
-
       </div>
 
-      {/* TEAM LIST */}
+      {/* YOUR TEAMS */}
 
       <div className="teams-section">
 
-        <div className="teams-section-header">
+        <h3>
+          Your Teams
+        </h3>
 
-          <div>
-            <h3>
-              Your Teams
-            </h3>
+        {loading ? (
 
-            <p className="muted">
-              {teams.length} workspace
-              {teams.length === 1
-                ? ""
-                : "s"}
-            </p>
-          </div>
+          <p className="muted">
+            Loading teams...
+          </p>
 
-        </div>
+        ) : teams.length === 0 ? (
 
-        {teams.length === 0 ? (
-
-          <div className="empty-team-state">
-
-            <div className="empty-team-icon">
-              👥
-            </div>
-
-            <h3>
-              No teams yet
-            </h3>
-
-            <p>
-              Create your first workspace
-              to start deploying projects
-              with your team.
-            </p>
-
-          </div>
+          <p className="muted">
+            No teams yet 🚀
+          </p>
 
         ) : (
 
           <div className="teams-grid">
 
-            {teams.map((team) => {
+            {teams.map(
+              (team) => {
 
-              const memberCount =
-                team.membersCount || 0;
+                const memberCount =
+                  team.member_count ||
+                  0;
 
-              const isFull =
-                memberCount >= 3;
+                const maxMembers =
+                  team.max_members ||
+                  3;
 
-              const isOwner =
-                team.owner_id ===
-                user?.id;
+                const isFull =
+                  memberCount >=
+                  maxMembers;
 
-              return (
-                <div
-                  key={team.id}
-                  className="team-card"
-                >
+                const isOwner =
+                  team.is_owner;
 
-                  {/* TEAM HEADER */}
+                return (
 
-                  <div className="team-top">
+                  <div
+                    key={team.id}
+                    className="team-card"
+                  >
 
-                    <div>
+                    {/* HEADER */}
 
-                      <h4>
-                        {team.name}
-                      </h4>
+                    <div className="team-top">
 
-                      <p className="team-id">
-                        {team.id.slice(
-                          0,
-                          8
-                        )}
-                        ...
-                        {team.id.slice(
-                          -4
-                        )}
-                      </p>
+                      <div>
+                        <h4>
+                          {team.name}
+                        </h4>
 
-                    </div>
+                        <p className="team-id">
+                          {team.id.slice(
+                            0,
+                            8
+                          )}
+                          ...
+                          {team.id.slice(
+                            -4
+                          )}
+                        </p>
+                      </div>
 
-                    <span className="badge">
-                      TEAM
-                    </span>
-
-                  </div>
-
-                  {/* MEMBER COUNT */}
-
-                  <div className="member-limit">
-
-                    <div className="member-limit-top">
-
-                      <span>
-                        Verified members
+                      <span className="badge">
+                        TEAM
                       </span>
 
-                      <strong>
-                        {memberCount} / 3
-                      </strong>
-
                     </div>
 
-                    <div className="member-progress">
+                    {/* MEMBERS */}
+
+                    <div className="team-members-summary">
+
+                      <div className="member-count">
+
+                        <span className="member-icon">
+                          👥
+                        </span>
+
+                        <strong>
+                          {memberCount}
+                        </strong>
+
+                        <span>
+                          /
+                          {maxMembers}
+                        </span>
+
+                        <span>
+                          active members
+                        </span>
+
+                      </div>
 
                       <div
-                        className="member-progress-fill"
-                        style={{
-                          width:
-                            `${Math.min(
-                              memberCount / 3,
+                        className={
+                          isFull
+                            ? "capacity-full"
+                            : "capacity-available"
+                        }
+                      >
+                        {isFull
+                          ? "Team full"
+                          : `${maxMembers - memberCount} seat${
+                              maxMembers -
+                                memberCount ===
                               1
-                            ) * 100}%`,
-                        }}
-                      />
+                                ? ""
+                                : "s"
+                            } available`}
+                      </div>
 
                     </div>
 
-                  </div>
+                    {/* OWNER STATUS */}
 
-                  {/* MEMBERS */}
+                    <div className="team-role">
 
-                  <div className="team-members-list">
+                      {isOwner
+                        ? "👑 You are the owner"
+                        : "👤 You are a member"}
 
-                    {(team.members || [])
-                      .map(
-                        (member) => (
+                    </div>
 
-                          <div
-                            key={
-                              member.id
-                            }
-                            className="team-member-row"
-                          >
+                    {/* ACTIONS */}
 
-                            <div>
+                    <div className="team-actions">
 
-                              <div className="member-email">
-                                {member.email ||
-                                  "Unknown member"}
-                              </div>
-
-                              <div className="member-role">
-                                {member.role ===
-                                "owner"
-                                  ? "Owner"
-                                  : "Member"}
-                              </div>
-
-                            </div>
-
-                            <span className="member-status">
-                              ✓ Verified
-                            </span>
-
-                          </div>
-
-                        )
-                      )}
-
-                  </div>
-
-                  {/* ACTIONS */}
-
-                  <div className="team-actions">
-
-                    <button
-                      className="secondary"
-                      onClick={() =>
-                        handleOpenTeam(
-                          team.id
-                        )
-                      }
-                    >
-                      Open
-                    </button>
-
-                    {isOwner && (
                       <button
                         className="secondary"
                         onClick={() =>
-                          setSelectedTeam(
-                            selectedTeam ===
+                          handleOpenTeam(
                             team.id
-                              ? null
-                              : team.id
                           )
                         }
                       >
-                        {selectedTeam ===
-                        team.id
-                          ? "Cancel"
-                          : "Invite"}
+                        Open
                       </button>
-                    )}
 
-                  </div>
+                      {isOwner && (
+                        <button
+                          className="secondary"
+                          disabled={isFull}
+                          onClick={() => {
+                            setSelectedTeam(
+                              team.id
+                            );
+                            setInviteEmail("");
+                          }}
+                        >
+                          {isFull
+                            ? "Full"
+                            : "Invite"}
+                        </button>
+                      )}
 
-                  {/* INVITE */}
+                    </div>
 
-                  {selectedTeam ===
-                    team.id &&
-                    isOwner && (
+                    {/* INVITE BOX */}
 
-                    <div className="invite-box">
+                    {selectedTeam ===
+                      team.id &&
+                      isOwner && (
 
-                      {isFull ? (
+                        <div className="invite-box">
 
-                        <div className="invite-limit-message">
-                          🔒 Team is full.
-                          Free teams can have
-                          up to 3 verified
-                          members.
-                        </div>
-
-                      ) : (
-
-                        <>
                           <input
                             type="email"
                             placeholder="member@email.com"
                             value={
                               inviteEmail
                             }
-                            onChange={(e) =>
+                            onChange={(
+                              e
+                            ) =>
                               setInviteEmail(
                                 e.target.value
                               )
@@ -684,25 +671,30 @@ export default function Teams() {
                                 team
                               )
                             }
-                            disabled={
-                              inviting
+                          >
+                            Send Invite
+                          </button>
+
+                          <button
+                            type="button"
+                            className="cancel-button"
+                            onClick={() =>
+                              setSelectedTeam(
+                                null
+                              )
                             }
                           >
-                            {inviting
-                              ? "Sending..."
-                              : "Send Invite"}
+                            Cancel
                           </button>
-                        </>
+
+                        </div>
 
                       )}
 
-                    </div>
-
-                  )}
-
-                </div>
-              );
-            })}
+                  </div>
+                );
+              }
+            )}
 
           </div>
 
