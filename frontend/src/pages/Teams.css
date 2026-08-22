@@ -213,120 +213,99 @@ button:not(.secondary):not(.danger) {
   margin: 0;
 }
 
-.member-limit {
+.member-summary {
   margin-top: 16px;
-  padding: 12px;
+  padding: 14px;
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-}
-
-.member-limit-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #475569;
-}
-
-.member-limit-top strong {
-  color: #0f172a;
-}
-
-.member-progress {
-  height: 7px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.member-progress-fill {
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    #6366f1,
-    #8b5cf6
-  );
-  border-radius: 999px;
-  transition: width 0.25s ease;
-}
-
-.team-members-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.team-member-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
 }
 
-.member-email {
-  font-size: 13px;
-  font-weight: 600;
+.member-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-size: 14px;
+}
+
+.member-count strong {
+  font-size: 18px;
   color: #0f172a;
-  word-break: break-word;
 }
 
-.member-role {
-  margin-top: 3px;
-  font-size: 10px;
+.member-count span {
+  margin-left: 4px;
   color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 12px;
 }
 
-.member-status {
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-size: 10px;
-  font-weight: 700;
-  color: #15803d;
-  background: #dcfce7;
-  padding: 4px 8px;
+.full-badge {
+  padding: 5px 9px;
   border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.empty-team-state {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 50px 24px;
-  text-align: center;
+.available-badge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.empty-team-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
+.role-summary {
+  margin-top: 12px;
 }
 
-.empty-team-state h3 {
-  margin: 0 0 8px 0;
-  color: #0f172a;
+.owner-badge,
+.member-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.empty-team-state p {
-  margin: 0 auto;
-  max-width: 420px;
-  color: #64748b;
-  line-height: 1.6;
+.owner-badge {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.invite-limit-message {
-  padding: 12px;
-  border-radius: 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #9a3412;
+.member-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.member-management {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.member-management-title {
   font-size: 13px;
-  line-height: 1.5;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.member-management-text {
+  font-size: 13px;
+  color: #475569;
+}
+
+.member-management-help {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
 }

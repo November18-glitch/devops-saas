@@ -582,25 +582,27 @@ if (action === "getTeams") {
   */
 
   const teams =
-    rawTeams.map((team) => ({
-      id: team.id,
-      name: team.name,
-      owner_id: team.owner_id,
-      created_at: team.created_at,
+  rawTeams.map((team) => ({
+    id: team.id,
+    name: team.name,
+    owner_id: team.owner_id,
+    created_at: team.created_at,
 
-      member_count:
-        memberCounts[team.id] || 0,
+    // Number of ACTIVE members only
+    member_count:
+      memberCounts[team.id] || 0,
 
-      /*
-      FREE TEAM LIMIT
-      Owner counts as a member.
-      */
+    // FREE plan limit
+    max_members: 3,
 
-      max_members: 3,
+    // Current logged-in user is the owner
+    is_owner:
+      team.owner_id === user.id,
 
-      is_owner:
-        team.owner_id === user.id,
-    }));
+    // Useful for the UI
+    is_full:
+      (memberCounts[team.id] || 0) >= 3,
+  }));
 
   /*
   =========================
@@ -628,6 +630,110 @@ if (action === "getTeams") {
 
   return res.status(200).json({
     teams: uniqueTeams,
+  });
+}
+
+/*
+=========================
+GET TEAM MEMBERS
+=========================
+*/
+
+if (action === "getTeamMembers") {
+  if (req.method !== "GET") {
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
+  }
+
+  const token =
+    req.headers.authorization?.replace(
+      "Bearer ",
+      ""
+    );
+
+  if (!token) {
+    return res.status(401).json({
+      error: "No token",
+    });
+  }
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
+  }
+
+  const { teamId } = req.query;
+
+  if (!teamId) {
+    return res.status(400).json({
+      error: "Missing teamId",
+    });
+  }
+
+  /*
+  =========================
+  VERIFY USER BELONGS TO TEAM
+  =========================
+  */
+
+  const {
+    data: membership,
+    error: membershipError,
+  } = await supabase
+    .from("team_members")
+    .select("id, role, status")
+    .eq("team_id", teamId)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (membershipError) {
+    return res.status(500).json({
+      error: membershipError.message,
+    });
+  }
+
+  if (!membership) {
+    return res.status(403).json({
+      error: "You are not an active member of this team.",
+    });
+  }
+
+  /*
+  =========================
+  GET ACTIVE MEMBERS
+  =========================
+  */
+
+  const {
+    data: members,
+    error: membersError,
+  } = await supabase
+    .from("team_members")
+    .select(
+      "id, team_id, user_id, email, role, status, created_at"
+    )
+    .eq("team_id", teamId)
+    .eq("status", "active")
+    .order("created_at", {
+      ascending: true,
+    });
+
+  if (membersError) {
+    return res.status(500).json({
+      error: membersError.message,
+    });
+  }
+
+  return res.status(200).json({
+    members: members || [],
   });
 }
 
