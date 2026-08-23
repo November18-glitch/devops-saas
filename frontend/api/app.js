@@ -617,6 +617,11 @@ if (action === "getTeams") {
   );
 
   console.log(
+  "[GET TEAMS] MEMBER COUNTS:",
+  JSON.stringify(memberCounts, null, 2)
+);
+
+  console.log(
     "[GET TEAMS] FINAL TEAMS:",
     JSON.stringify(
       uniqueTeams,
