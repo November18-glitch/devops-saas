@@ -543,10 +543,7 @@ if (action === "getTeams") {
         "team_id",
         teamIds
       )
-      .eq(
-        "status",
-        "active"
-      );
+      .eq("status", "active");
 
     if (allMembersError) {
       console.error(
