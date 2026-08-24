@@ -362,6 +362,8 @@ const vercelFramework =
   analysis.outputDirectory === "dist"
     ? "vite"
     : analysis.framework;
+const isPython =
+  analysis.deploymentStrategy === "python";
 
 const vercelPayload = {
   name: `${projectName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
@@ -373,15 +375,19 @@ const vercelPayload = {
   },
 
   projectSettings: {
-  framework: vercelFramework,
+  framework: isPython ? null : vercelFramework,
+
   ...(rootDirectory ? { rootDirectory } : {}),
+
   installCommand: analysis.installCommand,
+
   ...(analysis.buildCommand
-      ? { buildCommand: analysis.buildCommand }
-      : {}),
+    ? { buildCommand: analysis.buildCommand }
+    : {}),
+
   ...(analysis.outputDirectory
-      ? { outputDirectory: analysis.outputDirectory }
-      : {})
+    ? { outputDirectory: analysis.outputDirectory }
+    : {}),
 },
 
   env: project?.env_vars || {},

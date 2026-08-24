@@ -119,7 +119,16 @@ export default async function handler(req, res) {
           });
         }
       }
+/* =========================
+   ANALYZER V4 — PRO ONLY
+   ========================= */
 
+if (userPlan !== "PRO") {
+  return res.status(403).json({
+    error: "Analyzer V4 requires a Pro plan.",
+    code: "PRO_REQUIRED",
+  });
+}
       /*
       =========================
       ANALYZE REPOSITORY
