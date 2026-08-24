@@ -9,6 +9,29 @@ const PACKAGE_LOCATIONS = [
   "src/package.json"
 ];
 
+const PYTHON_FILES = [
+  "requirements.txt",
+  "pyproject.toml",
+  "Pipfile",
+  "setup.py",
+  "poetry.lock"
+];
+
+const PYTHON_FRAMEWORKS = {
+  fastapi: {
+    name: "fastapi",
+    deploymentStrategy: "python"
+  },
+  flask: {
+    name: "flask",
+    deploymentStrategy: "python"
+  },
+  django: {
+    name: "django",
+    deploymentStrategy: "python"
+  }
+};
+
 const FRAMEWORKS = {
   next:{
    dependency:"next",
@@ -260,6 +283,11 @@ function chooseDeploymentStrategy({
     case "nestjs":
       return "node";
 
+    case "fastapi":
+    case "flask":
+    case "django":
+     return "python";  
+
     default:
       return "manual";
   }
@@ -346,20 +374,99 @@ export default async function analyzeRepo(repoInput) {
 
 });
     if (!packageFiles.length) {
+  const repositoryPaths = repositoryTree.map(
+    file => file.path
+  );
+
+  const pythonFiles = repositoryPaths.filter(
+    path => PYTHON_FILES.includes(path)
+  );
+
+  if (pythonFiles.length > 0) {
+    const detected = [
+      "python",
+      ...pythonFiles
+    ];
+
+    let pythonFramework = null;
+
+    const requirementsFile =
+      repositoryPaths.includes("requirements.txt");
+
+    if (requirementsFile) {
+      const requirements = await fetch(
+        `https://raw.githubusercontent.com/${owner}/${repo}/${repoData.default_branch}/requirements.txt`
+      );
+
+      if (requirements.ok) {
+        const text = await requirements.text();
+        const lower = text.toLowerCase();
+
+        if (lower.includes("fastapi")) {
+          pythonFramework = "fastapi";
+        } else if (lower.includes("django")) {
+          pythonFramework = "django";
+        } else if (lower.includes("flask")) {
+          pythonFramework = "flask";
+        }
+      }
+    }
+
+    if (pythonFramework) {
+      detected.push(pythonFramework);
+
       return {
         valid: true,
-        deployable: false,
+        deployable: true,
         owner,
         repo,
+        repositoryType: "application",
+        confidence: 85,
+        confidenceLabel: "High",
+        deploymentStrategy: "python",
         defaultBranch: repoData.default_branch,
-        reason:
-          "No package.json found. LaunchAlly currently supports JavaScript/TypeScript projects.",
-        detected: [],
-        warnings: [
-          "No Node.js project detected."
-        ]
+        framework: pythonFramework,
+        packageManager: "pip",
+        installCommand: "pip install -r requirements.txt",
+        buildCommand: null,
+        outputDirectory: null,
+        nodeVersion: null,
+        detected,
+        warnings: [],
+        reason: null
       };
     }
+
+    return {
+      valid: true,
+      deployable: false,
+      owner,
+      repo,
+      defaultBranch: repoData.default_branch,
+      framework: "python",
+      detected,
+      warnings: [
+        "Python project detected, but no supported Python web framework was identified."
+      ],
+      reason:
+        "Python project detected, but LaunchAlly could not identify FastAPI, Flask, or Django."
+    };
+  }
+
+  return {
+    valid: true,
+    deployable: false,
+    owner,
+    repo,
+    defaultBranch: repoData.default_branch,
+    reason:
+      "No supported application project detected.",
+    detected: [],
+    warnings: [
+      "No supported project manifest detected."
+    ]
+  };
+}
 
 let packageJson = null;
 let packagePath = null;
