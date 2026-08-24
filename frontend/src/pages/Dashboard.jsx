@@ -38,7 +38,7 @@ export default function Dashboard() {
       setTeam([]);
       setProjects([]);
       setDeployments([]);
-      setMembersCount([]);
+      setMembersCount(0);
       setLoading(false);
       return;
     }
@@ -193,19 +193,16 @@ export default function Dashboard() {
 const verifiedMembersTotal =
   loadedTeams.reduce(
     (total, currentTeam) =>
-      total + (currentTeam.membersCount || 0),
+      total + (currentTeam.member_count || 0),
     0
   );
 
-setMembersCount(
-  verifiedMembersTotal
-);
+setMembersCount(verifiedMembersTotal);
 
 console.log(
   "[DASHBOARD] VERIFIED MEMBERS:",
   verifiedMembersTotal
 );
-
     // ========================================
     // DEPLOYMENTS
     // ========================================
