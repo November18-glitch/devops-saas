@@ -38,7 +38,7 @@ export default function Dashboard() {
       setTeam([]);
       setProjects([]);
       setDeployments([]);
-      setMembersCount(0);
+      setMembersCount([]);
       setLoading(false);
       return;
     }
