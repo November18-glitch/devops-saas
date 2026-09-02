@@ -127,7 +127,7 @@ const res = await fetch("/api/app?action=getTeams", {
              value,
             })
            )
-          );
+            );
         }
       }
 
@@ -424,284 +424,341 @@ ${data.analysis?.detected?.join(", ") || "None"}
   };
 
   return (
-    <div style={container}>
-      <div style={content}>
+  <div style={container}>
+    <div style={content}>
 
-        <h1 style={title}>🚀 Projects</h1>
+      <h1 style={title}>🚀 Projects</h1>
 
-        <div style={hero}>
-          <h2 style={{ marginTop: 0 }}>
-            Deploy your app in 3 steps
-          </h2>
+      {/* HERO */}
+      <div style={hero}>
+        <h2 style={{ marginTop: 0, color: "var(--text)" }}>
+          Deploy your app in 3 steps
+        </h2>
 
-          <div style={steps}>
-            <div style={step}>1️⃣ Create or select a project</div>
-            <div style={step}>2️⃣ Connect your GitHub repository</div>
-            <div style={step}>3️⃣ Click Deploy 🚀</div>
+        <div style={steps}>
+          <div style={step}>
+            1️⃣ Create or select a project
+          </div>
+
+          <div style={step}>
+            2️⃣ Connect your GitHub repository
+          </div>
+
+          <div style={step}>
+            3️⃣ Click Deploy 🚀
           </div>
         </div>
-
-        <div style={card}>
-          <h3>Create New Project</h3>
-
-          <select
-            style={input}
-            value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
-          >
-            <option value="">Select Team</option>
-
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            style={input}
-            placeholder="My SaaS App"
-            value={newProjectName}
-            onChange={(e) => setNewProjectName(e.target.value)}
-          />
-
-          <input
-            style={input}
-            placeholder="https://github.com/your/repository"
-            value={newRepoUrl}
-            onChange={(e) => setNewRepoUrl(e.target.value)}
-          />
-
-          <h3>Environment Variables</h3>
-
-          {envVars.map((env, index) => (
-  <div
-    key={index}
-    style={{
-      display: "flex",
-      gap: 10,
-      marginBottom: 10,
-    }}
-  >
-    <input
-      placeholder="KEY"
-      value={env.key}
-      onChange={(e) => {
-        const updated = [...envVars];
-        updated[index].key = e.target.value;
-        setEnvVars(updated);
-      }}
-      style={{ flex: 1 }}
-    />
-
-    <input
-      placeholder="VALUE"
-      value={env.value}
-      onChange={(e) => {
-        const updated = [...envVars];
-        updated[index].value = e.target.value;
-        setEnvVars(updated);
-      }}
-      style={{ flex: 2 }}
-    />
-
-    <button
-      onClick={() => {
-        setEnvVars(
-          envVars.filter((_, i) => i !== index)
-        );
-      }}
-    >
-      ✕
-    </button>
-  </div>
-))}
-
-<button
-  onClick={() =>
-    setEnvVars([
-      ...envVars,
-      {
-        key: "",
-        value: "",
-      },
-    ])
-  }
->
-  + Add Variable
-</button>
-
-          <button style={primary} onClick={handleCreateProject}>
-            ➕ Create Project
-          </button>
-        </div>
-
-        <div style={card}>
-          <h3>Deploy Existing Project</h3>
-          <div style={{ marginBottom: 20 }}>
-  {projects.map((project) => (
-    <div
-      key={project.id}
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 12,
-        marginBottom: 10,
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-      }}
-    >
-      <div>
-        <b>{project.name}</b>
-
       </div>
-        <button
-          onClick={() => deleteProject(project)}
-          style={{
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            padding: "8px 12px",
-            cursor: "pointer",
-          }}
+
+      {/* CREATE PROJECT */}
+      <div style={card}>
+        <h3 style={cardTitle}>Create New Project</h3>
+
+        <select
+          style={input}
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
         >
-          Delete
-        </button>
-    </div>
-  ))}
-</div>
+          <option value="">Select Team</option>
 
-          <select
-            style={input}
-            value={selectedProject}
-            onChange={(e) => {
-  const id = e.target.value;
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
 
-  setSelectedProject(id);
+        <input
+          style={input}
+          placeholder="My SaaS App"
+          value={newProjectName}
+          onChange={(e) => setNewProjectName(e.target.value)}
+        />
 
-  const project = projects.find((p) => p.id === id);
+        <input
+          style={input}
+          placeholder="https://github.com/your/repository"
+          value={newRepoUrl}
+          onChange={(e) => setNewRepoUrl(e.target.value)}
+        />
 
-  if (project?.env_vars) {
-    setEnvVars(
-      Object.entries(project.env_vars).map(
-        ([key, value]) => ({
-          key,
-          value,
-        })
-      )
-    );
-  } else {
-    setEnvVars([
-      {
-        key: "",
-        value: "",
-      },
-    ]);
-  }
-}}
+        <h3 style={cardTitle}>Environment Variables</h3>
+
+        {envVars.map((env, index) => (
+          <div
+            key={index}
+            style={envRow}
           >
-            <option value="">Select Project</option>
-
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          <div style={buttonRow}>
-            <button
-              style={secondary}
-              onClick={() => {
-                if (!selectedProject) {
-                  return alert("Select a project first");
-                }
-
-                navigate(`/projects/${selectedProject}`);
+            <input
+              placeholder="KEY"
+              value={env.key}
+              onChange={(e) => {
+                const updated = [...envVars];
+                updated[index] = {
+                  ...updated[index],
+                  key: e.target.value,
+                };
+                setEnvVars(updated);
               }}
-            >
-              📂 Open Project
-            </button>
+              style={{
+                ...input,
+                flex: 1,
+                marginBottom: 0,
+              }}
+            />
 
-            <button style={primary} onClick={handleDeploy}>
-              🚀 Deploy Now
+            <input
+              placeholder="VALUE"
+              value={env.value}
+              onChange={(e) => {
+                const updated = [...envVars];
+                updated[index] = {
+                  ...updated[index],
+                  value: e.target.value,
+                };
+                setEnvVars(updated);
+              }}
+              style={{
+                ...input,
+                flex: 2,
+                marginBottom: 0,
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                setEnvVars(
+                  envVars.filter((_, i) => i !== index)
+                );
+              }}
+              style={removeButton}
+            >
+              ✕
             </button>
           </div>
-        </div>
+        ))}
 
-        <div style={{ marginTop: 30 }}>
-          <h2>Recent Deployments</h2>
+        <button
+          type="button"
+          onClick={() =>
+            setEnvVars([
+              ...envVars,
+              {
+                key: "",
+                value: "",
+              },
+            ])
+          }
+          style={addVariableButton}
+        >
+          + Add Variable
+        </button>
 
-          {!selectedProject && (
-            <div style={emptyState}>
-              Select a project to see deployments
+        <button
+          style={primary}
+          onClick={handleCreateProject}
+        >
+          ➕ Create Project
+        </button>
+      </div>
+
+      {/* EXISTING PROJECTS */}
+      <div style={card}>
+        <h3 style={cardTitle}>Deploy Existing Project</h3>
+
+        <div style={projectList}>
+          {projects.length === 0 ? (
+            <div style={emptyProject}>
+              No projects yet. Create your first project above.
             </div>
-          )}
-
-          {loading ? (
-            <div style={emptyState}>Loading deployments...</div>
           ) : (
-            deployments.map((d) => (
-              <div key={d.id} style={deployCard}>
-                <div style={deployTop}>
-                  <div>
-                    <div style={deployId}>{d.id}</div>
-
-                    <div style={status(d.status)}>
-                      {d.status}
-                    </div>
-                  </div>
-
-                  {d.url && (
-                    <a
-                      href={d.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={liveLink}
-                    >
-                      Open Deployment
-                    </a>
-                  )}
+            projects.map((project) => (
+              <div
+                key={project.id}
+                style={projectRow}
+              >
+                <div>
+                  <b style={{ color: "var(--text)" }}>
+                    {project.name}
+                  </b>
                 </div>
 
-                <div style={logs}>
-                  {d.logs}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => deleteProject(project)}
+                  style={deleteButton}
+                >
+                  Delete
+                </button>
               </div>
             ))
           )}
         </div>
 
+        <select
+          style={input}
+          value={selectedProject}
+          onChange={(e) => {
+            const id = e.target.value;
+
+            setSelectedProject(id);
+
+            const project = projects.find(
+              (p) => p.id === id
+            );
+
+            if (project?.env_vars) {
+              setEnvVars(
+                Object.entries(project.env_vars).map(
+                  ([key, value]) => ({
+                    key,
+                    value,
+                  })
+                )
+              );
+            } else {
+              setEnvVars([
+                {
+                  key: "",
+                  value: "",
+                },
+              ]);
+            }
+          }}
+        >
+          <option value="">Select Project</option>
+
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        <div style={buttonRow}>
+          <button
+            style={secondary}
+            onClick={() => {
+              if (!selectedProject) {
+                return alert("Select a project first");
+              }
+
+              navigate(`/projects/${selectedProject}`);
+            }}
+          >
+            📂 Open Project
+          </button>
+
+          <button
+            style={primary}
+            onClick={handleDeploy}
+          >
+            🚀 Deploy Now
+          </button>
+        </div>
       </div>
+
+      {/* RECENT DEPLOYMENTS */}
+      <div style={recentSection}>
+        <h2 style={sectionTitle}>
+          Recent Deployments
+        </h2>
+
+        {!selectedProject && (
+          <div style={emptyState}>
+            Select a project to see deployments
+          </div>
+        )}
+
+        {selectedProject && loading && (
+          <div style={emptyState}>
+            Loading deployments...
+          </div>
+        )}
+
+        {selectedProject &&
+          !loading &&
+          deployments.length === 0 && (
+            <div style={emptyState}>
+              No deployments yet for this project.
+            </div>
+          )}
+
+        {!loading &&
+          deployments.map((d) => (
+            <div
+              key={d.id}
+              style={deployCard}
+            >
+              <div style={deployTop}>
+                <div>
+                  <div style={deployId}>
+                    {d.id}
+                  </div>
+
+                  <div style={status(d.status)}>
+                    {d.status}
+                  </div>
+                </div>
+
+                {d.url && (
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={liveLink}
+                  >
+                    Open Deployment
+                  </a>
+                )}
+              </div>
+
+              <div style={logs}>
+                {d.logs || "No deployment logs available."}
+              </div>
+            </div>
+          ))}
+      </div>
+
     </div>
-  );
+  </div>
+);
+
 }
 
-/* STYLES */
+
+/* =========================
+   STYLES
+========================= */
 
 const container = {
-  background: "#050505",
+  background: "var(--bg)",
   minHeight: "100vh",
+  color: "var(--text)",
   padding: 32,
 };
 
 const content = {
   maxWidth: 1000,
+  margin: "0 auto",
 };
 
 const title = {
   fontSize: 32,
   marginBottom: 24,
+  color: "var(--text)",
+  letterSpacing: "-0.5px",
 };
 
 const hero = {
-  background: "white",
+  background:
+    "linear-gradient(145deg, #101014 0%, #0d0d0f 100%)",
+  border: "1px solid var(--border)",
   padding: 24,
   borderRadius: 18,
   marginBottom: 24,
-  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+  boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
 };
 
 const steps = {
@@ -712,18 +769,28 @@ const steps = {
 };
 
 const step = {
-  background: "#050505",
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
+  color: "var(--text-soft)",
   padding: 14,
   borderRadius: 10,
   fontWeight: 500,
 };
 
 const card = {
-  background: "white",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
+  color: "var(--text)",
   padding: 24,
   borderRadius: 18,
   marginBottom: 24,
-  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+  boxShadow: "0 10px 35px rgba(0,0,0,0.22)",
+};
+
+const cardTitle = {
+  marginTop: 0,
+  marginBottom: 16,
+  color: "var(--text)",
 };
 
 const input = {
@@ -731,32 +798,69 @@ const input = {
   padding: 14,
   marginBottom: 14,
   borderRadius: 10,
-  border: "1px solid #dbeafe",
+  border: "1px solid var(--border)",
+  background: "#09090b",
+  color: "var(--text)",
   fontSize: 14,
   boxSizing: "border-box",
+  outline: "none",
+  colorScheme: "dark",
+};
+
+const envRow = {
+  display: "flex",
+  gap: 10,
+  marginBottom: 10,
+  alignItems: "center",
+};
+
+const removeButton = {
+  flexShrink: 0,
+  width: 42,
+  height: 42,
+  borderRadius: 9,
+  border: "1px solid #7f1d1d",
+  background: "var(--danger-bg)",
+  color: "#fca5a5",
+  cursor: "pointer",
+  fontWeight: 700,
+};
+
+const addVariableButton = {
+  width: "100%",
+  padding: 12,
+  marginBottom: 16,
+  borderRadius: 10,
+  border: "1px dashed var(--border)",
+  background: "var(--surface-2)",
+  color: "var(--text-soft)",
+  cursor: "pointer",
+  fontWeight: 600,
 };
 
 const primary = {
   flex: 1,
   padding: 14,
   borderRadius: 12,
-  border: "none",
+  border: "1px solid rgba(139,92,246,0.35)",
   cursor: "pointer",
   color: "white",
   fontWeight: 700,
-  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+  background:
+    "linear-gradient(135deg, var(--accent-2), var(--accent))",
+  boxShadow:
+    "0 8px 24px rgba(99,102,241,0.18)",
 };
 
 const secondary = {
   flex: 1,
   padding: 14,
   borderRadius: 12,
-  border: "none",
+  border: "1px solid var(--border)",
   cursor: "pointer",
   fontWeight: 700,
-  color: "white",
-  background: "#0f172a",
-  boxShadow: "0 4px 12px rgba(15,23,42,.15)",
+  color: "var(--text-soft)",
+  background: "var(--surface-2)",
 };
 
 const buttonRow = {
@@ -764,12 +868,57 @@ const buttonRow = {
   gap: 12,
 };
 
+const projectList = {
+  marginBottom: 20,
+};
+
+const projectRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: 14,
+  marginBottom: 10,
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
+  borderRadius: 12,
+};
+
+const deleteButton = {
+  background: "var(--danger-bg)",
+  color: "#fca5a5",
+  border: "1px solid #7f1d1d",
+  borderRadius: 8,
+  padding: "8px 12px",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const emptyProject = {
+  padding: 14,
+  marginBottom: 10,
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
+  borderRadius: 12,
+  color: "var(--muted)",
+};
+
+const recentSection = {
+  marginTop: 30,
+};
+
+const sectionTitle = {
+  color: "var(--text)",
+  marginBottom: 16,
+};
+
 const deployCard = {
-  background: "white",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
+  color: "var(--text)",
   borderRadius: 16,
   padding: 20,
   marginBottom: 16,
-  boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+  boxShadow: "0 8px 28px rgba(0,0,0,0.18)",
 };
 
 const deployTop = {
@@ -782,22 +931,26 @@ const deployTop = {
 const deployId = {
   fontWeight: 700,
   marginBottom: 6,
+  color: "var(--text)",
 };
 
 const logs = {
-  background: "#0f172a",
-  color: "#e2e8f0",
+  background: "#08080a",
+  border: "1px solid var(--border)",
+  color: "#c4c4ce",
   padding: 14,
   borderRadius: 10,
   fontSize: 13,
   overflowX: "auto",
   whiteSpace: "pre-wrap",
   lineHeight: 1.6,
+  fontFamily:
+    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 };
 
 const liveLink = {
   padding: "10px 14px",
-  background: "#6366f1",
+  background: "var(--accent-2)",
   color: "white",
   borderRadius: 10,
   textDecoration: "none",
@@ -805,10 +958,11 @@ const liveLink = {
 };
 
 const emptyState = {
-  background: "white",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
   padding: 20,
   borderRadius: 14,
-  color: "#64748b",
+  color: "var(--muted)",
 };
 
 const status = (s) => ({
@@ -817,10 +971,25 @@ const status = (s) => ({
   borderRadius: 999,
   fontSize: 12,
   fontWeight: 700,
+
   background:
     s === "READY"
-      ? "#dcfce7"
+      ? "var(--success-bg)"
       : s === "BUILDING"
-      ? "#fef3c7"
-      : "#fee2e2",
+      ? "var(--warning-bg)"
+      : "var(--danger-bg)",
+
+  color:
+    s === "READY"
+      ? "#86efac"
+      : s === "BUILDING"
+      ? "#fcd34d"
+      : "#fca5a5",
+
+  border:
+    s === "READY"
+      ? "1px solid #14532d"
+      : s === "BUILDING"
+      ? "1px solid #78350f"
+      : "1px solid #7f1d1d",
 });
