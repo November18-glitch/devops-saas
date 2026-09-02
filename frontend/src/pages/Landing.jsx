@@ -6,720 +6,1168 @@ import demoVideo from "../assets/DeployAlly.mp4";
 
 export default function Landing() {
   const [showVideo, setShowVideo] = useState(false);
+  const [repo, setRepo] = useState("");
+
+  const handleDemo = () => {
+    if (!repo.trim()) return;
+    setRepo("github.com/yourname/your-app");
+  };
 
   return (
     <>
       <div
         style={{
           minHeight: "100vh",
-          background: "radial-gradient(circle at top right, rgba(99,102,241,0.15), transparent 35%), #0f172a",
-          color: "white",
-          fontFamily: "Inter, sans-serif",
+          background:
+            "radial-gradient(circle at 50% -10%, rgba(99,102,241,.22), transparent 38%), #070b16",
+          color: "#f8fafc",
+          fontFamily:
+            "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
           overflowX: "hidden",
         }}
       >
         {/* NAVBAR */}
         <nav
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "20px 40px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            backdropFilter: "blur(12px)",
             position: "sticky",
             top: 0,
             zIndex: 100,
-            background: "rgba(15,23,42,0.8)",
+            borderBottom: "1px solid rgba(255,255,255,.07)",
+            background: "rgba(7,11,22,.78)",
+            backdropFilter: "blur(18px)",
           }}
         >
-          {/* LOGO */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <img
-              src={logo}
-              alt="LaunchAlly Logo"
-              style={{ width: 38, height: 38, objectFit: "contain" }}
-            />
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>
-              LaunchAlly
-            </h1>
-          </div>
-
-          {/* NAV LINKS */}
-          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          <div
+            style={{
+              maxWidth: 1180,
+              margin: "0 auto",
+              padding: "16px 20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <Link
-              to="/login"
+              to="/"
               style={{
-                color: "#cbd5e1",
-                textDecoration: "none",
-                fontSize: 15,
-                fontWeight: 500,
-                transition: "0.2s ease",
-              }}
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              style={{
-                background: "#6366f1",
-                padding: "10px 20px",
-                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
                 color: "white",
                 textDecoration: "none",
-                fontSize: 15,
-                fontWeight: 600,
-                boxShadow: "0 4px 20px rgba(99,102,241,0.25)",
               }}
             >
-              Get Started
-            </Link>
-          </div>
-        </nav>
+              <img
+                src={logo}
+                alt="LaunchAlly"
+                style={{
+                  width: 34,
+                  height: 34,
+                  objectFit: "contain",
+                }}
+              />
 
-        {/* HERO SECTION */}
-        <section
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            padding: "100px 20px 60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 60,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* LEFT COLUMN */}
-          <div style={{ flex: 1, minWidth: 320 }}>
+              <span
+                style={{
+                  fontSize: 19,
+                  fontWeight: 800,
+                  letterSpacing: "-.5px",
+                }}
+              >
+                LaunchAlly
+              </span>
+            </Link>
+
             <div
               style={{
-                display: "inline-block",
-                background: "rgba(99,102,241,0.1)",
-                color: "#a5b4fc",
-                padding: "6px 14px",
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 600,
-                marginBottom: 20,
-                border: "1px solid rgba(99,102,241,0.2)",
-                letterSpacing: "0.5px",
+                display: "flex",
+                alignItems: "center",
+                gap: 24,
               }}
             >
-              ⚡ Launch your app in minutes — no DevOps required
-            </div>
+              <a
+                href="#how-it-works"
+                style={{
+                  color: "#94a3b8",
+                  textDecoration: "none",
+                  fontSize: 14,
+                }}
+              >
+                How it works
+              </a>
 
-            <h1
-              style={{
-                fontSize: "clamp(38px, 5vw, 56px)",
-                lineHeight: 1.1,
-                marginBottom: 20,
-                fontWeight: 800,
-                letterSpacing: -1.5,
-              }}
-            >
-              Deploy your full-stack app in minutes.
-              No servers. No DevOps. No headaches.
-            </h1>
+              <a
+                href="#pricing"
+                style={{
+                  color: "#94a3b8",
+                  textDecoration: "none",
+                  fontSize: 14,
+                }}
+              >
+                Pricing
+              </a>
 
-            <p
-              style={{
-                fontSize: 18,
-                lineHeight: 1.6,
-                color: "#94a3b8",
-                marginBottom: 36,
-                maxWidth: 580,
-              }}
-            >
-              Connect your GitHub repository, configure your environment variables, and deploy your application from one simple dashboard.
-            </p>
+              <Link
+                to="/login"
+                style={{
+                  color: "#cbd5e1",
+                  textDecoration: "none",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Login
+              </Link>
 
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <Link
                 to="/register"
                 style={{
                   background: "#6366f1",
-                  padding: "14px 28px",
-                  borderRadius: 10,
                   color: "white",
                   textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  boxShadow: "0 10px 25px rgba(99,102,241,0.3)",
+                  padding: "9px 16px",
+                  borderRadius: 9,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  boxShadow: "0 8px 25px rgba(99,102,241,.25)",
                 }}
               >
-                Start Deploying Free
+                Start free
               </Link>
-              <button
-                onClick={() => setShowVideo(true)}
-                style={{
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  padding: "14px 24px",
-                  borderRadius: 10,
-                  color: "white",
-                  background: "rgba(255,255,255,0.03)",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                ▶ See How It Works
-              </button>
             </div>
           </div>
+        </nav>
 
-          <div
-  style={{
-    marginTop: 30,
-    display: "flex",
-    gap: 24,
-    flexWrap: "wrap",
-    color: "#94a3b8",
-    fontSize: 15,
-  }}
->
-  <span>⚡ Deploy in under 2 minutes</span>
-
-  <span>🔒 Secure GitHub OAuth</span>
-
-  <span>🌍 Production-ready deployments</span>
-</div>
-
-          {/* RIGHT COLUMN: INTERACTIVE APP CONTAINER */}
-          <div
+        {/* HERO */}
+        <main>
+          <section
             style={{
-              flex: 1,
-              minWidth: 320,
-              background: "rgba(30, 41, 59, 0.5)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 20,
-              padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.3), 0 0 50px rgba(99,102,241,0.05)",
+              maxWidth: 1180,
+              margin: "0 auto",
+              padding: "90px 20px 70px",
             }}
           >
-            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
-            </div>
-
             <div
-  style={{
-    background: "#0f172a",
-    borderRadius: 14,
-    border: "1px solid rgba(255,255,255,0.05)",
-    overflow: "hidden",
-  }}
->
-  {/* Header */}
-  <div
-    style={{
-      padding: "16px 20px",
-      borderBottom: "1px solid rgba(255,255,255,0.05)",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
-    <strong>Deployment #42</strong>
-
-    <span
-      style={{
-        color: "#22c55e",
-        background: "rgba(34,197,94,.12)",
-        padding: "4px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
-      }}
-    >
-      SUCCESS
-    </span>
-  </div>
-
-  <div style={{ padding: 20 }}>
-
-    <DashboardRow label="Repository" value="my-company/api" />
-    <DashboardRow label="Branch" value="main" />
-    <DashboardRow label="Environment" value="Production" />
-    <DashboardRow label="Latest Commit" value="e812af4" />
-
-    <div
-      style={{
-        marginTop: 20,
-        background: "#020617",
-        borderRadius: 10,
-        padding: 16,
-        fontFamily: "monospace",
-        fontSize: 13,
-        lineHeight: 1.8,
-        color: "#94a3b8",
-      }}
-    >
-      ✓ Installing dependencies<br />
-      ✓ Building application<br />
-      ✓ Creating Docker image<br />
-      ✓ Deploying container<br />
-      <span style={{ color: "#22c55e" }}>
-        ✓ Deployment completed
-      </span>
-    </div>
-
-    <div
-      style={{
-        marginTop: 20,
-        background: "rgba(99,102,241,.08)",
-        borderRadius: 10,
-        padding: 14,
-      }}
-    >
-      <div
-        style={{
-          color: "#64748b",
-          fontSize: 12,
-        }}
-      >
-        LIVE URL
-      </div>
-
-      <div
-        style={{
-          marginTop: 4,
-          color: "#a5b4fc",
-          fontWeight: 600,
-        }}
-      >
-        https://myapp.launchally.app
-      </div>
-    </div>
-
-  </div>
-</div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-              <div style={{ background: "rgba(15,23,42,0.4)", padding: 12, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
-                🎯 Workspace: <b>Founders-HQ</b>
+              style={{
+                maxWidth: 850,
+                margin: "0 auto",
+                textAlign: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "7px 12px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(99,102,241,.28)",
+                  background: "rgba(99,102,241,.09)",
+                  color: "#a5b4fc",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  marginBottom: 24,
+                }}
+              >
+                <span>●</span>
+                From GitHub repository to live application
               </div>
-              <div style={{ background: "rgba(15,23,42,0.4)", padding: 12, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
-                👥 Team Sync: <b>Connected</b>
+
+              <h1
+                style={{
+                  fontSize: "clamp(44px, 7vw, 76px)",
+                  lineHeight: 1.02,
+                  letterSpacing: "-4px",
+                  margin: "0 auto 24px",
+                  fontWeight: 850,
+                }}
+              >
+                Your code is ready.
+                <br />
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(90deg,#818cf8,#c4b5fd,#818cf8)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  Now ship it.
+                </span>
+              </h1>
+
+              <p
+                style={{
+                  maxWidth: 690,
+                  margin: "0 auto",
+                  color: "#94a3b8",
+                  fontSize: 19,
+                  lineHeight: 1.7,
+                }}
+              >
+                Connect your GitHub repository. LaunchAlly analyzes your
+                project, detects how it should run, and gets it deployed
+                without making you become a DevOps engineer first.
+              </p>
+
+              {/* REPO INPUT */}
+              <div
+                style={{
+                  maxWidth: 720,
+                  margin: "38px auto 18px",
+                  padding: 7,
+                  display: "flex",
+                  gap: 8,
+                  background: "rgba(15,23,42,.92)",
+                  border: "1px solid rgba(255,255,255,.11)",
+                  borderRadius: 14,
+                  boxShadow:
+                    "0 25px 80px rgba(0,0,0,.4), 0 0 50px rgba(99,102,241,.08)",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 14px",
+                    minWidth: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#64748b",
+                      marginRight: 10,
+                      fontSize: 16,
+                    }}
+                  >
+                    →
+                  </span>
+
+                  <input
+                    value={repo}
+                    onChange={(e) => setRepo(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleDemo();
+                    }}
+                    placeholder="Paste your GitHub repository"
+                    style={{
+                      width: "100%",
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      color: "white",
+                      fontSize: 15,
+                    }}
+                  />
+                </div>
+
+                <Link
+                  to="/register"
+                  style={{
+                    background: "#6366f1",
+                    color: "white",
+                    textDecoration: "none",
+                    padding: "13px 20px",
+                    borderRadius: 9,
+                    fontWeight: 750,
+                    fontSize: 14,
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 8px 25px rgba(99,102,241,.28)",
+                  }}
+                >
+                  Deploy my app
+                </Link>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: 22,
+                  flexWrap: "wrap",
+                  color: "#64748b",
+                  fontSize: 13,
+                }}
+              >
+                <span>✓ Free to start</span>
+                <span>✓ GitHub connected</span>
+                <span>✓ No server setup</span>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* AUDIENCE TARGETING STRIP */}
-        <section style={{ borderY: "1px solid rgba(255,255,255,0.05)", background: "rgba(15,23,42,0.4)", padding: "24px 20px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyItems: "center", justifyContent: "center", gap: "clamp(20px, 5vw, 60px)", flexWrap: "wrap", color: "#64748b", fontWeight: 600 }}>
-            <span style={{ color: "#94a3b8" }}>BUILT FOR:</span>
-            <span>✓ Indie Hackers</span>
-            <span>✓ SaaS Founders</span>
-            <span>✓ Startup Teams</span>
-            <span>✓ Freelancers & Agencies</span>
-          </div>
-        </section>
+            {/* PRODUCT PREVIEW */}
+            <div
+              style={{
+                maxWidth: 1020,
+                margin: "70px auto 0",
+                borderRadius: 20,
+                border: "1px solid rgba(255,255,255,.1)",
+                background: "rgba(15,23,42,.8)",
+                boxShadow:
+                  "0 40px 100px rgba(0,0,0,.55), 0 0 100px rgba(99,102,241,.08)",
+                overflow: "hidden",
+              }}
+            >
+              {/* browser top */}
+              <div
+                style={{
+                  height: 46,
+                  padding: "0 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  borderBottom: "1px solid rgba(255,255,255,.07)",
+                  background: "#0b1020",
+                }}
+              >
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: "#ef4444",
+                  }}
+                />
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: "#f59e0b",
+                  }}
+                />
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: "#22c55e",
+                  }}
+                />
 
-        {/* CONCRETE VALUE FEATURES */}
-        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 20px" }}>
-          <h2 style={{ fontSize: 36, fontWeight: 800, textAlign: "center", marginBottom: 12, letterSpacing: -1 }}>
-            Run your startup infrastructure without the complexity
-          </h2>
-          <p style={{ color: "#94a3b8", textAlign: "center", fontSize: 16, marginBottom: 60 }}>
-            Stop configuration hopping. Manage your assets directly.
-          </p>
+                <div
+                  style={{
+                    marginLeft: 14,
+                    flex: 1,
+                    maxWidth: 420,
+                    marginRight: "auto",
+                    marginLeft: "auto",
+                    background: "#070b16",
+                    borderRadius: 7,
+                    padding: "6px 12px",
+                    color: "#64748b",
+                    fontSize: 11,
+                  }}
+                >
+                  app.launchally.org/projects/my-app
+                </div>
+              </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
-            <FeatureCard
-              icon="🚀"
-              title="Connect GitHub"
-              text="Paste your repository and LaunchAlly prepares everything automatically."
-            />
-            <FeatureCard
-              icon="📈"
-              title="Track Deployments"
-              text="See build logs, deployment status, and your live URL in one place."
-            />
-            <FeatureCard
-              icon="📁"
-              title="Manage Projects"
-              text="Keep repositories, deployments and environments organized inside your workspace."
-            />
-            <FeatureCard
-              icon="🤝"
-              title="Work Together"
-              text="Invite teammates and manage projects together from a shared workspace."
-            />
-          </div>
-        </section>
+              {/* dashboard */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "210px 1fr",
+                  minHeight: 420,
+                }}
+              >
+                <div
+                  style={{
+                    borderRight: "1px solid rgba(255,255,255,.06)",
+                    padding: 20,
+                    background: "#090e1b",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#6366f1",
+                      fontWeight: 800,
+                      marginBottom: 30,
+                    }}
+                  >
+                    LaunchAlly
+                  </div>
 
-        {/* WHY TEAMS CHOOSE LAUNCHALLY */}
-<section
-  style={{
-    background: "rgba(30,41,59,0.2)",
-    borderTop: "1px solid rgba(255,255,255,0.04)",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
-    padding: "100px 20px",
-  }}
->
-  <div
-    style={{
-      maxWidth: 1000,
-      margin: "0 auto",
-    }}
-  >
-    <h2
-      style={{
-        fontSize: 36,
-        fontWeight: 800,
-        textAlign: "center",
-        marginBottom: 16,
-        letterSpacing: -1,
-      }}
-    >
-      Why Teams Choose LaunchAlly
-    </h2>
+                  <PreviewNav active text="Projects" />
+                  <PreviewNav text="Deployments" />
+                  <PreviewNav text="Teams" />
+                  <PreviewNav text="Settings" />
+                </div>
 
-    <p
-      style={{
-        color: "#94a3b8",
-        textAlign: "center",
-        marginBottom: 60,
-        fontSize: 16,
-        maxWidth: 700,
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
-    >
-      LaunchAlly brings projects, deployments, monitoring, and collaboration
-      together so small teams can stay focused on building instead of juggling
-      multiple tools.
-    </p>
+                <div
+                  style={{
+                    padding: 28,
+                    background:
+                      "radial-gradient(circle at 80% 0%, rgba(99,102,241,.07), transparent 35%), #0b1020",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: 12,
+                          marginBottom: 5,
+                        }}
+                      >
+                        PROJECT
+                      </div>
 
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-        gap: 24,
-      }}
-    >
-      <div
-        style={{
-          background: "#0f172a",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: 28,
-        }}
-      >
-        <div style={{ fontSize: 30, marginBottom: 14 }}>🚀</div>
+                      <div
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 800,
+                        }}
+                      >
+                        fastapi-vercel
+                      </div>
+                    </div>
 
-        <h3
-          style={{
-            marginBottom: 12,
-            fontSize: 20,
-            fontWeight: 700,
-          }}
-        >
-          One-Click Deployments
-        </h3>
+                    <span
+                      style={{
+                        color: "#4ade80",
+                        background: "rgba(34,197,94,.1)",
+                        border: "1px solid rgba(34,197,94,.18)",
+                        borderRadius: 999,
+                        padding: "6px 11px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      ● LIVE
+                    </span>
+                  </div>
 
-        <p
-          style={{
-            color: "#94a3b8",
-            lineHeight: 1.7,
-          }}
-        >
-          Connect your repository, manage deployments, and launch applications
-          from one workspace.
-        </p>
-      </div>
+                  {/* analyzer */}
+                  <div
+                    style={{
+                      padding: 20,
+                      borderRadius: 14,
+                      background: "#070b16",
+                      border: "1px solid rgba(255,255,255,.07)",
+                      marginBottom: 14,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Repository analysis
+                      </div>
 
-      <div
-        style={{
-          background: "#0f172a",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: 28,
-        }}
-      >
-        <div style={{ fontSize: 30, marginBottom: 14 }}>👥</div>
+                      <span
+                        style={{
+                          color: "#a5b4fc",
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ANALYZER V4
+                      </span>
+                    </div>
 
-        <h3
-          style={{
-            marginBottom: 12,
-            fontSize: 20,
-            fontWeight: 700,
-          }}
-        >
-          Team Workspaces
-        </h3>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit,minmax(120px,1fr))",
+                        gap: 10,
+                      }}
+                    >
+                      <AnalysisItem label="Framework" value="FastAPI" />
+                      <AnalysisItem label="Runtime" value="Python" />
+                      <AnalysisItem label="Package manager" value="pip" />
+                      <AnalysisItem label="Confidence" value="High · 85%" />
+                    </div>
+                  </div>
 
-        <p
-          style={{
-            color: "#94a3b8",
-            lineHeight: 1.7,
-          }}
-        >
-          Organize projects, collaborate with teammates, and keep everyone
-          aligned inside a shared workspace.
-        </p>
-      </div>
+                  {/* deployment */}
+                  <div
+                    style={{
+                      padding: 20,
+                      borderRadius: 14,
+                      background: "#070b16",
+                      border: "1px solid rgba(255,255,255,.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "#64748b",
+                        fontSize: 11,
+                        marginBottom: 8,
+                      }}
+                    >
+                      DEPLOYMENT
+                    </div>
 
-      <div
-        style={{
-          background: "#0f172a",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: 28,
-        }}
-      >
-        <div style={{ fontSize: 30, marginBottom: 14 }}>📊</div>
+                    <div
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: 12,
+                        lineHeight: 1.9,
+                        color: "#94a3b8",
+                      }}
+                    >
+                      <div>✓ Repository connected</div>
+                      <div>✓ Framework detected</div>
+                      <div>✓ Dependencies installed</div>
+                      <div>✓ Deployment created</div>
 
-        <h3
-          style={{
-            marginBottom: 12,
-            fontSize: 20,
-            fontWeight: 700,
-          }}
-        >
-          Deployment Insights
-        </h3>
+                      <div
+                        style={{
+                          color: "#4ade80",
+                          marginTop: 6,
+                        }}
+                      >
+                        ✓ Application is live
+                      </div>
+                    </div>
 
-        <p
-          style={{
-            color: "#94a3b8",
-            lineHeight: 1.7,
-          }}
-        >
-          Track deployments, view status updates, and stay informed about what
-          is happening across your projects.
-        </p>
-      </div>
-
-      <div
-        style={{
-          background: "#0f172a",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16,
-          padding: 28,
-        }}
-      >
-        <div style={{ fontSize: 30, marginBottom: 14 }}>✨</div>
-
-        <h3
-          style={{
-            marginBottom: 12,
-            fontSize: 20,
-            fontWeight: 700,
-          }}
-        >
-          No DevOps Experience Needed
-        </h3>
-
-        <p
-          style={{
-            color: "#94a3b8",
-            lineHeight: 1.7,
-          }}
-        >
-          Designed for founders, indie hackers, and small teams who want a
-          simple way to manage software projects without DevOps complexity.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-        <section
-  style={{
-    maxWidth: 1100,
-    margin: "0 auto",
-    padding: "80px 20px",
-  }}
->
-
-<h2
-style={{
-fontSize:36,
-fontWeight:800,
-textAlign:"center",
-marginBottom:16,
-}}
->
-Deploy in 4 Simple Steps
-</h2>
-
-<p
-style={{
-textAlign:"center",
-color:"#94a3b8",
-marginBottom:60,
-}}
->
-Launch your application from GitHub to production in just a few clicks.
-</p>
-
-<div
-style={{
-display:"grid",
-gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
-gap:24,
-}}
->
-
-<Step
-number="1"
-title="Connect GitHub"
-text="Authorize LaunchAlly and choose your repository."
-/>
-
-<Step
-number="2"
-title="Configure Variables"
-text="Add your environment variables securely."
-/>
-
-<Step
-number="3"
-title="Click Deploy"
-text="LaunchAlly builds and deploys your application automatically."
-/>
-
-<Step
-number="4"
-title="Share Your URL"
-text="Your production application is live and ready to use."
-/>
-
-</div>
-
-</section>
-
-        {/* PRICING */}
-        <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 20px 100px" }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, textAlign: "center", marginBottom: 12 }}>
-            Transparent Plans for Every Stage
-          </h2>
-          <p style={{ color: "#94a3b8", textAlign: "center", marginBottom: 48 }}>
-            Start managing infrastructure for free, upgrade smoothly as your operation shifts up.
-          </p>
-
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
-            {/* FREE TIER */}
-            <div style={{ flex: 1, minWidth: 280, background: "rgba(17,24,39,0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 32 }}>
-              <h3 style={{ fontSize: 20, margin: 0 }}>Free Tier</h3>
-              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$0</div>
-              <ul style={{ paddingLeft: 20, color: "#94a3b8", lineHeight: 2 }}>
-                <li>1 Project</li>
-                <li>up to 5 Deployments</li>
-                <li>Team workspaces</li>
-                <li>Deployment logs</li>
-              </ul>
+                    <div
+                      style={{
+                        marginTop: 15,
+                        padding: 12,
+                        borderRadius: 9,
+                        background: "rgba(99,102,241,.08)",
+                        color: "#a5b4fc",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      https://fastapi-vercel.launchally.app
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </section>
 
-            {/* PRO TIER */}
-            <div style={{ flex: 1, minWidth: 280, background: "rgba(99,102,241,0.05)", border: "2px solid #6366f1", borderRadius: 16, padding: 32, position: "relative" }}>
-              <span style={{ position: "absolute", top: 16, right: 16, background: "#6366f1", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>⭐ Most Popular</span>
-              <h3 style={{ fontSize: 20, margin: 0, color: "#a5b4fc" }}>Pro SaaS</h3>
-              <div style={{ fontSize: 36, fontWeight: 800, margin: "16px 0" }}>$5<span style={{ fontSize: 14, color: "#64748b" }}>/mo</span></div>
-              <ul style={{ paddingLeft: 20, color: "#cbd5e1", lineHeight: 2 }}>
-                <li>Unlimited projects</li>
-                <li>Unlimited Deployments</li>
-                <li>Team Invites</li>
-                <li>AI-powered Debugging</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px 80px" }}>
-          <div
+          {/* POSITIONING */}
+          <section
             style={{
-              background: "linear-gradient(135deg, rgba(99,102,241,0.12), rgba(15,23,42,0.6))",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24,
-              padding: "60px 40px",
+              borderTop: "1px solid rgba(255,255,255,.06)",
+              borderBottom: "1px solid rgba(255,255,255,.06)",
+              background: "rgba(15,23,42,.38)",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 1050,
+                margin: "0 auto",
+                padding: "28px 20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 35,
+                flexWrap: "wrap",
+                color: "#64748b",
+                fontSize: 13,
+              }}
+            >
+              <strong style={{ color: "#94a3b8" }}>
+                BUILT FOR PEOPLE WHO JUST WANT TO SHIP
+              </strong>
+
+              <span>Indie hackers</span>
+              <span>SaaS founders</span>
+              <span>Students</span>
+              <span>Freelancers</span>
+              <span>Small teams</span>
+            </div>
+          </section>
+
+          {/* THE PROBLEM */}
+          <section
+            style={{
+              maxWidth: 1050,
+              margin: "0 auto",
+              padding: "110px 20px 80px",
+            }}
+          >
+            <SectionLabel>THE PROBLEM</SectionLabel>
+
+            <h2
+              style={{
+                fontSize: "clamp(32px,5vw,50px)",
+                lineHeight: 1.08,
+                letterSpacing: "-2px",
+                maxWidth: 760,
+                margin: "12px 0 20px",
+              }}
+            >
+              You built the application.
+              <br />
+              Why should deployment become another project?
+            </h2>
+
+            <p
+              style={{
+                maxWidth: 700,
+                color: "#94a3b8",
+                fontSize: 17,
+                lineHeight: 1.75,
+              }}
+            >
+              GitHub repositories, build configuration, environment
+              variables, deployment settings, logs, infrastructure and
+              troubleshooting quickly turn a simple launch into a DevOps
+              problem.
+            </p>
+          </section>
+
+          {/* HOW IT WORKS */}
+          <section
+            id="how-it-works"
+            style={{
+              padding: "90px 20px 110px",
+              background:
+                "linear-gradient(180deg, rgba(15,23,42,.3), rgba(15,23,42,.65))",
+              borderTop: "1px solid rgba(255,255,255,.05)",
+              borderBottom: "1px solid rgba(255,255,255,.05)",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 1100,
+                margin: "0 auto",
+              }}
+            >
+              <div style={{ textAlign: "center", marginBottom: 60 }}>
+                <SectionLabel>HOW IT WORKS</SectionLabel>
+
+                <h2
+                  style={{
+                    fontSize: "clamp(32px,5vw,48px)",
+                    letterSpacing: "-2px",
+                    margin: "12px 0 14px",
+                  }}
+                >
+                  GitHub to live app.
+                  <br />
+                  Four steps.
+                </h2>
+
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    maxWidth: 620,
+                    margin: "0 auto",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  LaunchAlly handles the boring deployment work so you can
+                  spend your time building the product.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit,minmax(220px,1fr))",
+                  gap: 16,
+                }}
+              >
+                <BigStep
+                  number="01"
+                  title="Connect GitHub"
+                  text="Choose the repository containing the application you want to ship."
+                />
+
+                <BigStep
+                  number="02"
+                  title="We analyze it"
+                  text="LaunchAlly detects the framework, runtime, package manager and deployment path."
+                />
+
+                <BigStep
+                  number="03"
+                  title="Deploy"
+                  text="Configure your environment variables and launch the application."
+                />
+
+                <BigStep
+                  number="04"
+                  title="Go live"
+                  text="Get a production URL you can open, test and share."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ANALYZER */}
+          <section
+            style={{
+              maxWidth: 1050,
+              margin: "0 auto",
+              padding: "110px 20px",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 55,
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <SectionLabel>SMART REPOSITORY ANALYSIS</SectionLabel>
+
+                <h2
+                  style={{
+                    fontSize: "clamp(32px,4vw,46px)",
+                    lineHeight: 1.08,
+                    letterSpacing: "-2px",
+                    margin: "12px 0 20px",
+                  }}
+                >
+                  Don't know what your project needs?
+                  <br />
+                  <span style={{ color: "#818cf8" }}>
+                    LaunchAlly figures it out.
+                  </span>
+                </h2>
+
+                <p
+                  style={{
+                    color: "#94a3b8",
+                    fontSize: 16,
+                    lineHeight: 1.75,
+                  }}
+                >
+                  Before deployment, LaunchAlly analyzes your repository and
+                  determines what it is, how it should be built, and whether
+                  it can be deployed.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  background: "#070b16",
+                  border: "1px solid rgba(255,255,255,.09)",
+                  borderRadius: 16,
+                  padding: 22,
+                  boxShadow: "0 25px 70px rgba(0,0,0,.3)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                  }}
+                >
+                  <span style={{ fontWeight: 750 }}>
+                    Repository analysis
+                  </span>
+
+                  <span
+                    style={{
+                      color: "#818cf8",
+                      fontSize: 11,
+                      fontWeight: 800,
+                    }}
+                  >
+                    V4
+                  </span>
+                </div>
+
+                <AnalysisLine
+                  label="Repository"
+                  value="my-saas-app"
+                />
+                <AnalysisLine
+                  label="Framework"
+                  value="Next.js"
+                  good
+                />
+                <AnalysisLine
+                  label="Runtime"
+                  value="Node.js"
+                  good
+                />
+                <AnalysisLine
+                  label="Package manager"
+                  value="npm"
+                  good
+                />
+                <AnalysisLine
+                  label="Deployment strategy"
+                  value="Vercel"
+                  good
+                />
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    padding: 13,
+                    borderRadius: 9,
+                    background: "rgba(34,197,94,.07)",
+                    border: "1px solid rgba(34,197,94,.12)",
+                    color: "#86efac",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  ✓ Repository is ready to deploy
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* FEATURES */}
+          <section
+            style={{
+              padding: "100px 20px",
+              borderTop: "1px solid rgba(255,255,255,.05)",
+              background: "rgba(15,23,42,.35)",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 1050,
+                margin: "0 auto",
+              }}
+            >
+              <div style={{ marginBottom: 45 }}>
+                <SectionLabel>ONE WORKSPACE</SectionLabel>
+
+                <h2
+                  style={{
+                    fontSize: "clamp(32px,5vw,48px)",
+                    letterSpacing: "-2px",
+                    margin: "12px 0",
+                  }}
+                >
+                  Everything after{" "}
+                  <span style={{ color: "#818cf8" }}>
+                    git push.
+                  </span>
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit,minmax(240px,1fr))",
+                  gap: 16,
+                }}
+              >
+                <Feature
+                  number="01"
+                  title="Deployments"
+                  text="Launch projects from GitHub and see exactly what is happening."
+                />
+
+                <Feature
+                  number="02"
+                  title="Environment variables"
+                  text="Configure application secrets without scattering configuration across tools."
+                />
+
+                <Feature
+                  number="03"
+                  title="Teams"
+                  text="Invite teammates and keep projects organized inside shared workspaces."
+                />
+
+                <Feature
+                  number="04"
+                  title="Deployment insights"
+                  text="See deployment status, logs and live URLs from one dashboard."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* VIDEO */}
+          <section
+            style={{
+              maxWidth: 900,
+              margin: "0 auto",
+              padding: "110px 20px",
               textAlign: "center",
             }}
           >
-            <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
-              Ready to Deploy Your Next Project?
-            </h2>
-            <p style={{ color: "#cbd5e1", maxWidth: 600, margin: "0 auto 32px", fontSize: 16, lineHeight: 1.6 }}>
-              Stop jumping between five tabs to monitor one application codebase. Bring structure to your launch process.
-            </p>
-            <Link
-              to="/register"
+            <SectionLabel>SEE IT IN ACTION</SectionLabel>
+
+            <h2
               style={{
-                display: "inline-block",
-                background: "#6366f1",
-                padding: "16px 32px",
-                borderRadius: 10,
-                color: "white",
-                textDecoration: "none",
-                fontWeight: 700,
-                boxShadow: "0 10px 30px rgba(99,102,241,0.3)",
+                fontSize: "clamp(32px,5vw,48px)",
+                letterSpacing: "-2px",
+                margin: "12px 0 18px",
               }}
             >
-              Start Deploying Free
-            </Link>
-          </div>
-        </section>
+              Watch a repository go live.
+            </h2>
+
+            <p
+              style={{
+                color: "#94a3b8",
+                maxWidth: 620,
+                margin: "0 auto 30px",
+                lineHeight: 1.7,
+              }}
+            >
+              No slides. No marketing animation. See how LaunchAlly actually
+              works.
+            </p>
+
+            <button
+              onClick={() => setShowVideo(true)}
+              style={{
+                border: "1px solid rgba(255,255,255,.1)",
+                background: "#111827",
+                color: "white",
+                padding: "15px 24px",
+                borderRadius: 10,
+                fontWeight: 750,
+                fontSize: 15,
+                cursor: "pointer",
+              }}
+            >
+              ▶ Watch the demo
+            </button>
+          </section>
+
+          {/* PRICING */}
+          <section
+            id="pricing"
+            style={{
+              padding: "100px 20px",
+              borderTop: "1px solid rgba(255,255,255,.05)",
+              background: "rgba(15,23,42,.35)",
+            }}
+          >
+            <div
+              style={{
+                maxWidth: 900,
+                margin: "0 auto",
+                textAlign: "center",
+              }}
+            >
+              <SectionLabel>PRICING</SectionLabel>
+
+              <h2
+                style={{
+                  fontSize: "clamp(32px,5vw,48px)",
+                  letterSpacing: "-2px",
+                  margin: "12px 0",
+                }}
+              >
+                Start free.
+                <br />
+                Upgrade when you need more.
+              </h2>
+
+              <p
+                style={{
+                  color: "#94a3b8",
+                  marginBottom: 45,
+                  lineHeight: 1.7,
+                }}
+              >
+                No complicated infrastructure contracts. Build first, pay
+                when LaunchAlly becomes part of your workflow.
+              </p>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit,minmax(280px,1fr))",
+                  gap: 18,
+                  textAlign: "left",
+                }}
+              >
+                <PriceCard
+                  title="Free"
+                  price="$0"
+                  text="For trying LaunchAlly and shipping your first projects."
+                  items={[
+                    "1 project",
+                    "Up to 5 deployments",
+                    "Team workspace",
+                    "Deployment logs",
+                  ]}
+                />
+
+                <PriceCard
+                  title="Pro"
+                  price="$5"
+                  highlighted
+                  text="For builders who are ready to ship without limits."
+                  items={[
+                    "Unlimited projects",
+                    "Unlimited deployments",
+                    "Team invites",
+                    "AI-powered debugging",
+                  ]}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* FINAL CTA */}
+          <section
+            style={{
+              maxWidth: 1050,
+              margin: "0 auto",
+              padding: "110px 20px 100px",
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                textAlign: "center",
+                borderRadius: 24,
+                padding: "75px 25px",
+                border: "1px solid rgba(129,140,248,.2)",
+                background:
+                  "radial-gradient(circle at 50% 0%, rgba(99,102,241,.22), transparent 55%), #0c1222",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "clamp(36px,5vw,58px)",
+                  lineHeight: 1.05,
+                  letterSpacing: "-2.5px",
+                  margin: "0 0 18px",
+                }}
+              >
+                Stop preparing to deploy.
+                <br />
+                <span style={{ color: "#818cf8" }}>
+                  Just deploy.
+                </span>
+              </h2>
+
+              <p
+                style={{
+                  color: "#94a3b8",
+                  maxWidth: 590,
+                  margin: "0 auto 30px",
+                  lineHeight: 1.7,
+                }}
+              >
+                Your next production URL could be a few clicks away.
+              </p>
+
+              <Link
+                to="/register"
+                style={{
+                  display: "inline-block",
+                  background: "#6366f1",
+                  color: "white",
+                  textDecoration: "none",
+                  padding: "15px 25px",
+                  borderRadius: 10,
+                  fontWeight: 800,
+                  boxShadow: "0 12px 35px rgba(99,102,241,.3)",
+                }}
+              >
+                Deploy my first project →
+              </Link>
+            </div>
+          </section>
+        </main>
 
         {/* FOOTER */}
         <footer
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
-            padding: "32px 20px",
-            textAlign: "center",
+            borderTop: "1px solid rgba(255,255,255,.06)",
+            padding: "35px 20px",
             color: "#64748b",
-            fontSize: 14,
+            fontSize: 13,
           }}
         >
-          © {new Date().getFullYear()} LaunchAlly. Deploy applications without DevOps complexity.
+          <div
+            style={{
+              maxWidth: 1050,
+              margin: "0 auto",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            <span>© {new Date().getFullYear()} LaunchAlly</span>
+
+            <span>
+              Ship software without becoming a DevOps engineer.
+            </span>
+          </div>
         </footer>
       </div>
 
-      {/* VIDEO MODAL CONTAINER */}
+      {/* VIDEO MODAL */}
       {showVideo && (
         <div
           onClick={() => setShowVideo(false)}
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15,23,42,0.95)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
             zIndex: 9999,
+            background: "rgba(2,6,23,.94)",
+            backdropFilter: "blur(14px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             padding: 20,
-            backdropFilter: "blur(8px)",
           }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 960, position: "relative" }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 960,
+              position: "relative",
+            }}
+          >
             <button
               onClick={() => setShowVideo(false)}
               style={{
                 position: "absolute",
-                top: -45,
                 right: 0,
-                background: "transparent",
+                top: -48,
                 border: "none",
+                background: "transparent",
                 color: "white",
-                fontSize: 36,
+                fontSize: 32,
                 cursor: "pointer",
               }}
             >
               ×
             </button>
+
             <video
               controls
               autoPlay
               style={{
                 width: "100%",
                 borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.1)",
                 background: "black",
-                boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,.1)",
               }}
             >
               <source src={demoVideo} type="video/mp4" />
@@ -731,85 +1179,291 @@ text="Your production application is live and ready to use."
   );
 }
 
-{/* REFACTORED CLEAN COMPONENTS */}
-function FeatureCard({ icon, title, text }) {
+/* ---------- SMALL COMPONENTS ---------- */
+
+function SectionLabel({ children }) {
   return (
     <div
       style={{
-        background: "rgba(30, 41, 59, 0.3)",
-        padding: 32,
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.05)",
-        transition: "all 0.2s ease-in-out",
+        color: "#818cf8",
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: "1.5px",
       }}
     >
-      <div style={{ fontSize: 28, marginBottom: 16 }}>{icon}</div>
-      <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 18, fontWeight: 700, color: "#f8fafc" }}>
+      {children}
+    </div>
+  );
+}
+
+function PreviewNav({ text, active }) {
+  return (
+    <div
+      style={{
+        padding: "10px 11px",
+        marginBottom: 5,
+        borderRadius: 7,
+        background: active ? "rgba(99,102,241,.12)" : "transparent",
+        color: active ? "#c7d2fe" : "#64748b",
+        fontSize: 12,
+        fontWeight: active ? 700 : 500,
+      }}
+    >
+      {text}
+    </div>
+  );
+}
+
+function AnalysisItem({ label, value }) {
+  return (
+    <div
+      style={{
+        padding: 11,
+        borderRadius: 9,
+        background: "#0c1222",
+      }}
+    >
+      <div
+        style={{
+          color: "#64748b",
+          fontSize: 10,
+          marginBottom: 5,
+        }}
+      >
+        {label.toUpperCase()}
+      </div>
+
+      <div
+        style={{
+          color: "#e2e8f0",
+          fontSize: 12,
+          fontWeight: 700,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function AnalysisLine({ label, value, good }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 20,
+        padding: "11px 0",
+        borderBottom: "1px solid rgba(255,255,255,.05)",
+        fontSize: 13,
+      }}
+    >
+      <span style={{ color: "#64748b" }}>{label}</span>
+
+      <span
+        style={{
+          color: good ? "#a5b4fc" : "#e2e8f0",
+          fontWeight: 700,
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function BigStep({ number, title, text }) {
+  return (
+    <div
+      style={{
+        padding: 25,
+        borderRadius: 15,
+        border: "1px solid rgba(255,255,255,.07)",
+        background: "rgba(7,11,22,.65)",
+      }}
+    >
+      <div
+        style={{
+          color: "#6366f1",
+          fontSize: 12,
+          fontWeight: 800,
+          marginBottom: 22,
+        }}
+      >
+        {number}
+      </div>
+
+      <h3
+        style={{
+          margin: "0 0 10px",
+          fontSize: 18,
+        }}
+      >
         {title}
       </h3>
-      <p style={{ color: "#94a3b8", lineHeight: 1.6, margin: 0, fontSize: 14 }}>
+
+      <p
+        style={{
+          color: "#94a3b8",
+          lineHeight: 1.65,
+          margin: 0,
+          fontSize: 14,
+        }}
+      >
         {text}
       </p>
     </div>
   );
 }
 
-function DashboardRow({ label, value }) {
+function Feature({ number, title, text }) {
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        marginBottom: 12,
-        color: "#cbd5e1",
-        fontSize: 14,
-      }}
-    >
-      <span style={{ color: "#64748b" }}>
-        {label}
-      </span>
-
-      <span>{value}</span>
-    </div>
-  );
-}
-
-function Step({ number, title, text }) {
-  return (
-    <div
-      style={{
-        background: "rgba(30,41,59,.35)",
-        borderRadius: 16,
-        padding: 28,
-        border: "1px solid rgba(255,255,255,.05)",
+        padding: 26,
+        borderRadius: 15,
+        border: "1px solid rgba(255,255,255,.07)",
+        background: "#090e1b",
       }}
     >
       <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          background: "#6366f1",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 700,
+          color: "#6366f1",
+          fontSize: 11,
+          fontWeight: 800,
           marginBottom: 18,
         }}
       >
         {number}
       </div>
 
-      <h3>{title}</h3>
+      <h3
+        style={{
+          margin: "0 0 10px",
+          fontSize: 18,
+        }}
+      >
+        {title}
+      </h3>
 
       <p
         style={{
           color: "#94a3b8",
-          lineHeight: 1.6,
+          lineHeight: 1.65,
+          margin: 0,
+          fontSize: 14,
         }}
       >
         {text}
       </p>
+    </div>
+  );
+}
+
+function PriceCard({
+  title,
+  price,
+  text,
+  items,
+  highlighted,
+}) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        padding: 28,
+        borderRadius: 16,
+        border: highlighted
+          ? "1px solid rgba(129,140,248,.6)"
+          : "1px solid rgba(255,255,255,.08)",
+        background: highlighted
+          ? "rgba(99,102,241,.08)"
+          : "#090e1b",
+        boxShadow: highlighted
+          ? "0 20px 60px rgba(99,102,241,.1)"
+          : "none",
+      }}
+    >
+      {highlighted && (
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            color: "#a5b4fc",
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: ".5px",
+          }}
+        >
+          MOST POPULAR
+        </div>
+      )}
+
+      <div
+        style={{
+          color: highlighted ? "#a5b4fc" : "#cbd5e1",
+          fontWeight: 750,
+          marginBottom: 12,
+        }}
+      >
+        {title}
+      </div>
+
+      <div
+        style={{
+          fontSize: 40,
+          fontWeight: 850,
+          letterSpacing: "-2px",
+        }}
+      >
+        {price}
+        {price !== "$0" && (
+          <span
+            style={{
+              color: "#64748b",
+              fontSize: 13,
+              fontWeight: 500,
+            }}
+          >
+            /month
+          </span>
+        )}
+      </div>
+
+      <p
+        style={{
+          color: "#64748b",
+          fontSize: 13,
+          lineHeight: 1.6,
+          minHeight: 42,
+        }}
+      >
+        {text}
+      </p>
+
+      <div
+        style={{
+          borderTop: "1px solid rgba(255,255,255,.06)",
+          paddingTop: 18,
+        }}
+      >
+        {items.map((item) => (
+          <div
+            key={item}
+            style={{
+              color: "#cbd5e1",
+              fontSize: 13,
+              marginBottom: 11,
+            }}
+          >
+            <span style={{ color: "#4ade80", marginRight: 8 }}>
+              ✓
+            </span>
+            {item}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
