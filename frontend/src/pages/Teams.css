@@ -1,31 +1,35 @@
 .teams-container {
   padding: 40px;
-  background: #f8fafc;
+  background: #050505;
   min-height: 100vh;
-  color: #0f172a;
+  color: #f5f5f5;
 }
 
 /* HEADER */
+
 .teams-header {
   margin-bottom: 30px;
 }
 
 .subtitle {
-  color: #64748b;
+  color: #a1a1aa;
   margin-top: 5px;
 }
 
 /* CARD */
+
 .teams-card {
-  background: white;
+  background: #0d0d0d;
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border: 1px solid #262626;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   max-width: 600px;
   margin-bottom: 30px;
 }
 
 /* INPUT ROW */
+
 .row {
   display: flex;
   gap: 10px;
@@ -36,10 +40,23 @@
   flex: 1;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #2a2a2a;
+  background: #111111;
+  color: #f5f5f5;
+}
+
+.row input::placeholder {
+  color: #71717a;
+}
+
+.row input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
 }
 
 /* BUTTONS */
+
 button {
   padding: 12px 16px;
   border-radius: 10px;
@@ -59,16 +76,19 @@ button:not(.secondary):not(.danger) {
 }
 
 .secondary {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: #18181b;
+  color: #a5b4fc;
+  border: 1px solid #303030;
 }
 
 .danger {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #241010;
+  color: #f87171;
+  border: 1px solid #451a1a;
 }
 
 /* TEAMS GRID */
+
 .teams-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -77,19 +97,23 @@ button:not(.secondary):not(.danger) {
 }
 
 /* TEAM CARD */
+
 .team-card {
-  background: white;
+  background: #0d0d0d;
   padding: 16px;
   border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+  border: 1px solid #262626;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   transition: 0.2s;
 }
 
 .team-card:hover {
   transform: translateY(-3px);
+  border-color: #3f3f46;
 }
 
 /* TOP ROW */
+
 .team-top {
   display: flex;
   justify-content: space-between;
@@ -97,44 +121,48 @@ button:not(.secondary):not(.danger) {
 }
 
 /* BADGE */
+
 .badge {
   font-size: 10px;
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #1e1b4b;
+  color: #a5b4fc;
   padding: 4px 8px;
   border-radius: 999px;
 }
 
 /* ID */
+
 .team-id {
   font-size: 12px;
-  color: #64748b;
+  color: #71717a;
   margin: 10px 0;
 }
 
 /* ACTIONS */
+
 .team-actions {
   display: flex;
   gap: 10px;
 }
 
 /* TEXT */
+
 .muted {
-  color: #64748b;
+  color: #a1a1aa;
 }
 
 .team-members-summary {
   margin-top: 14px;
   padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #111111;
+  border: 1px solid #27272a;
   border-radius: 10px;
-  color: #475569;
+  color: #a1a1aa;
   font-size: 13px;
 }
 
 .team-members-summary strong {
-  color: #0f172a;
+  color: #f5f5f5;
   font-size: 15px;
 }
 
@@ -152,21 +180,21 @@ button:not(.secondary):not(.danger) {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #111111;
+  border: 1px solid #27272a;
 }
 
 .member-email {
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: #f5f5f5;
   word-break: break-word;
 }
 
 .member-role {
   margin-top: 2px;
   font-size: 11px;
-  color: #64748b;
+  color: #71717a;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -175,19 +203,20 @@ button:not(.secondary):not(.danger) {
   white-space: nowrap;
   font-size: 11px;
   font-weight: 700;
-  color: #15803d;
-  background: #dcfce7;
+  color: #4ade80;
+  background: #0c2415;
+  border: 1px solid #14532d;
   padding: 4px 8px;
   border-radius: 999px;
 }
 
 .teams-loading {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: #0d0d0d;
+  border: 1px solid #262626;
   border-radius: 16px;
   padding: 32px;
   text-align: center;
-  color: #64748b;
+  color: #a1a1aa;
   font-weight: 600;
 }
 
@@ -217,8 +246,8 @@ button:not(.secondary):not(.danger) {
   margin-top: 16px;
   padding: 14px;
   border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #111111;
+  border: 1px solid #27272a;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -230,26 +259,27 @@ button:not(.secondary):not(.danger) {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #334155;
+  color: #d4d4d8;
   font-size: 14px;
 }
 
 .member-count strong {
   font-size: 18px;
-  color: #0f172a;
+  color: #f5f5f5;
 }
 
 .member-count span {
   margin-left: 4px;
-  color: #64748b;
+  color: #71717a;
   font-size: 12px;
 }
 
 .full-badge {
   padding: 5px 9px;
   border-radius: 999px;
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #2a1111;
+  color: #f87171;
+  border: 1px solid #451a1a;
   font-size: 11px;
   font-weight: 700;
 }
@@ -257,8 +287,9 @@ button:not(.secondary):not(.danger) {
 .available-badge {
   padding: 5px 9px;
   border-radius: 999px;
-  background: #dcfce7;
-  color: #15803d;
+  background: #0c2415;
+  color: #4ade80;
+  border: 1px solid #14532d;
   font-size: 11px;
   font-weight: 700;
 }
@@ -277,35 +308,37 @@ button:not(.secondary):not(.danger) {
 }
 
 .owner-badge {
-  background: #fef3c7;
-  color: #92400e;
+  background: #2a2110;
+  color: #facc15;
+  border: 1px solid #713f12;
 }
 
 .member-badge {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #0c1f2a;
+  color: #38bdf8;
+  border: 1px solid #075985;
 }
 
 .member-management {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #27272a;
 }
 
 .member-management-title {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: #f5f5f5;
   margin-bottom: 4px;
 }
 
 .member-management-text {
   font-size: 13px;
-  color: #475569;
+  color: #a1a1aa;
 }
 
 .member-management-help {
   margin: 6px 0 0;
   font-size: 12px;
-  color: #94a3b8;
+  color: #71717a;
 }

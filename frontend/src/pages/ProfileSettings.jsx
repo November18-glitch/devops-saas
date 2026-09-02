@@ -214,7 +214,7 @@ export default function ProfileSettings() {
 
       <div
   style={{
-    background: "#f8fafc",
+    background: "#050505",
     border: "1px solid #e5e7eb",
     padding: 16,
     borderRadius: 10,

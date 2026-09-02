@@ -307,7 +307,7 @@ console.log(
 
               <div style={teamText}>
                 Active Workspaces:{" "}
-                <b style={{ color: "#334155" }}>
+                <b style={{ color: "#e4e4e7" }}>
                   {team.map((t) => t.name).join(", ") || "No Active Workspaces Found"}
                 </b>
               </div>
@@ -375,7 +375,7 @@ console.log(
           {deployments.length === 0 ? (
             <div style={emptyState}>
               <div style={emptyEmoji}>📡</div>
-              <h3 style={{ marginBottom: 10, color: "#1e293b" }}>No execution contexts found</h3>
+              <h3 style={{ marginBottom: 10, color: "#f5f5f5" }}>No execution contexts found</h3>
               <p style={emptyText}>
                 Launch an app deployment stream inside a workspace project to build logs.
               </p>
@@ -439,7 +439,7 @@ function StatCard({ label, value, emoji }) {
 
 /* ================= COMPONENT SPECIFIC INTERFACE STYLES ================= */
 const container = {
-  background: "#f8fafc",
+  background: "#050505",
   minHeight: "100vh",
   padding: "40px 24px",
   fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
@@ -455,18 +455,19 @@ const loadingContainer = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "#f8fafc",
+  background: "#050505",
 };
 
 const loadingCard = {
-  background: "white",
+  background: "#0d0d0d",
   padding: "24px 36px",
   borderRadius: 16,
-  boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05)",
+  border: "1px solid #262626",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.35)",
   display: "flex",
   alignItems: "center",
   gap: 16,
-  color: "#475569",
+  color: "#a1a1aa",
   fontWeight: 600,
 };
 
@@ -480,12 +481,12 @@ const loadingSpinner = {
 };
 
 const heroCard = {
-  background: "#ffffff",
+  background: "#0d0d0d",
   borderRadius: 24,
   padding: 32,
   marginBottom: 24,
-  border: "1px solid #f1f5f9",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02)",
+  border: "1px solid #262626",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
 };
 
 const heroTop = {
@@ -507,12 +508,12 @@ const heroTitle = {
   fontSize: 30,
   margin: 0,
   fontWeight: 800,
-  color: "#0f172a",
+  color: "#f5f5f5",
   letterSpacing: "-0.5px",
 };
 
 const heroSubtitle = {
-  color: "#475569",
+  color: "#a1a1aa",
   lineHeight: 1.6,
   maxWidth: 640,
   fontSize: 15,
@@ -520,7 +521,7 @@ const heroSubtitle = {
 };
 
 const teamText = {
-  color: "#64748b",
+  color: "#71717a",
   fontSize: 14,
 };
 
@@ -551,17 +552,17 @@ const upgradeBtn = {
 const successBox = {
   marginTop: 24,
   padding: "14px 18px",
-  background: "#f0fdf4",
-  border: "1px solid #bbf7d0",
-  color: "#166534",
+  background: "#0c2415",
+  border: "1px solid #14532d",
+  color: "#4ade80",
   borderRadius: 12,
   fontWeight: 600,
   fontSize: 14,
 };
 
 const quickStartBox = {
-  background: "#ffffff",
-  border: "1px solid #e2e8f0",
+  background: "#0d0d0d",
+  border: "1px solid #262626",
   borderRadius: 20,
   padding: 32,
   marginBottom: 24,
@@ -571,14 +572,14 @@ const quickStartTitle = {
   margin: "0 0 16px 0",
   fontSize: 20,
   fontWeight: 700,
-  color: "#0f172a",
+  color: "#f5f5f5",
 };
 
 const quickStartList = {
   margin: "0 0 24px 0",
   paddingLeft: 20,
   lineHeight: "2.2",
-  color: "#475569",
+  color: "#a1a1aa",
   fontSize: 14,
 };
 
@@ -588,7 +589,7 @@ const quickStartStep = {
 
 const primaryAction = {
   padding: "12px 22px",
-  background: "#0f172a",
+  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
   color: "white",
   border: "none",
   borderRadius: 10,
@@ -606,11 +607,11 @@ const grid = {
 };
 
 const statCard = {
-  background: "white",
+  background: "#0d0d0d",
   padding: 24,
   borderRadius: 16,
-  border: "1px solid #e2e8f0",
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.01)",
+  border: "1px solid #262626",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
 };
 
 const statTop = {
@@ -622,13 +623,13 @@ const statTop = {
 
 const statEmoji = {
   fontSize: 18,
-  background: "#f1f5f9",
+  background: "#18181b",
   padding: "6px 10px",
   borderRadius: 8,
 };
 
 const statLabel = {
-  color: "#64748b",
+  color: "#a1a1aa",
   fontSize: 13,
   fontWeight: 600,
   textTransform: "uppercase",
@@ -638,15 +639,16 @@ const statLabel = {
 const statValue = {
   fontSize: 32,
   fontWeight: 800,
-  color: "#0f172a",
+  color: "#f5f5f5",
   letterSpacing: "-0.5px",
 };
 
 const tableWrapper = {
-  background: "white",
+  background: "#0d0d0d",
   borderRadius: 20,
   padding: 32,
-  border: "1px solid #e2e8f0",
+  border: "1px solid #262626",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
 };
 
 const tableHeader = {
@@ -662,25 +664,25 @@ const deploymentsTitle = {
   margin: 0,
   fontSize: 18,
   fontWeight: 700,
-  color: "#0f172a",
+  color: "#f5f5f5",
   marginBottom: 4,
 };
 
 const tableSubtext = {
   margin: 0,
-  color: "#64748b",
+  color: "#71717a",
   fontSize: 13,
 };
 
 const viewAllBtn = {
   padding: "8px 14px",
   borderRadius: 8,
-  border: "1px solid #cbd5e1",
-  background: "white",
+  border: "1px solid #303030",
+  background: "#111111",
   cursor: "pointer",
   fontWeight: 600,
   fontSize: 13,
-  color: "#334155",
+  color: "#d4d4d8",
   transition: "all 0.15s",
 };
 
@@ -691,10 +693,10 @@ const deploymentsList = {
 };
 
 const deploymentCard = {
-  border: "1px solid #e2e8f0",
+  border: "1px solid #27272a",
   borderRadius: 12,
   padding: 16,
-  background: "#f8fafc",
+  background: "#111111",
 };
 
 const deploymentTop = {
@@ -709,12 +711,12 @@ const deploymentTop = {
 const projectName = {
   fontWeight: 700,
   fontSize: 15,
-  color: "#0f172a",
+  color: "#f5f5f5",
   marginBottom: 2,
 };
 
 const deployTime = {
-  color: "#64748b",
+  color: "#71717a",
   fontSize: 12,
 };
 
@@ -727,8 +729,9 @@ const deploymentBottom = {
 };
 
 const environmentTag = {
-  background: "#e0f2fe",
-  color: "#0369a1",
+  background: "#0c1f2a",
+  color: "#38bdf8",
+  border: "1px solid #075985",
   padding: "4px 10px",
   borderRadius: 6,
   fontSize: 11,
@@ -756,28 +759,48 @@ const emptyText = {
 
 const viewBtn = {
   padding: "6px 12px",
-  background: "#ffffff",
-  color: "#0f172a",
+  background: "#18181b",
+  color: "#e4e4e7",
   borderRadius: 8,
   textDecoration: "none",
   fontSize: 12,
   fontWeight: 600,
-  border: "1px solid #cbd5e1",
-  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  border: "1px solid #303030",
+  boxShadow: "none",
 };
 
 const statusBadge = (status) => {
   const normStatus = (status || "").toUpperCase();
-  const isReady = normStatus === "READY" || normStatus === "SUCCESS" || normStatus === "ACTIVE";
-  const isBuilding = normStatus === "BUILDING" || normStatus === "PENDING";
-  
+
+  const isReady =
+    normStatus === "READY" ||
+    normStatus === "SUCCESS" ||
+    normStatus === "ACTIVE";
+
+  const isBuilding =
+    normStatus === "BUILDING" ||
+    normStatus === "PENDING";
+
   return {
     padding: "4px 10px",
     borderRadius: 999,
     fontWeight: 700,
     fontSize: 11,
     letterSpacing: "0.5px",
-    background: isReady ? "#dcfce7" : isBuilding ? "#fef9c3" : "#fee2e2",
-    color: isReady ? "#15803d" : isBuilding ? "#a16207" : "#b91c1c",
+    background: isReady
+      ? "#0c2415"
+      : isBuilding
+      ? "#2a2110"
+      : "#2a1111",
+    color: isReady
+      ? "#4ade80"
+      : isBuilding
+      ? "#facc15"
+      : "#f87171",
+    border: isReady
+      ? "1px solid #14532d"
+      : isBuilding
+      ? "1px solid #713f12"
+      : "1px solid #451a1a",
   };
 };

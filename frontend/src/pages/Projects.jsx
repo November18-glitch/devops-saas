@@ -682,7 +682,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
 /* STYLES */
 
 const container = {
-  background: "#f8fafc",
+  background: "#050505",
   minHeight: "100vh",
   padding: 32,
 };
@@ -712,7 +712,7 @@ const steps = {
 };
 
 const step = {
-  background: "#f8fafc",
+  background: "#050505",
   padding: 14,
   borderRadius: 10,
   fontWeight: 500,

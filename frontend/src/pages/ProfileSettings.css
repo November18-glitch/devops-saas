@@ -1,13 +1,17 @@
 .profile-page {
   padding: 40px;
+  background: #050505;
+  min-height: 100vh;
+  color: #f5f5f5;
 }
 
 .profile-card {
-  background: white;
-  border-radius: 12px;
+  background: #0d0d0d;
+  border-radius: 16px;
   padding: 30px;
   max-width: 900px;
-  box-shadow: 0px 10px 30px rgba(0,0,0,0.05);
+  border: 1px solid #262626;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .profile-section {
@@ -16,6 +20,7 @@
 
 .profile-section h4 {
   margin-bottom: 10px;
+  color: #f5f5f5;
 }
 
 .profile-section button {
@@ -23,7 +28,7 @@
   padding: 8px 14px;
   border-radius: 6px;
   border: none;
-  background: #6c63ff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   cursor: pointer;
 }
@@ -31,7 +36,9 @@
 .profile-section input {
   padding: 8px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid #303030;
+  background: #111111;
+  color: #f5f5f5;
 }
 
 .avatar-box {
@@ -40,6 +47,7 @@
   border-radius: 50%;
   overflow: hidden;
   margin-bottom: 10px;
+  border: 2px solid #303030;
 }
 
 .avatar-box img {
@@ -51,12 +59,12 @@
 .avatar-placeholder {
   width: 100%;
   height: 100%;
-  background: #ccc;
+  background: #18181b;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   font-weight: bold;
-  color: white;
+  color: #f5f5f5;
   border-radius: 50%;
 }

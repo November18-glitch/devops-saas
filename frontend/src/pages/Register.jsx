@@ -305,25 +305,23 @@ export default function Register() {
 
 const styles = {
   page: {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#fafafa",
-    padding: 20,
-  },
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#050505",
+  padding: 20,
+},
 
   card: {
-    width: "100%",
-    maxWidth: 380,
-    padding: 32,
-    background: "#fff",
-    borderRadius: 16,
-    boxShadow:
-      "0 10px 40px rgba(0,0,0,0.08)",
-    border:
-      "1px solid rgba(0,0,0,0.05)",
-  },
+  width: "100%",
+  maxWidth: 380,
+  padding: 32,
+  background: "#0d0d0d",
+  borderRadius: 16,
+  boxShadow: "0 20px 50px rgba(0,0,0,0.45)",
+  border: "1px solid #262626",
+},
 
   logoWrapper: {
     display: "flex",
@@ -333,18 +331,19 @@ const styles = {
   },
 
   title: {
-    textAlign: "center",
-    marginTop: 14,
-    marginBottom: 6,
-    fontSize: 28,
-  },
+  textAlign: "center",
+  marginTop: 14,
+  marginBottom: 6,
+  fontSize: 28,
+  color: "#f5f5f5",
+},
 
   subtitle: {
-    textAlign: "center",
-    color: "#64748b",
-    marginBottom: 28,
-    fontSize: 15,
-  },
+  textAlign: "center",
+  color: "#a1a1aa",
+  marginBottom: 28,
+  fontSize: 15,
+},
 
   successText: {
     textAlign: "center",
@@ -359,31 +358,33 @@ const styles = {
   },
 
   label: {
-    fontSize: 14,
-    marginBottom: 6,
-    fontWeight: 500,
-  },
+  fontSize: 14,
+  marginBottom: 6,
+  fontWeight: 500,
+  color: "#d4d4d8",
+},
 
   input: {
-    padding: 12,
-    marginBottom: 18,
-    borderRadius: 10,
-    border:
-      "1px solid #d1d5db",
-    fontSize: 15,
-    outline: "none",
-  },
+  padding: 12,
+  marginBottom: 18,
+  borderRadius: 10,
+  border: "1px solid #303030",
+  background: "#111111",
+  color: "#f5f5f5",
+  fontSize: 15,
+  outline: "none",
+},
 
   button: {
-    padding: 14,
-    background: "#6366f1",
-    color: "#fff",
-    border: "none",
-    borderRadius: 10,
-    fontWeight: 600,
-    fontSize: 15,
-    marginTop: 8,
-  },
+  padding: 14,
+  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+  color: "#fff",
+  border: "none",
+  borderRadius: 10,
+  fontWeight: 600,
+  fontSize: 15,
+  marginTop: 8,
+},
 
   loginButton: {
     display: "block",
@@ -403,27 +404,27 @@ const styles = {
   },
 
   footer: {
-    marginTop: 22,
-    textAlign: "center",
-    fontSize: 14,
-    color: "#64748b",
-  },
+  marginTop: 22,
+  textAlign: "center",
+  fontSize: 14,
+  color: "#71717a",
+},
 
   googleButton: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    padding: 14,
-    borderRadius: 10,
-    border:
-      "1px solid #d1d5db",
-    background: "#fff",
-    fontWeight: 600,
-    fontSize: 15,
-    cursor: "pointer",
-    marginBottom: 18,
-  },
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  padding: 14,
+  borderRadius: 10,
+  border: "1px solid #303030",
+  background: "#111111",
+  color: "#f5f5f5",
+  fontWeight: 600,
+  fontSize: 15,
+  cursor: "pointer",
+  marginBottom: 18,
+},
 
   divider: {
     display: "flex",
