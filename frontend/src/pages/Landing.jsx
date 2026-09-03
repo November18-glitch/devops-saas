@@ -388,10 +388,10 @@ export default function Landing() {
                     LaunchAlly
                   </div>
 
-                  <PreviewNav active text="Projects" />
-                  <PreviewNav text="Deployments" />
+                  <PreviewNav active text="Dashboard" />
                   <PreviewNav text="Teams" />
-                  <PreviewNav text="Settings" />
+                  <PreviewNav text="Projects" />
+                  <PreviewNav text="Profile Settings" />
                 </div>
 
                 <div
