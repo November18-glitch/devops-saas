@@ -22,33 +22,59 @@ export default function TopBar() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "14px 24px",
-        background: "rgba(5, 5, 5, 0.92)",
+        minHeight: 70,
+        padding: "12px 24px",
+        background: "rgba(8, 8, 10, 0.96)",
         borderBottom: "1px solid var(--border)",
         color: "var(--text)",
         position: "sticky",
         top: 0,
-        zIndex: 20,
-        backdropFilter: "blur(12px)",
+        zIndex: 50,
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
       }}
     >
-      <div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          minWidth: 0,
+        }}
+      >
         {user ? (
-          <strong
+          <div
             style={{
-              color: "var(--text)",
-              fontSize: 15,
-              fontWeight: 600,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              lineHeight: 1.2,
             }}
           >
-            Welcome back 👋{" "}
-            <span style={{ color: "#a78bfa" }}>{username}</span>
-          </strong>
+            <span
+              style={{
+                color: "var(--muted)",
+                fontSize: 12,
+                fontWeight: 500,
+              }}
+            >
+              Welcome back 👋
+            </span>
+
+            <strong
+              style={{
+                color: "var(--text)",
+                fontSize: 15,
+                fontWeight: 700,
+              }}
+            >
+              {username}
+            </strong>
+          </div>
         ) : (
           <span
             style={{
               color: "var(--muted)",
-              fontSize: 15,
+              fontSize: 14,
             }}
           >
             Welcome
@@ -63,17 +89,29 @@ export default function TopBar() {
             window.location.href = "/";
           }}
           style={{
-            padding: "9px 14px",
+            padding: "9px 15px",
             borderRadius: 9,
             border: "1px solid var(--border)",
             background: "var(--surface-2)",
             color: "var(--text-soft)",
-            fontSize: 14,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 700,
             cursor: "pointer",
+            transition:
+              "background .18s ease, border-color .18s ease, color .18s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--surface-3)";
+            e.currentTarget.style.borderColor = "var(--border-hover)";
+            e.currentTarget.style.color = "var(--text)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--surface-2)";
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.color = "var(--text-soft)";
           }}
         >
-          Logout
+          Log out
         </button>
       )}
     </header>
