@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import Header from "./Header";
 import logo from "../assets/logo.png";
-import "./layout.css";
+import "../styles/app.css";
 
 export default function Layout() {
   const navigate = useNavigate();

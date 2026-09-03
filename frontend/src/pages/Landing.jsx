@@ -352,7 +352,6 @@ export default function Landing() {
                     flex: 1,
                     maxWidth: 420,
                     marginRight: "auto",
-                    marginLeft: "auto",
                     background: "#070b16",
                     borderRadius: 7,
                     padding: "6px 12px",
