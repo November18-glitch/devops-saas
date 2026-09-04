@@ -1,70 +1,11 @@
-.profile-page {
-  padding: 40px;
-  background: #050505;
-  min-height: 100vh;
-  color: #f5f5f5;
+@media (max-width: 800px) {
+  .profile-page {
+    padding: 20px;
+  }
 }
 
-.profile-card {
-  background: #0d0d0d;
-  border-radius: 16px;
-  padding: 30px;
-  max-width: 900px;
-  border: 1px solid #262626;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-.profile-section {
-  margin-bottom: 30px;
-}
-
-.profile-section h4 {
-  margin-bottom: 10px;
-  color: #f5f5f5;
-}
-
-.profile-section button {
-  margin-top: 10px;
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: none;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  cursor: pointer;
-}
-
-.profile-section input {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #303030;
-  background: #111111;
-  color: #f5f5f5;
-}
-
-.avatar-box {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-bottom: 10px;
-  border: 2px solid #303030;
-}
-
-.avatar-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #18181b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #f5f5f5;
-  border-radius: 50%;
+@media (max-width: 700px) {
+  .profile-settings-grid {
+    grid-template-columns: 1fr;
+  }
 }

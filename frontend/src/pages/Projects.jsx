@@ -427,37 +427,111 @@ ${data.analysis?.detected?.join(", ") || "None"}
   <div style={container}>
     <div style={content}>
 
-      <h1 style={title}>🚀 Projects</h1>
+      {/* PAGE HEADER */}
+      <div style={pageHeader}>
+        <div>
+          <div style={eyebrow}>
+            DEPLOYMENT PLATFORM
+          </div>
 
-      {/* HERO */}
+          <h1 style={title}>
+            Projects
+          </h1>
+
+          <p style={subtitle}>
+            Build, configure, and deploy your applications
+            from one workspace.
+          </p>
+        </div>
+
+        <div style={headerBadge}>
+          <span style={onlineDot}></span>
+          Deployment engine online
+        </div>
+      </div>
+
+      {/* DEPLOYMENT PIPELINE */}
       <div style={hero}>
-        <h2 style={{ marginTop: 0, color: "var(--text)" }}>
-          Deploy your app in 3 steps
-        </h2>
+        <div style={heroGlow}></div>
 
-        <div style={steps}>
-          <div style={step}>
-            1️⃣ Create or select a project
+        <div style={heroContent}>
+          <div style={heroLabel}>
+            YOUR DEPLOYMENT PIPELINE
           </div>
 
-          <div style={step}>
-            2️⃣ Connect your GitHub repository
-          </div>
+          <h2 style={heroTitle}>
+            From repository to production.
+          </h2>
 
-          <div style={step}>
-            3️⃣ Click Deploy 🚀
+          <p style={heroSubtitle}>
+            LaunchAlly analyzes your application,
+            prepares the environment, and handles
+            the deployment flow.
+          </p>
+
+          <div style={steps}>
+            <div style={step}>
+              <div style={stepNumber}>01</div>
+              <div>
+                <strong>Create</strong>
+                <span>Create or select a project.</span>
+              </div>
+            </div>
+
+            <div style={stepLine}></div>
+
+            <div style={step}>
+              <div style={stepNumber}>02</div>
+              <div>
+                <strong>Connect</strong>
+                <span>Connect your GitHub repository.</span>
+              </div>
+            </div>
+
+            <div style={stepLine}></div>
+
+            <div style={step}>
+              <div style={stepNumber}>03</div>
+              <div>
+                <strong>Deploy</strong>
+                <span>Analyze, build, and launch.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* CREATE PROJECT */}
       <div style={card}>
-        <h3 style={cardTitle}>Create New Project</h3>
+        <div style={cardHeader}>
+          <div>
+            <div style={sectionEyebrow}>
+              NEW APPLICATION
+            </div>
+
+            <h3 style={cardTitle}>
+              Create New Project
+            </h3>
+
+            <p style={cardDescription}>
+              Connect a repository and configure your
+              deployment environment.
+            </p>
+          </div>
+
+          <div style={cardIcon}>＋</div>
+        </div>
+
+        <label style={label}>
+          Team
+        </label>
 
         <select
           style={input}
           value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
+          onChange={(e) =>
+            setSelectedTeam(e.target.value)
+          }
         >
           <option value="">Select Team</option>
 
@@ -468,76 +542,103 @@ ${data.analysis?.detected?.join(", ") || "None"}
           ))}
         </select>
 
+        <label style={label}>
+          Project Name
+        </label>
+
         <input
           style={input}
           placeholder="My SaaS App"
           value={newProjectName}
-          onChange={(e) => setNewProjectName(e.target.value)}
+          onChange={(e) =>
+            setNewProjectName(e.target.value)
+          }
         />
+
+        <label style={label}>
+          GitHub Repository
+        </label>
 
         <input
           style={input}
           placeholder="https://github.com/your/repository"
           value={newRepoUrl}
-          onChange={(e) => setNewRepoUrl(e.target.value)}
+          onChange={(e) =>
+            setNewRepoUrl(e.target.value)
+          }
         />
 
-        <h3 style={cardTitle}>Environment Variables</h3>
+        <div style={environmentHeader}>
+          <div>
+            <h3 style={environmentTitle}>
+              Environment Variables
+            </h3>
 
-        {envVars.map((env, index) => (
-          <div
-            key={index}
-            style={envRow}
-          >
-            <input
-              placeholder="KEY"
-              value={env.key}
-              onChange={(e) => {
-                const updated = [...envVars];
-                updated[index] = {
-                  ...updated[index],
-                  key: e.target.value,
-                };
-                setEnvVars(updated);
-              }}
-              style={{
-                ...input,
-                flex: 1,
-                marginBottom: 0,
-              }}
-            />
-
-            <input
-              placeholder="VALUE"
-              value={env.value}
-              onChange={(e) => {
-                const updated = [...envVars];
-                updated[index] = {
-                  ...updated[index],
-                  value: e.target.value,
-                };
-                setEnvVars(updated);
-              }}
-              style={{
-                ...input,
-                flex: 2,
-                marginBottom: 0,
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => {
-                setEnvVars(
-                  envVars.filter((_, i) => i !== index)
-                );
-              }}
-              style={removeButton}
-            >
-              ✕
-            </button>
+            <p style={environmentSubtitle}>
+              Configure values your application needs at runtime.
+            </p>
           </div>
-        ))}
+        </div>
+
+        <div style={envContainer}>
+          {envVars.map((env, index) => (
+            <div key={index} style={envRow}>
+              <input
+                placeholder="KEY"
+                value={env.key}
+                onChange={(e) => {
+                  const updated = [...envVars];
+
+                  updated[index] = {
+                    ...updated[index],
+                    key: e.target.value,
+                  };
+
+                  setEnvVars(updated);
+                }}
+                style={{
+                  ...input,
+                  flex: 1,
+                  marginBottom: 0,
+                }}
+              />
+
+              <input
+                placeholder="VALUE"
+                value={env.value}
+                onChange={(e) => {
+                  const updated = [...envVars];
+
+                  updated[index] = {
+                    ...updated[index],
+                    value: e.target.value,
+                  };
+
+                  setEnvVars(updated);
+                }}
+                style={{
+                  ...input,
+                  flex: 2,
+                  marginBottom: 0,
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEnvVars(
+                    envVars.filter(
+                      (_, i) => i !== index
+                    )
+                  );
+                }}
+                style={removeButton}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
 
         <button
           type="button"
@@ -552,25 +653,48 @@ ${data.analysis?.detected?.join(", ") || "None"}
           }
           style={addVariableButton}
         >
-          + Add Variable
+          <span>＋</span>
+          Add environment variable
         </button>
 
         <button
           style={primary}
           onClick={handleCreateProject}
         >
-          ➕ Create Project
+          Create Project
+          <span>→</span>
         </button>
       </div>
 
       {/* EXISTING PROJECTS */}
       <div style={card}>
-        <h3 style={cardTitle}>Deploy Existing Project</h3>
+        <div style={cardHeader}>
+          <div>
+            <div style={sectionEyebrow}>
+              WORKSPACE
+            </div>
+
+            <h3 style={cardTitle}>
+              Deploy Existing Project
+            </h3>
+
+            <p style={cardDescription}>
+              Select an existing project to inspect or deploy.
+            </p>
+          </div>
+        </div>
 
         <div style={projectList}>
           {projects.length === 0 ? (
             <div style={emptyProject}>
-              No projects yet. Create your first project above.
+              <div style={emptyProjectIcon}>📦</div>
+
+              <div>
+                <strong>No projects yet</strong>
+                <span>
+                  Create your first project above.
+                </span>
+              </div>
             </div>
           ) : (
             projects.map((project) => (
@@ -578,15 +702,27 @@ ${data.analysis?.detected?.join(", ") || "None"}
                 key={project.id}
                 style={projectRow}
               >
-                <div>
-                  <b style={{ color: "var(--text)" }}>
-                    {project.name}
-                  </b>
+                <div style={projectInfo}>
+                  <div style={projectSmallIcon}>
+                    🚀
+                  </div>
+
+                  <div>
+                    <b style={projectName}>
+                      {project.name}
+                    </b>
+
+                    <span style={projectRepo}>
+                      {project.repo_url}
+                    </span>
+                  </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => deleteProject(project)}
+                  onClick={() =>
+                    deleteProject(project)
+                  }
                   style={deleteButton}
                 >
                   Delete
@@ -595,6 +731,10 @@ ${data.analysis?.detected?.join(", ") || "None"}
             ))
           )}
         </div>
+
+        <label style={label}>
+          Selected Project
+        </label>
 
         <select
           style={input}
@@ -641,39 +781,70 @@ ${data.analysis?.detected?.join(", ") || "None"}
             style={secondary}
             onClick={() => {
               if (!selectedProject) {
-                return alert("Select a project first");
+                return alert(
+                  "Select a project first"
+                );
               }
 
-              navigate(`/projects/${selectedProject}`);
+              navigate(
+                `/projects/${selectedProject}`
+              );
             }}
           >
-            📂 Open Project
+            Open Project
+            <span>→</span>
           </button>
 
           <button
             style={primary}
             onClick={handleDeploy}
           >
-            🚀 Deploy Now
+            Deploy Now
+            <span>🚀</span>
           </button>
         </div>
       </div>
 
       {/* RECENT DEPLOYMENTS */}
       <div style={recentSection}>
-        <h2 style={sectionTitle}>
-          Recent Deployments
-        </h2>
+        <div style={recentHeader}>
+          <div>
+            <div style={sectionEyebrow}>
+              OPERATIONS
+            </div>
+
+            <h2 style={sectionTitle}>
+              Recent Deployments
+            </h2>
+
+            <p style={sectionSubtitle}>
+              Deployment status, logs, and production URLs.
+            </p>
+          </div>
+        </div>
 
         {!selectedProject && (
           <div style={emptyState}>
-            Select a project to see deployments
+            <div style={emptyStateIcon}>⌁</div>
+
+            <h3>Select a project</h3>
+
+            <p>
+              Choose a project above to inspect its
+              deployment history.
+            </p>
           </div>
         )}
 
         {selectedProject && loading && (
           <div style={emptyState}>
-            Loading deployments...
+            <div style={loader}></div>
+
+            <h3>Loading deployments...</h3>
+
+            <p>
+              Synchronizing deployment history.
+            </p>
           </div>
         )}
 
@@ -681,7 +852,16 @@ ${data.analysis?.detected?.join(", ") || "None"}
           !loading &&
           deployments.length === 0 && (
             <div style={emptyState}>
-              No deployments yet for this project.
+              <div style={emptyStateIcon}>
+                🚀
+              </div>
+
+              <h3>No deployments yet</h3>
+
+              <p>
+                Deploy this project to start building
+                your deployment history.
+              </p>
             </div>
           )}
 
@@ -693,16 +873,45 @@ ${data.analysis?.detected?.join(", ") || "None"}
             >
               <div style={deployTop}>
                 <div>
-                  <div style={deployId}>
-                    {d.id}
+                  <div style={deploymentIdRow}>
+                    <span style={terminalDot}></span>
+
+                    <div style={deployId}>
+                      {d.id}
+                    </div>
                   </div>
 
-                  <div style={status(d.status)}>
-                    {d.status}
+                  <div style={deployDate}>
+                    {d.createdAt
+                      ? new Date(
+                          d.createdAt
+                        ).toLocaleString()
+                      : "Recently created"}
                   </div>
                 </div>
 
-                {d.url && (
+                <div style={status(d.status)}>
+                  <span style={statusDot}></span>
+                  {d.status}
+                </div>
+              </div>
+
+              <div style={logsHeader}>
+                <span>BUILD OUTPUT</span>
+              </div>
+
+              <div style={logs}>
+                {d.logs ||
+                  "No deployment logs available."}
+              </div>
+
+              {d.url && (
+                <div style={deploymentFooter}>
+                  <div style={liveIndicator}>
+                    <span></span>
+                    Live deployment available
+                  </div>
+
                   <a
                     href={d.url}
                     target="_blank"
@@ -710,13 +919,10 @@ ${data.analysis?.detected?.join(", ") || "None"}
                     style={liveLink}
                   >
                     Open Deployment
+                    <span>↗</span>
                   </a>
-                )}
-              </div>
-
-              <div style={logs}>
-                {d.logs || "No deployment logs available."}
-              </div>
+                </div>
+              )}
             </div>
           ))}
       </div>
@@ -724,9 +930,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
     </div>
   </div>
 );
-
 }
-
 
 /* =========================
    STYLES
@@ -736,260 +940,591 @@ const container = {
   background: "var(--bg)",
   minHeight: "100vh",
   color: "var(--text)",
-  padding: 32,
+  padding: "34px 28px 60px",
 };
 
 const content = {
-  maxWidth: 1000,
+  maxWidth: 1050,
   margin: "0 auto",
+};
+
+const pageHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-end",
+  gap: 20,
+  marginBottom: 26,
+  flexWrap: "wrap",
+};
+
+const eyebrow = {
+  color: "#8b5cf6",
+  fontSize: 10,
+  fontWeight: 850,
+  letterSpacing: "1.5px",
+  marginBottom: 7,
 };
 
 const title = {
   fontSize: 32,
-  marginBottom: 24,
+  margin: 0,
   color: "var(--text)",
-  letterSpacing: "-0.5px",
+  letterSpacing: "-0.8px",
+  fontWeight: 850,
+};
+
+const subtitle = {
+  margin: "7px 0 0",
+  color: "var(--muted)",
+  fontSize: 14,
+};
+
+const headerBadge = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 7,
+  padding: "8px 11px",
+  borderRadius: 999,
+  background: "#0b1d13",
+  border: "1px solid #164e2a",
+  color: "#86efac",
+  fontSize: 10,
+  fontWeight: 800,
+};
+
+const onlineDot = {
+  width: 6,
+  height: 6,
+  borderRadius: "50%",
+  background: "#22c55e",
+  boxShadow: "0 0 9px rgba(34,197,94,.65)",
 };
 
 const hero = {
+  position: "relative",
+  overflow: "hidden",
   background:
-    "linear-gradient(145deg, #101014 0%, #0d0d0f 100%)",
-  border: "1px solid var(--border)",
-  padding: 24,
-  borderRadius: 18,
-  marginBottom: 24,
-  boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+    "linear-gradient(145deg, #111116 0%, #0b0b0e 70%, #100b1d 100%)",
+  border: "1px solid #292934",
+  padding: 27,
+  borderRadius: 20,
+  marginBottom: 22,
+  boxShadow: "0 20px 60px rgba(0,0,0,.30)",
+};
+
+const heroGlow = {
+  position: "absolute",
+  width: 300,
+  height: 300,
+  right: -100,
+  top: -150,
+  borderRadius: "50%",
+  background:
+    "radial-gradient(circle, rgba(124,58,237,.18), transparent 68%)",
+};
+
+const heroContent = {
+  position: "relative",
+  zIndex: 1,
+};
+
+const heroLabel = {
+  color: "#8b5cf6",
+  fontSize: 10,
+  fontWeight: 850,
+  letterSpacing: "1.5px",
+  marginBottom: 8,
+};
+
+const heroTitle = {
+  margin: 0,
+  fontSize: 23,
+  color: "#fafafa",
+  fontWeight: 850,
+  letterSpacing: "-.5px",
+};
+
+const heroSubtitle = {
+  maxWidth: 620,
+  margin: "8px 0 23px",
+  color: "#8b8b96",
+  fontSize: 13,
+  lineHeight: 1.6,
 };
 
 const steps = {
   display: "flex",
-  flexDirection: "column",
-  gap: 12,
-  marginTop: 18,
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "wrap",
 };
 
 const step = {
-  background: "var(--surface-2)",
-  border: "1px solid var(--border)",
-  color: "var(--text-soft)",
-  padding: 14,
-  borderRadius: 10,
-  fontWeight: 500,
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "11px 13px",
+  background: "#09090c",
+  border: "1px solid #262630",
+  borderRadius: 11,
+};
+
+const stepNumber = {
+  color: "#a78bfa",
+  fontSize: 10,
+  fontWeight: 900,
+  fontFamily: "ui-monospace, monospace",
+};
+
+const stepLine = {
+  width: 20,
+  height: 1,
+  background: "#33333d",
 };
 
 const card = {
-  background: "var(--surface)",
+  background:
+    "linear-gradient(145deg, #101014 0%, #0c0c0f 100%)",
   border: "1px solid var(--border)",
   color: "var(--text)",
-  padding: 24,
+  padding: 25,
   borderRadius: 18,
-  marginBottom: 24,
-  boxShadow: "0 10px 35px rgba(0,0,0,0.22)",
+  marginBottom: 22,
+  boxShadow: "0 12px 40px rgba(0,0,0,.20)",
+};
+
+const cardHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  gap: 15,
+  marginBottom: 22,
+};
+
+const sectionEyebrow = {
+  color: "#8b5cf6",
+  fontSize: 9,
+  fontWeight: 850,
+  letterSpacing: "1.4px",
+  marginBottom: 6,
 };
 
 const cardTitle = {
-  marginTop: 0,
-  marginBottom: 16,
+  margin: 0,
   color: "var(--text)",
+  fontSize: 18,
+  fontWeight: 800,
+};
+
+const cardDescription = {
+  margin: "5px 0 0",
+  color: "var(--muted)",
+  fontSize: 12,
+};
+
+const cardIcon = {
+  width: 36,
+  height: 36,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 10,
+  background: "#181326",
+  border: "1px solid #30234c",
+  color: "#c4b5fd",
+  fontSize: 18,
+};
+
+const label = {
+  display: "block",
+  color: "#b8b8c2",
+  fontSize: 11,
+  fontWeight: 700,
+  marginBottom: 7,
 };
 
 const input = {
   width: "100%",
-  padding: 14,
-  marginBottom: 14,
+  padding: "12px 13px",
+  marginBottom: 16,
   borderRadius: 10,
   border: "1px solid var(--border)",
-  background: "#09090b",
+  background: "#08080b",
   color: "var(--text)",
-  fontSize: 14,
+  fontSize: 13,
   boxSizing: "border-box",
   outline: "none",
   colorScheme: "dark",
 };
 
+const environmentHeader = {
+  paddingTop: 6,
+  marginBottom: 13,
+};
+
+const environmentTitle = {
+  margin: 0,
+  color: "var(--text)",
+  fontSize: 14,
+  fontWeight: 800,
+};
+
+const environmentSubtitle = {
+  margin: "4px 0 0",
+  color: "var(--muted)",
+  fontSize: 11,
+};
+
+const envContainer = {
+  padding: 12,
+  background: "#09090c",
+  border: "1px solid #24242d",
+  borderRadius: 12,
+  marginBottom: 10,
+};
+
 const envRow = {
   display: "flex",
-  gap: 10,
-  marginBottom: 10,
+  gap: 8,
+  marginBottom: 8,
   alignItems: "center",
 };
 
 const removeButton = {
   flexShrink: 0,
-  width: 42,
-  height: 42,
+  width: 40,
+  height: 40,
   borderRadius: 9,
   border: "1px solid #7f1d1d",
   background: "var(--danger-bg)",
   color: "#fca5a5",
   cursor: "pointer",
-  fontWeight: 700,
+  fontWeight: 800,
+  fontSize: 18,
 };
 
 const addVariableButton = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 6,
   width: "100%",
-  padding: 12,
+  padding: 11,
   marginBottom: 16,
   borderRadius: 10,
-  border: "1px dashed var(--border)",
-  background: "var(--surface-2)",
-  color: "var(--text-soft)",
+  border: "1px dashed #353541",
+  background: "#0b0b0f",
+  color: "#aaaab5",
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 650,
+  fontSize: 12,
 };
 
 const primary = {
-  flex: 1,
-  padding: 14,
-  borderRadius: 12,
-  border: "1px solid rgba(139,92,246,0.35)",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 9,
+  width: "100%",
+  padding: 13,
+  borderRadius: 11,
+  border: "1px solid rgba(139,92,246,.35)",
   cursor: "pointer",
   color: "white",
-  fontWeight: 700,
+  fontWeight: 750,
   background:
     "linear-gradient(135deg, var(--accent-2), var(--accent))",
-  boxShadow:
-    "0 8px 24px rgba(99,102,241,0.18)",
-};
-
-const secondary = {
-  flex: 1,
-  padding: 14,
-  borderRadius: 12,
-  border: "1px solid var(--border)",
-  cursor: "pointer",
-  fontWeight: 700,
-  color: "var(--text-soft)",
-  background: "var(--surface-2)",
-};
-
-const buttonRow = {
-  display: "flex",
-  gap: 12,
+  boxShadow: "0 10px 25px rgba(99,102,241,.15)",
 };
 
 const projectList = {
-  marginBottom: 20,
+  marginBottom: 18,
 };
 
 const projectRow = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: 14,
-  marginBottom: 10,
-  background: "var(--surface-2)",
-  border: "1px solid var(--border)",
-  borderRadius: 12,
+  gap: 12,
+  padding: 13,
+  marginBottom: 8,
+  background: "#09090c",
+  border: "1px solid #24242d",
+  borderRadius: 11,
+};
+
+const projectInfo = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  minWidth: 0,
+};
+
+const projectSmallIcon = {
+  width: 32,
+  height: 32,
+  flexShrink: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#17141f",
+  border: "1px solid #30234c",
+  borderRadius: 8,
+  fontSize: 13,
+};
+
+const projectName = {
+  display: "block",
+  color: "var(--text)",
+  fontSize: 13,
+};
+
+const projectRepo = {
+  display: "block",
+  color: "#62626d",
+  fontSize: 10,
+  marginTop: 3,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  maxWidth: 550,
 };
 
 const deleteButton = {
+  flexShrink: 0,
   background: "var(--danger-bg)",
   color: "#fca5a5",
   border: "1px solid #7f1d1d",
   borderRadius: 8,
-  padding: "8px 12px",
+  padding: "7px 10px",
   cursor: "pointer",
-  fontWeight: 600,
+  fontWeight: 700,
+  fontSize: 11,
 };
 
 const emptyProject = {
-  padding: 14,
-  marginBottom: 10,
-  background: "var(--surface-2)",
-  border: "1px solid var(--border)",
-  borderRadius: 12,
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  padding: 15,
+  background: "#09090c",
+  border: "1px dashed #30303a",
+  borderRadius: 11,
   color: "var(--muted)",
 };
 
+const emptyProjectIcon = {
+  fontSize: 18,
+};
+
+const buttonRow = {
+  display: "flex",
+  gap: 10,
+};
+
+const secondary = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  flex: 1,
+  padding: 13,
+  borderRadius: 11,
+  border: "1px solid var(--border)",
+  cursor: "pointer",
+  fontWeight: 700,
+  color: "var(--text-soft)",
+  background: "var(--surface-2)",
+};
+
 const recentSection = {
-  marginTop: 30,
+  marginTop: 36,
+};
+
+const recentHeader = {
+  marginBottom: 15,
 };
 
 const sectionTitle = {
+  margin: 0,
   color: "var(--text)",
-  marginBottom: 16,
+  fontSize: 20,
+  fontWeight: 800,
+};
+
+const sectionSubtitle = {
+  margin: "5px 0 0",
+  color: "var(--muted)",
+  fontSize: 12,
+};
+
+const emptyState = {
+  textAlign: "center",
+  background: "#0b0b0f",
+  border: "1px dashed #30303a",
+  padding: "42px 20px",
+  borderRadius: 15,
+  color: "var(--muted)",
+};
+
+const emptyStateIcon = {
+  fontSize: 28,
+  marginBottom: 8,
+};
+
+const loader = {
+  width: 20,
+  height: 20,
+  borderRadius: "50%",
+  border: "3px solid #292933",
+  borderTopColor: "#8b5cf6",
+  margin: "0 auto 12px",
+  animation: "spin 1s linear infinite",
 };
 
 const deployCard = {
-  background: "var(--surface)",
+  background:
+    "linear-gradient(145deg, #101014, #0c0c0f)",
   border: "1px solid var(--border)",
   color: "var(--text)",
   borderRadius: 16,
-  padding: 20,
-  marginBottom: 16,
-  boxShadow: "0 8px 28px rgba(0,0,0,0.18)",
+  padding: 19,
+  marginBottom: 12,
+  boxShadow: "0 10px 30px rgba(0,0,0,.18)",
 };
 
 const deployTop = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  marginBottom: 14,
+  gap: 15,
+  marginBottom: 15,
+};
+
+const deploymentIdRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
+
+const terminalDot = {
+  width: 7,
+  height: 7,
+  borderRadius: "50%",
+  background: "#8b5cf6",
+  boxShadow: "0 0 10px rgba(139,92,246,.5)",
 };
 
 const deployId = {
-  fontWeight: 700,
-  marginBottom: 6,
+  fontWeight: 750,
+  fontSize: 13,
   color: "var(--text)",
+  fontFamily: "ui-monospace, monospace",
+};
+
+const deployDate = {
+  fontSize: 10,
+  color: "#62626d",
+  marginTop: 5,
+};
+
+const status = (s) => {
+  const normalized = (s || "").toUpperCase();
+
+  const ready =
+    normalized === "READY" ||
+    normalized === "SUCCESS" ||
+    normalized === "ACTIVE";
+
+  const building =
+    normalized === "BUILDING" ||
+    normalized === "PENDING" ||
+    normalized === "ANALYZING";
+
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "6px 9px",
+    borderRadius: 999,
+    fontSize: 10,
+    fontWeight: 850,
+    background: ready
+      ? "#0b2115"
+      : building
+      ? "#211b0b"
+      : "#261010",
+    color: ready
+      ? "#86efac"
+      : building
+      ? "#fcd34d"
+      : "#fca5a5",
+    border: ready
+      ? "1px solid #14532d"
+      : building
+      ? "1px solid #713f12"
+      : "1px solid #7f1d1d",
+  };
+};
+
+const statusDot = {
+  width: 5,
+  height: 5,
+  borderRadius: "50%",
+  background: "currentColor",
+};
+
+const logsHeader = {
+  color: "#62626d",
+  fontSize: 9,
+  fontWeight: 850,
+  letterSpacing: "1px",
+  marginBottom: 6,
 };
 
 const logs = {
-  background: "#08080a",
-  border: "1px solid var(--border)",
-  color: "#c4c4ce",
+  background: "#07070a",
+  border: "1px solid #202027",
+  color: "#b8b8c2",
   padding: 14,
   borderRadius: 10,
-  fontSize: 13,
+  fontSize: 11,
   overflowX: "auto",
   whiteSpace: "pre-wrap",
-  lineHeight: 1.6,
+  lineHeight: 1.65,
+  maxHeight: 190,
   fontFamily:
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
 };
 
-const liveLink = {
-  padding: "10px 14px",
-  background: "var(--accent-2)",
-  color: "white",
-  borderRadius: 10,
-  textDecoration: "none",
-  fontWeight: 600,
+const deploymentFooter = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  flexWrap: "wrap",
+  marginTop: 12,
 };
 
-const emptyState = {
-  background: "var(--surface)",
-  border: "1px solid var(--border)",
-  padding: 20,
-  borderRadius: 14,
-  color: "var(--muted)",
-};
-
-const status = (s) => ({
-  display: "inline-block",
-  padding: "6px 10px",
-  borderRadius: 999,
-  fontSize: 12,
+const liveIndicator = {
+  display: "flex",
+  alignItems: "center",
+  gap: 7,
+  color: "#86efac",
+  fontSize: 10,
   fontWeight: 700,
+};
 
-  background:
-    s === "READY"
-      ? "var(--success-bg)"
-      : s === "BUILDING"
-      ? "var(--warning-bg)"
-      : "var(--danger-bg)",
-
-  color:
-    s === "READY"
-      ? "#86efac"
-      : s === "BUILDING"
-      ? "#fcd34d"
-      : "#fca5a5",
-
-  border:
-    s === "READY"
-      ? "1px solid #14532d"
-      : s === "BUILDING"
-      ? "1px solid #78350f"
-      : "1px solid #7f1d1d",
-});
+const liveLink = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 7,
+  padding: "9px 12px",
+  background: "#17141f",
+  border: "1px solid #30234c",
+  color: "#c4b5fd",
+  borderRadius: 9,
+  textDecoration: "none",
+  fontWeight: 700,
+  fontSize: 11,
+};

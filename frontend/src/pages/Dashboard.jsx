@@ -278,39 +278,66 @@ console.log(
 };
 
   if (loading) {
-    return (
-      <div style={loadingContainer}>
-        <div style={loadingCard}>
-          <div style={loadingSpinner}></div>
-          <div>Synchronizing workspace data...</div>
+  return (
+    <div style={loadingContainer}>
+      <div style={loadingCard}>
+        <div style={loadingSpinner}></div>
+        <div>
+          <div style={loadingTitle}>Synchronizing workspace</div>
+          <div style={loadingText}>Loading your LaunchAlly environment...</div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  return (
-    <div style={container}>
-      <div style={main}>
+return (
+  <div style={container}>
+    <div style={main}>
 
-        {/* HERO SECTION */}
-        <div style={heroCard}>
+      {/* HERO */}
+      <div style={heroCard}>
+        <div style={heroGlow}></div>
+
+        <div style={heroContent}>
           <div style={heroTop}>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={eyebrow}>
+                LAUNCHALLY CONTROL CENTER
+              </div>
+
               <div style={welcomeRow}>
-                <h1 style={heroTitle}>Welcome back 👋</h1>
-                {isPro && <div style={proBadge}>PRO</div>}
+                <h1 style={heroTitle}>
+                  Welcome back 👋
+                </h1>
+
+                {isPro && (
+                  <div style={proBadge}>
+                    ✦ PRO
+                  </div>
+                )}
               </div>
 
               <p style={heroSubtitle}>
-                Deploy systems, orchestrate teams, and track real-time changes instantly.
+                Deploy systems, orchestrate teams, and monitor
+                production changes from one clean workspace.
               </p>
 
               <div style={teamText}>
-                Active Workspaces:{" "}
-                <b style={{ color: "#e4e4e7" }}>
-                  {team.map((t) => t.name).join(", ") || "No Active Workspaces Found"}
+                <span style={teamLabel}>
+                  ACTIVE WORKSPACES
+                </span>
+
+                <b style={teamNames}>
+                  {team.map((t) => t.name).join(", ") ||
+                    "No Active Workspaces Found"}
                 </b>
               </div>
+            </div>
+
+            <div style={heroStatus}>
+              <div style={statusDot}></div>
+              <span>Systems operational</span>
             </div>
           </div>
 
@@ -321,132 +348,279 @@ console.log(
               onMouseLeave={() => setHoveredBtn(null)}
               style={{
                 ...upgradeBtn,
-                opacity: hoveredBtn === "upgrade" ? 0.9 : 1,
-                transform: hoveredBtn === "upgrade" ? "translateY(-1px)" : "none",
+                transform:
+                  hoveredBtn === "upgrade"
+                    ? "translateY(-2px)"
+                    : "none",
               }}
             >
-              🚀 Upgrade to Pro
+              <span>🚀</span>
+              Upgrade to Pro
+              <span style={upgradeArrow}>→</span>
             </button>
           ) : (
             <div style={successBox}>
-              🔥 Platinum access configured: Unlimited deployments unlocked
+              <span style={successIcon}>✓</span>
+              <div>
+                <strong>Pro workspace active</strong>
+                <span>
+                  Unlimited deployments are unlocked.
+                </span>
+              </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* ONBOARDING QUICK START */}
-        {projects.length === 0 && (
-          <div style={quickStartBox}>
-            <h2 style={quickStartTitle}>🚀 Onboarding Roadmap</h2>
-            <ol style={quickStartList}>
-              <li style={quickStartStep}>Go to Teams and create a workspace</li>
-              <li style={quickStartStep}>Go to Projects and create a project</li>
-              <li style={quickStartStep}>Connect your GitHub repository</li>
-              <li style={quickStartStep}>Deploy your application</li>
-            </ol>
+      {/* QUICK START */}
+      {projects.length === 0 && (
+        <div style={quickStartBox}>
+          <div style={quickStartHeader}>
+            <div>
+              <div style={sectionEyebrow}>GET STARTED</div>
+
+              <h2 style={quickStartTitle}>
+                Your deployment journey starts here
+              </h2>
+
+              <p style={quickStartSubtitle}>
+                Follow these four steps to get your first
+                application running.
+              </p>
+            </div>
+
+            <div style={rocketIcon}>🚀</div>
+          </div>
+
+          <div style={quickStartGrid}>
+            <div style={quickStep}>
+              <div style={stepNumber}>01</div>
+              <div>
+                <strong>Create a workspace</strong>
+                <span>
+                  Organize your projects and collaborators.
+                </span>
+              </div>
+            </div>
+
+            <div style={quickStep}>
+              <div style={stepNumber}>02</div>
+              <div>
+                <strong>Create a project</strong>
+                <span>
+                  Give your application a home.
+                </span>
+              </div>
+            </div>
+
+            <div style={quickStep}>
+              <div style={stepNumber}>03</div>
+              <div>
+                <strong>Connect GitHub</strong>
+                <span>
+                  Point LaunchAlly at your repository.
+                </span>
+              </div>
+            </div>
+
+            <div style={quickStep}>
+              <div style={stepNumber}>04</div>
+              <div>
+                <strong>Deploy</strong>
+                <span>
+                  Analyze, build, and launch your application.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            style={primaryAction}
+            onClick={() => navigate("/teams")}
+          >
+            Create your first team
+            <span>→</span>
+          </button>
+        </div>
+      )}
+
+      {/* OVERVIEW */}
+      <div style={overviewHeader}>
+        <div>
+          <div style={sectionEyebrow}>WORKSPACE OVERVIEW</div>
+          <h2 style={overviewTitle}>System Overview</h2>
+        </div>
+      </div>
+
+      <div style={grid}>
+        <StatCard
+          label="Total Projects"
+          value={projects.length}
+          emoji="📦"
+        />
+
+        <StatCard
+          label="Live Deployments"
+          value={deployments.length}
+          emoji="🚀"
+        />
+
+        <StatCard
+          label="Verified Members"
+          value={membersCount}
+          emoji="👥"
+        />
+      </div>
+
+      {/* DEPLOYMENTS */}
+      <div style={tableWrapper}>
+        <div style={tableHeader}>
+          <div>
+            <div style={sectionEyebrow}>
+              DEPLOYMENT ACTIVITY
+            </div>
+
+            <h3 style={deploymentsTitle}>
+              Recent Deployments
+            </h3>
+
+            <p style={tableSubtext}>
+              Latest operations across your LaunchAlly workspace.
+            </p>
+          </div>
+
+          <button
+            style={viewAllBtn}
+            onClick={() => navigate("/projects")}
+          >
+            View all deployments
+            <span>→</span>
+          </button>
+        </div>
+
+        {deployments.length === 0 ? (
+          <div style={emptyState}>
+            <div style={emptyIcon}>⌁</div>
+
+            <h3 style={emptyTitle}>
+              No deployments yet
+            </h3>
+
+            <p style={emptyText}>
+              Launch your first application to start seeing
+              deployment activity and build logs here.
+            </p>
+
             <button
               style={primaryAction}
-              onClick={() => navigate("/teams")}
+              onClick={() => navigate("/projects")}
             >
-              Create Team
+              Provision your first deployment
+              <span>→</span>
             </button>
           </div>
-        )}
+        ) : (
+          <div style={deploymentsList}>
+            {deployments.map((d) => (
+              <div
+                key={d.deployment_id || d.id}
+                style={deploymentCard}
+              >
+                <div style={deploymentTop}>
+                  <div style={deploymentProject}>
+                    <div style={projectIcon}>
+                      🚀
+                    </div>
 
-        {/* STATISTICS MATRICES */}
-        <div style={grid}>
-          <StatCard label="Total Projects" value={projects.length} emoji="📦" />
-          <StatCard label="Live Deployments" value={deployments.length} emoji="🚀" />
-          <StatCard label="Verified Members" value={membersCount} emoji="👥" />
-        </div>
-
-        {/* LIVE DEPLOYMENT RECORDS */}
-        <div style={tableWrapper}>
-          <div style={tableHeader}>
-            <div>
-              <h3 style={deploymentsTitle}>Recent Logs & Deployments</h3>
-              <p style={tableSubtext}>Latest operations pipeline metrics across your groups</p>
-            </div>
-            <button style={viewAllBtn} onClick={() => navigate("/projects")}>
-              View System Logs
-            </button>
-          </div>
-
-          {deployments.length === 0 ? (
-            <div style={emptyState}>
-              <div style={emptyEmoji}>📡</div>
-              <h3 style={{ marginBottom: 10, color: "#f5f5f5" }}>No execution contexts found</h3>
-              <p style={emptyText}>
-                Launch an app deployment stream inside a workspace project to build logs.
-              </p>
-              <button style={primaryAction} onClick={() => navigate("/projects")}>
-                Provision Stack
-              </button>
-            </div>
-          ) : (
-            <div style={deploymentsList}>
-              {deployments.map((d) => (
-                <div key={d.deployment_id || d.id} style={deploymentCard}>
-                  <div style={deploymentTop}>
                     <div>
                       <div style={projectName}>
-                        {projects.find((p) => p.id === d.project_id)?.name || "Production Kernel"}
+                        {projects.find(
+                          (p) => p.id === d.project_id
+                        )?.name || "Production Kernel"}
                       </div>
+
                       <div style={deployTime}>
-                        {d.created_at ? new Date(d.created_at).toLocaleString() : "Just now"}
+                        {d.created_at
+                          ? new Date(
+                              d.created_at
+                            ).toLocaleString()
+                          : "Just now"}
                       </div>
                     </div>
-                    <span style={statusBadge(d.status)}>
-                      {d.status || "IDLE"}
-                    </span>
                   </div>
 
-                  <div style={deploymentBottom}>
-                    <div style={environmentTag}>{d.environment || "production"}</div>
-                    {d.url && (
-                      <a
-                        href={d.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={viewBtn}
-                      >
-                        Launch Instance ↗
-                      </a>
-                    )}
-                  </div>
+                  <span style={statusBadge(d.status)}>
+                    <span style={statusIndicator}></span>
+                    {d.status || "IDLE"}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
 
+                <div style={deploymentBottom}>
+                  <div style={environmentTag}>
+                    <span>●</span>
+                    {d.environment || "production"}
+                  </div>
+
+                  {d.url && (
+                    <a
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={viewBtn}
+                    >
+                      Launch instance
+                      <span>↗</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
     </div>
-  );
+  </div>
+);
 }
 
 function StatCard({ label, value, emoji }) {
   return (
     <div style={statCard}>
       <div style={statTop}>
-        <div style={statLabel}>{label}</div>
-        <div style={statEmoji}>{emoji}</div>
+        <div style={statLabel}>
+          {label}
+        </div>
+
+        <div style={statEmoji}>
+          {emoji}
+        </div>
       </div>
-      <div style={statValue}>{value}</div>
+
+      <div style={statValue}>
+        {value}
+      </div>
+
+      <div style={statFooter}>
+        <span style={statPulse}></span>
+        Workspace metric
+      </div>
     </div>
   );
 }
 
-/* ================= COMPONENT SPECIFIC INTERFACE STYLES ================= */
+/* ================= COMPONENT STYLES ================= */
+
 const container = {
-  background: "#050505",
+  background: "var(--bg)",
   minHeight: "100vh",
-  padding: "40px 24px",
-  fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+  padding: "36px 28px 60px",
+  fontFamily:
+    "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 };
 
 const main = {
-  maxWidth: 1140,
+  maxWidth: 1180,
   margin: "0 auto",
 };
 
@@ -455,318 +629,541 @@ const loadingContainer = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  background: "#050505",
+  background: "var(--bg)",
 };
 
 const loadingCard = {
-  background: "#0d0d0d",
-  padding: "24px 36px",
-  borderRadius: 16,
-  border: "1px solid #262626",
-  boxShadow: "0 10px 25px rgba(0,0,0,0.35)",
   display: "flex",
   alignItems: "center",
   gap: 16,
-  color: "#a1a1aa",
-  fontWeight: 600,
+  padding: "18px 22px",
+  borderRadius: 14,
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
+  boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+  color: "var(--text)",
 };
 
 const loadingSpinner = {
-  width: 20,
-  height: 20,
+  width: 22,
+  height: 22,
   borderRadius: "50%",
-  border: "3px solid #e2e8f0",
-  borderTop: "3px solid #6366f1",
+  border: "3px solid #292933",
+  borderTopColor: "#8b5cf6",
   animation: "spin 1s linear infinite",
 };
 
+const loadingTitle = {
+  fontSize: 14,
+  fontWeight: 700,
+  marginBottom: 3,
+};
+
+const loadingText = {
+  fontSize: 12,
+  color: "var(--muted)",
+};
+
 const heroCard = {
-  background: "#0d0d0d",
-  borderRadius: 24,
-  padding: 32,
-  marginBottom: 24,
-  border: "1px solid #262626",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+  position: "relative",
+  overflow: "hidden",
+  background:
+    "linear-gradient(145deg, #111116 0%, #0b0b0e 65%, #0e0b19 100%)",
+  border: "1px solid #292934",
+  borderRadius: 22,
+  padding: 30,
+  marginBottom: 28,
+  boxShadow:
+    "0 24px 70px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.025)",
+};
+
+const heroGlow = {
+  position: "absolute",
+  width: 320,
+  height: 320,
+  right: -120,
+  top: -160,
+  borderRadius: "50%",
+  background:
+    "radial-gradient(circle, rgba(124,58,237,0.20), transparent 68%)",
+  pointerEvents: "none",
+};
+
+const heroContent = {
+  position: "relative",
+  zIndex: 1,
 };
 
 const heroTop = {
   display: "flex",
   justifyContent: "space-between",
-  gap: 20,
+  alignItems: "flex-start",
+  gap: 24,
   flexWrap: "wrap",
+};
+
+const eyebrow = {
+  color: "#8b5cf6",
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: "1.5px",
+  marginBottom: 10,
 };
 
 const welcomeRow = {
   display: "flex",
   alignItems: "center",
-  gap: 14,
+  gap: 12,
   flexWrap: "wrap",
   marginBottom: 12,
 };
 
 const heroTitle = {
-  fontSize: 30,
   margin: 0,
+  fontSize: 31,
   fontWeight: 800,
-  color: "#f5f5f5",
-  letterSpacing: "-0.5px",
+  color: "#fafafa",
+  letterSpacing: "-0.8px",
 };
 
 const heroSubtitle = {
   color: "#a1a1aa",
-  lineHeight: 1.6,
-  maxWidth: 640,
-  fontSize: 15,
-  margin: "0 0 16px 0",
+  lineHeight: 1.65,
+  maxWidth: 650,
+  fontSize: 14,
+  margin: "0 0 20px",
 };
 
 const teamText = {
-  color: "#71717a",
-  fontSize: 14,
+  display: "flex",
+  flexDirection: "column",
+  gap: 5,
 };
 
+const teamLabel = {
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: "1px",
+  color: "#71717a",
+};
+
+
 const proBadge = {
-  background: "linear-gradient(135deg, #fef08a, #facc15)",
-  color: "#713f12",
-  padding: "4px 10px",
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "5px 10px",
   borderRadius: 999,
-  fontWeight: 700,
+  background:
+    "linear-gradient(135deg, #fef08a, #facc15)",
+  color: "#713f12",
+  fontSize: 10,
+  fontWeight: 900,
+  letterSpacing: "0.7px",
+  boxShadow: "0 5px 20px rgba(250,204,21,0.12)",
+};
+
+const heroStatus = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: "#0b1d13",
+  border: "1px solid #164e2a",
+  color: "#86efac",
   fontSize: 11,
-  letterSpacing: "0.5px",
+  fontWeight: 700,
+};
+
+const statusDot = {
+  width: 7,
+  height: 7,
+  borderRadius: "50%",
+  background: "#22c55e",
+  boxShadow: "0 0 12px rgba(34,197,94,0.65)",
 };
 
 const upgradeBtn = {
-  marginTop: 24,
-  padding: "12px 24px",
-  borderRadius: 12,
-  border: "none",
-  background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 10,
+  marginTop: 28,
+  padding: "12px 18px",
+  borderRadius: 11,
+  border: "1px solid rgba(139,92,246,0.45)",
+  background:
+    "linear-gradient(135deg, #6366f1, #7c3aed)",
   color: "white",
-  fontWeight: 700,
+  fontWeight: 750,
   cursor: "pointer",
-  fontSize: 14,
-  boxShadow: "0 4px 14px 0 rgba(99, 102, 241, 0.3)",
-  transition: "all 0.2s ease-in-out",
+  fontSize: 13,
+  boxShadow: "0 10px 30px rgba(99,102,241,0.20)",
+  transition: "transform .18s ease, box-shadow .18s ease",
+};
+
+const upgradeArrow = {
+  opacity: 0.7,
+  marginLeft: 3,
 };
 
 const successBox = {
-  marginTop: 24,
-  padding: "14px 18px",
-  background: "#0c2415",
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  marginTop: 26,
+  padding: "13px 16px",
+  width: "fit-content",
+  background: "#0b1d13",
   border: "1px solid #14532d",
-  color: "#4ade80",
   borderRadius: 12,
-  fontWeight: 600,
-  fontSize: 14,
+  color: "#86efac",
+  fontSize: 13,
+};
+
+const successIcon = {
+  width: 26,
+  height: 26,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "50%",
+  background: "#14532d",
+  color: "#86efac",
+  fontWeight: 900,
 };
 
 const quickStartBox = {
-  background: "#0d0d0d",
-  border: "1px solid #262626",
+  background:
+    "linear-gradient(145deg, #101014, #0c0c0f)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
-  padding: 32,
-  marginBottom: 24,
+  padding: 28,
+  marginBottom: 30,
+  boxShadow: "0 16px 50px rgba(0,0,0,0.24)",
+};
+
+const quickStartHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 20,
+  alignItems: "flex-start",
+  marginBottom: 26,
+};
+
+const sectionEyebrow = {
+  color: "#8b5cf6",
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: "1.4px",
+  marginBottom: 7,
 };
 
 const quickStartTitle = {
-  margin: "0 0 16px 0",
+  margin: 0,
+  color: "var(--text)",
   fontSize: 20,
-  fontWeight: 700,
-  color: "#f5f5f5",
+  fontWeight: 800,
+  letterSpacing: "-0.3px",
 };
 
-const quickStartList = {
-  margin: "0 0 24px 0",
-  paddingLeft: 20,
-  lineHeight: "2.2",
-  color: "#a1a1aa",
-  fontSize: 14,
+const quickStartSubtitle = {
+  color: "var(--muted)",
+  fontSize: 13,
+  margin: "7px 0 0",
 };
 
-const quickStartStep = {
-  fontWeight: 500,
+const rocketIcon = {
+  width: 44,
+  height: 44,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 12,
+  background: "#1a1430",
+  border: "1px solid #30205e",
+  fontSize: 20,
+};
+
+const quickStartGrid = {
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 12,
+  marginBottom: 22,
+};
+
+const quickStep = {
+  display: "flex",
+  gap: 12,
+  padding: 15,
+  background: "#0a0a0d",
+  border: "1px solid var(--border)",
+  borderRadius: 12,
+};
+
+const stepNumber = {
+  color: "#8b5cf6",
+  fontFamily:
+    "ui-monospace, SFMono-Regular, Menlo, monospace",
+  fontSize: 11,
+  fontWeight: 800,
 };
 
 const primaryAction = {
-  padding: "12px 22px",
-  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-  color: "white",
-  border: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "11px 16px",
   borderRadius: 10,
+  border: "1px solid rgba(139,92,246,0.4)",
+  background:
+    "linear-gradient(135deg, #6366f1, #7c3aed)",
+  color: "white",
   cursor: "pointer",
-  fontWeight: 600,
-  fontSize: 14,
-  transition: "background 0.2s",
+  fontWeight: 700,
+  fontSize: 13,
+  boxShadow: "0 8px 25px rgba(99,102,241,0.16)",
+};
+
+const overviewHeader = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "end",
+  marginBottom: 14,
+};
+
+const overviewTitle = {
+  margin: 0,
+  fontSize: 20,
+  fontWeight: 800,
+  color: "var(--text)",
 };
 
 const grid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-  gap: 20,
-  marginBottom: 24,
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(240px, 1fr))",
+  gap: 14,
+  marginBottom: 30,
 };
 
 const statCard = {
-  background: "#0d0d0d",
-  padding: 24,
+  background:
+    "linear-gradient(145deg, #101014, #0c0c0f)",
+  padding: 20,
   borderRadius: 16,
-  border: "1px solid #262626",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
+  border: "1px solid var(--border)",
+  boxShadow: "0 10px 35px rgba(0,0,0,0.20)",
 };
 
 const statTop = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: 12,
+  marginBottom: 16,
 };
 
 const statEmoji = {
-  fontSize: 18,
-  background: "#18181b",
-  padding: "6px 10px",
-  borderRadius: 8,
+  width: 38,
+  height: 38,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#181820",
+  border: "1px solid #292934",
+  borderRadius: 10,
+  fontSize: 17,
 };
 
 const statLabel = {
-  color: "#a1a1aa",
-  fontSize: 13,
-  fontWeight: 600,
+  color: "#8b8b96",
+  fontSize: 10,
+  fontWeight: 800,
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
+  letterSpacing: "1px",
 };
 
 const statValue = {
-  fontSize: 32,
-  fontWeight: 800,
-  color: "#f5f5f5",
-  letterSpacing: "-0.5px",
+  fontSize: 34,
+  fontWeight: 850,
+  color: "#fafafa",
+  letterSpacing: "-1px",
+};
+
+const statFooter = {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  marginTop: 10,
+  color: "#62626d",
+  fontSize: 10,
+};
+
+const statPulse = {
+  width: 5,
+  height: 5,
+  borderRadius: "50%",
+  background: "#8b5cf6",
+  boxShadow: "0 0 8px rgba(139,92,246,0.6)",
 };
 
 const tableWrapper = {
-  background: "#0d0d0d",
+  background:
+    "linear-gradient(145deg, #101014, #0c0c0f)",
   borderRadius: 20,
-  padding: 32,
-  border: "1px solid #262626",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+  padding: 26,
+  border: "1px solid var(--border)",
+  boxShadow: "0 16px 50px rgba(0,0,0,0.22)",
 };
 
 const tableHeader = {
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
+  alignItems: "flex-end",
   gap: 20,
   flexWrap: "wrap",
-  marginBottom: 24,
+  marginBottom: 22,
 };
 
 const deploymentsTitle = {
   margin: 0,
-  fontSize: 18,
-  fontWeight: 700,
-  color: "#f5f5f5",
-  marginBottom: 4,
+  fontSize: 19,
+  fontWeight: 800,
+  color: "var(--text)",
 };
 
 const tableSubtext = {
-  margin: 0,
-  color: "#71717a",
-  fontSize: 13,
+  margin: "6px 0 0",
+  color: "var(--muted)",
+  fontSize: 12,
 };
 
 const viewAllBtn = {
-  padding: "8px 14px",
-  borderRadius: 8,
-  border: "1px solid #303030",
-  background: "#111111",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "9px 13px",
+  borderRadius: 9,
+  border: "1px solid var(--border)",
+  background: "var(--surface-2)",
+  color: "var(--text-soft)",
   cursor: "pointer",
-  fontWeight: 600,
-  fontSize: 13,
-  color: "#d4d4d8",
-  transition: "all 0.15s",
+  fontWeight: 650,
+  fontSize: 12,
 };
 
 const deploymentsList = {
   display: "flex",
   flexDirection: "column",
-  gap: 12,
+  gap: 10,
 };
 
 const deploymentCard = {
-  border: "1px solid #27272a",
-  borderRadius: 12,
   padding: 16,
-  background: "#111111",
+  background: "#0a0a0d",
+  border: "1px solid #27272f",
+  borderRadius: 13,
+  transition: "border-color .18s ease",
 };
 
 const deploymentTop = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  gap: 20,
-  marginBottom: 12,
+  gap: 16,
   flexWrap: "wrap",
+  marginBottom: 14,
+};
+
+const deploymentProject = {
+  display: "flex",
+  alignItems: "center",
+  gap: 11,
+};
+
+const projectIcon = {
+  width: 34,
+  height: 34,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#17141f",
+  border: "1px solid #30234c",
+  borderRadius: 9,
+  fontSize: 15,
 };
 
 const projectName = {
-  fontWeight: 700,
-  fontSize: 15,
-  color: "#f5f5f5",
-  marginBottom: 2,
+  fontWeight: 750,
+  fontSize: 14,
+  color: "#f5f5f7",
+  marginBottom: 3,
 };
 
 const deployTime = {
-  color: "#71717a",
-  fontSize: 12,
+  color: "#686873",
+  fontSize: 11,
 };
 
 const deploymentBottom = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  gap: 16,
+  gap: 12,
   flexWrap: "wrap",
+  paddingTop: 12,
+  borderTop: "1px solid #202027",
 };
 
 const environmentTag = {
-  background: "#0c1f2a",
-  color: "#38bdf8",
-  border: "1px solid #075985",
-  padding: "4px 10px",
-  borderRadius: 6,
-  fontSize: 11,
-  fontWeight: 700,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  background: "#0b1d22",
+  color: "#67e8f9",
+  border: "1px solid #164e63",
+  padding: "5px 9px",
+  borderRadius: 7,
+  fontSize: 10,
+  fontWeight: 800,
   textTransform: "uppercase",
+  letterSpacing: ".4px",
 };
 
 const emptyState = {
   textAlign: "center",
   padding: "48px 24px",
+  border: "1px dashed #30303a",
+  borderRadius: 14,
+  background: "#09090c",
 };
 
-const emptyEmoji = {
-  fontSize: 36,
-  marginBottom: 14,
+const emptyIcon = {
+  width: 48,
+  height: 48,
+  margin: "0 auto 14px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 14,
+  background: "#17141f",
+  border: "1px solid #30234c",
+  color: "#a78bfa",
+  fontSize: 25,
+};
+
+const emptyTitle = {
+  margin: "0 0 8px",
+  color: "var(--text)",
+  fontSize: 16,
 };
 
 const emptyText = {
-  color: "#64748b",
-  marginBottom: 20,
-  fontSize: 14,
-  maxWidth: 400,
-  margin: "0 auto 20px auto",
-};
-
-const viewBtn = {
-  padding: "6px 12px",
-  background: "#18181b",
-  color: "#e4e4e7",
-  borderRadius: 8,
-  textDecoration: "none",
-  fontSize: 12,
-  fontWeight: 600,
-  border: "1px solid #303030",
-  boxShadow: "none",
+  color: "var(--muted)",
+  margin: "0 auto 20px",
+  fontSize: 13,
+  lineHeight: 1.6,
+  maxWidth: 430,
 };
 
 const statusBadge = (status) => {
@@ -782,25 +1179,40 @@ const statusBadge = (status) => {
     normStatus === "PENDING";
 
   return {
-    padding: "4px 10px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "5px 9px",
     borderRadius: 999,
-    fontWeight: 700,
-    fontSize: 11,
-    letterSpacing: "0.5px",
+    fontWeight: 800,
+    fontSize: 10,
+    letterSpacing: ".4px",
     background: isReady
-      ? "#0c2415"
+      ? "#0b2115"
       : isBuilding
-      ? "#2a2110"
-      : "#2a1111",
+      ? "#211b0b"
+      : "#261010",
     color: isReady
-      ? "#4ade80"
+      ? "#86efac"
       : isBuilding
-      ? "#facc15"
-      : "#f87171",
+      ? "#fcd34d"
+      : "#fca5a5",
     border: isReady
       ? "1px solid #14532d"
       : isBuilding
       ? "1px solid #713f12"
-      : "1px solid #451a1a",
+      : "1px solid #7f1d1d",
   };
+};
+
+const statusIndicator = {
+  width: 5,
+  height: 5,
+  borderRadius: "50%",
+  background: "currentColor",
+};
+
+const teamNames = {
+  color: "#e4e4e7",
+  fontSize: 13,
 };

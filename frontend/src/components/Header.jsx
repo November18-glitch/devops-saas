@@ -78,153 +78,107 @@ export default function Header() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <header
+  <div
+    style={{
+      position: "sticky",
+      top: 0,
+      zIndex: 50,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "16px 30px",
+      borderBottom: "1px solid var(--border)",
+      background: "rgba(5, 5, 5, 0.92)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+    }}
+  >
+    <div
       style={{
-        minHeight: 70,
-        padding: "10px 28px",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
-
-        background: "rgba(8, 8, 10, 0.96)",
-        borderBottom: "1px solid var(--border)",
-
-        color: "var(--text)",
-
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-
-        boxSizing: "border-box",
+        gap: 14,
+        minWidth: 0,
       }}
     >
-      {/* USER AREA */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 13,
-          minWidth: 0,
-        }}
-      >
-        {/* AVATAR */}
-        {avatar ? (
-          <img
-            src={avatar}
-            alt="Profile"
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "2px solid #292933",
-              boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.08)",
-              flexShrink: 0,
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              background:
-                "linear-gradient(135deg, var(--accent-2), var(--accent))",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: 16,
-              flexShrink: 0,
-              boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.08)",
-            }}
-          >
-            {initial}
-          </div>
-        )}
-
-        {/* NAME */}
+      {avatar ? (
+        <img
+          src={avatar}
+          alt="profile"
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: "50%",
+            objectFit: "cover",
+            border: "2px solid #34343d",
+            boxShadow: "0 0 0 4px rgba(124,58,237,0.08)",
+          }}
+        />
+      ) : (
         <div
           style={{
+            width: 46,
+            height: 46,
+            borderRadius: "50%",
+            background:
+              "linear-gradient(135deg, #6366f1, #7c3aed)",
+            color: "white",
             display: "flex",
-            flexDirection: "column",
-            gap: 3,
-            minWidth: 0,
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 800,
+            fontSize: 17,
+            boxShadow: "0 8px 24px rgba(99,102,241,0.18)",
           }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              lineHeight: 1,
-              color: "var(--muted)",
-              fontWeight: 500,
-            }}
-          >
-            Welcome back 👋
-          </span>
+          {initial}
+        </div>
+      )}
 
-          <span
-            style={{
-              fontSize: 15,
-              lineHeight: 1.15,
-              color: "var(--text)",
-              fontWeight: 750,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: 260,
-            }}
-          >
-            {displayName}
-          </span>
+      <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--muted)",
+            marginBottom: 2,
+          }}
+        >
+          Welcome back 👋
+        </div>
+
+        <div
+          style={{
+            fontSize: 17,
+            fontWeight: 750,
+            color: "var(--text)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {displayName}
         </div>
       </div>
+    </div>
 
-      {/* LOGOUT */}
-      <button
-        onClick={async () => {
-          await supabase.auth.signOut();
-          window.location.reload();
-        }}
-        style={{
-          height: 38,
-          padding: "0 16px",
-
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
-          borderRadius: 9,
-
-          color: "var(--text-soft)",
-
-          fontSize: 13,
-          fontWeight: 700,
-
-          cursor: "pointer",
-
-          transition:
-            "background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease",
-
-          flexShrink: 0,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "var(--surface-3)";
-          e.currentTarget.style.borderColor = "var(--border-hover)";
-          e.currentTarget.style.color = "var(--text)";
-          e.currentTarget.style.transform = "translateY(-1px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "var(--surface-2)";
-          e.currentTarget.style.borderColor = "var(--border)";
-          e.currentTarget.style.color = "var(--text-soft)";
-          e.currentTarget.style.transform = "translateY(0)";
-        }}
-      >
-        Log out
-      </button>
-    </header>
-  );
+    <button
+      onClick={async () => {
+        await supabase.auth.signOut();
+        window.location.reload();
+      }}
+      style={{
+        background: "var(--surface-2)",
+        color: "var(--text-soft)",
+        border: "1px solid var(--border)",
+        padding: "10px 16px",
+        borderRadius: 10,
+        cursor: "pointer",
+        fontWeight: 650,
+        fontSize: 13,
+      }}
+    >
+      Log out
+    </button>
+  </div>
+);
 }
