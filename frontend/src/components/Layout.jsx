@@ -2,7 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useEffect, useState } from "react";
 
-import Header from "./TopBar";
+import Header from "./Header";
 import logo from "../assets/logo.png";
 import "../styles/app.css";
 
@@ -219,7 +219,7 @@ export default function Layout() {
         color: "var(--text)",
       }}
     >
-      <TopBar />
+      <Header />
 
       <div
         style={{

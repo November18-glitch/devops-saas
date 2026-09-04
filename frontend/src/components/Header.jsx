@@ -15,7 +15,6 @@ export default function Header() {
       const currentUser = data.user;
 
       setUser(currentUser);
-
       setAvatar(currentUser.user_metadata?.avatar_url || null);
 
       const { data: profile } = await supabase
@@ -79,93 +78,153 @@ export default function Header() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div
+    <header
       style={{
+        minHeight: 70,
+        padding: "10px 28px",
         display: "flex",
-        justifyContent: "space-between",
         alignItems: "center",
-        padding: "18px 30px",
-        borderBottom: "1px solid #e5e7eb",
-        background: "#fff",
+        justifyContent: "space-between",
+
+        background: "rgba(8, 8, 10, 0.96)",
+        borderBottom: "1px solid var(--border)",
+
+        color: "var(--text)",
+
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+
+        boxSizing: "border-box",
       }}
     >
+      {/* USER AREA */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 14,
+          gap: 13,
+          minWidth: 0,
         }}
       >
+        {/* AVATAR */}
         {avatar ? (
           <img
             src={avatar}
-            alt="profile"
+            alt="Profile"
             style={{
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               borderRadius: "50%",
               objectFit: "cover",
-              border: "2px solid #e5e7eb",
+              border: "2px solid #292933",
+              boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.08)",
+              flexShrink: 0,
             }}
           />
         ) : (
           <div
             style={{
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               borderRadius: "50%",
-              background: "#e2e8f0",
-              color: "#334155",
+              background:
+                "linear-gradient(135deg, var(--accent-2), var(--accent))",
+              color: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontWeight: 700,
-              fontSize: 18,
+              fontWeight: 800,
+              fontSize: 16,
+              flexShrink: 0,
+              boxShadow: "0 0 0 3px rgba(124, 58, 237, 0.08)",
             }}
           >
             {initial}
           </div>
         )}
 
-        <div>
-          <div
+        {/* NAME */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            minWidth: 0,
+          }}
+        >
+          <span
             style={{
-              fontSize: 13,
-              color: "#64748b",
+              fontSize: 12,
+              lineHeight: 1,
+              color: "var(--muted)",
+              fontWeight: 500,
             }}
           >
             Welcome back 👋
-          </div>
+          </span>
 
-          <div
+          <span
             style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: "#0f172a",
+              fontSize: 15,
+              lineHeight: 1.15,
+              color: "var(--text)",
+              fontWeight: 750,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: 260,
             }}
           >
             {displayName}
-          </div>
+          </span>
         </div>
       </div>
 
+      {/* LOGOUT */}
       <button
         onClick={async () => {
           await supabase.auth.signOut();
           window.location.reload();
         }}
         style={{
-          background: "#6366f1",
-          color: "white",
-          border: "none",
-          padding: "10px 18px",
-          borderRadius: 10,
+          height: 38,
+          padding: "0 16px",
+
+          background: "var(--surface-2)",
+          border: "1px solid var(--border)",
+          borderRadius: 9,
+
+          color: "var(--text-soft)",
+
+          fontSize: 13,
+          fontWeight: 700,
+
           cursor: "pointer",
-          fontWeight: 600,
+
+          transition:
+            "background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease",
+
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--surface-3)";
+          e.currentTarget.style.borderColor = "var(--border-hover)";
+          e.currentTarget.style.color = "var(--text)";
+          e.currentTarget.style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "var(--surface-2)";
+          e.currentTarget.style.borderColor = "var(--border)";
+          e.currentTarget.style.color = "var(--text-soft)";
+          e.currentTarget.style.transform = "translateY(0)";
         }}
       >
         Log out
       </button>
-    </div>
+    </header>
   );
 }
