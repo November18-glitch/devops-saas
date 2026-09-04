@@ -1204,6 +1204,21 @@ const statusBadge = (status) => {
       : "1px solid #7f1d1d",
   };
 };
+const viewBtn = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "8px 14px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  background: "var(--surface-3)",
+  color: "var(--text-soft)",
+  textDecoration: "none",
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: "pointer",
+  transition: "all 0.18s ease",
+};
 
 const statusIndicator = {
   width: 5,
