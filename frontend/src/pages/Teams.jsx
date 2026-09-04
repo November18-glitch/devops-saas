@@ -16,6 +16,7 @@ export default function Teams() {
   const [inviting, setInviting] = useState(false);
 
   const [user, setUser] = useState(null);
+  const [plan, setPlan] = useState("FREE");
 
   const [teamMembers, setTeamMembers] = useState({});
   const [removingMember, setRemovingMember] = useState(null);
@@ -27,13 +28,24 @@ export default function Teams() {
   */
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
+  const loadUser = async () => {
+    const { data } = await supabase.auth.getUser();
 
-    loadUser();
-  }, []);
+    setUser(data.user);
+
+    if (!data.user) return;
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("plan")
+      .eq("id", data.user.id)
+      .single();
+
+    setPlan(profile?.plan || "FREE");
+  };
+
+  loadUser();
+}, []);
 
   /*
   =========================
@@ -255,12 +267,13 @@ export default function Teams() {
     }
 
     if (
-      (team.member_count || 0) >=
-      (team.max_members || 3)
-    ) {
-      alert("This team is already full.");
-      return;
-    }
+  plan !== "PRO" &&
+  (team.member_count || 0) >=
+    (team.max_members || 3)
+) {
+  alert("This team is already full.");
+  return;
+}
 
     setInviting(true);
 
@@ -505,23 +518,23 @@ export default function Teams() {
 
             {teams.map((team) => {
 
-              const members =
-                teamMembers[team.id] || [];
-
               const memberCount =
-                team.member_count || 0;
+  team.member_count || 0;
 
-              const maxMembers =
-                team.max_members || 3;
+const maxMembers =
+  team.max_members || 3;
 
-              const slotsLeft =
-                Math.max(
-                  0,
-                  maxMembers - memberCount
-                );
+const slotsLeft =
+  plan === "PRO"
+    ? Infinity
+    : Math.max(
+        0,
+        maxMembers - memberCount
+      );
 
-              const isFull =
-                memberCount >= maxMembers;
+const isFull =
+  plan !== "PRO" &&
+  memberCount >= maxMembers;
 
               return (
                 <div
@@ -557,27 +570,36 @@ export default function Teams() {
                       👥
 
                       <strong>
-                        {memberCount}/{maxMembers}
-                      </strong>
+  {plan === "PRO"
+    ? `${memberCount} members`
+    : `${memberCount}/${maxMembers}`}
+</strong>
 
-                      <span>
-                        active members
-                      </span>
-                    </div>
+<span>
+  {plan === "PRO"
+    ? "unlimited team"
+    : "active members"}
+</span>
 
-                    {isFull ? (
-                      <span className="full-badge">
-                        Team full
-                      </span>
-                    ) : (
-                      <span className="available-badge">
-                        {slotsLeft}{" "}
-                        {slotsLeft === 1
-                          ? "slot"
-                          : "slots"}{" "}
-                        available
-                      </span>
-                    )}
+                    {plan === "PRO" ? (
+  <span className="available-badge">
+    Unlimited
+  </span>
+) : isFull ? (
+  <span className="full-badge">
+    Team full
+  </span>
+) : (
+  <span className="available-badge">
+    {slotsLeft}{" "}
+    {slotsLeft === 1
+      ? "slot"
+      : "slots"}{" "}
+    available
+  </span>
+)}
+
+                  </div>
 
                   </div>
 
@@ -612,20 +634,20 @@ export default function Teams() {
 
                     {team.is_owner && (
                       <button
-                        className="secondary"
-                        disabled={isFull}
-                        onClick={() =>
-                          setSelectedTeam(
-                            selectedTeam === team.id
-                              ? null
-                              : team.id
-                          )
-                        }
-                      >
-                        {isFull
-                          ? "Full"
-                          : "Invite"}
-                      </button>
+  className="secondary"
+  disabled={isFull}
+  onClick={() =>
+    setSelectedTeam(
+      selectedTeam === team.id
+        ? null
+        : team.id
+    )
+  }
+>
+  {isFull
+    ? "Full"
+    : "Invite"}
+</button>
                     )}
 
                   </div>
