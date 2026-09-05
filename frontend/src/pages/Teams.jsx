@@ -516,31 +516,34 @@ export default function Teams() {
 
           <div className="teams-grid">
 
-            {teams.map((team) => {
+             {teams.map((team) => {
+
+              const members =
+               teamMembers[team.id] || [];
 
               const memberCount =
-  team.member_count || 0;
+               team.member_count || 0;
 
-const maxMembers =
-  team.max_members || 3;
+              const maxMembers =
+               team.max_members || 3;
 
-const slotsLeft =
-  plan === "PRO"
-    ? Infinity
-    : Math.max(
-        0,
-        maxMembers - memberCount
-      );
+              const slotsLeft =
+               plan === "PRO"
+               ? Infinity
+               : Math.max(
+               0,
+               maxMembers - memberCount
+              );
 
-const isFull =
-  plan !== "PRO" &&
-  memberCount >= maxMembers;
+              const isFull =
+               plan !== "PRO" &&
+               memberCount >= maxMembers;
 
               return (
-                <div
-                  key={team.id}
-                  className="team-card"
-                >
+               <div
+                key={team.id}
+                className="team-card"
+              >
 
                   {/* TEAM HEADER */}
 
