@@ -14,12 +14,14 @@ export default function Projects() {
 
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
-  const [envVars, setEnvVars] = useState([
+  const [newProjectEnvVars, setNewProjectEnvVars] = useState([
   {
     key: "",
     value: "",
   },
 ]);
+
+const [selectedProjectEnvVars, setSelectedProjectEnvVars] = useState([]);
 
   const [newProjectName, setNewProjectName] = useState("");
   const [newRepoUrl, setNewRepoUrl] = useState("");
@@ -117,19 +119,19 @@ const res = await fetch("/api/app?action=getTeams", {
         setProjects(loadedProjects);
 
         if (loadedProjects.length > 0) {
-         const first = loadedProjects[0];
+  const first = loadedProjects[0];
 
-          if (first.env_vars) {
-           setEnvVars(
-            Object.entries(first.env_vars).map(
-            ([key, value]) => ({
-             key,
-             value,
-            })
-           )
-            );
-        }
-      }
+  setSelectedProjectEnvVars(
+    first.env_vars
+      ? Object.entries(first.env_vars).map(
+          ([key, value]) => ({
+            key,
+            value,
+          })
+        )
+      : []
+  );
+}
 
         if (loadedProjects.length > 0) {
           setSelectedProject(loadedProjects[0].id);
@@ -186,11 +188,11 @@ const res = await fetch("/api/app?action=getTeams", {
 
      const formattedEnv = {};
 
-      envVars.forEach((env) => {
-      if (env.key.trim()) {
-       formattedEnv[env.key] = env.value;
-      }
-     });
+newProjectEnvVars.forEach((env) => {
+  if (env.key.trim()) {
+    formattedEnv[env.key.trim()] = env.value;
+  }
+});
 
     const res = await fetch("/api/app?action=createProject", {
       method: "POST",
@@ -215,7 +217,7 @@ const res = await fetch("/api/app?action=getTeams", {
     setNewProjectName("");
     setNewRepoUrl("");
 
-    setEnvVars([
+    setNewProjectEnvVars([
      {
        key: "",
        value: "",
@@ -581,21 +583,21 @@ ${data.analysis?.detected?.join(", ") || "None"}
         </div>
 
         <div style={envContainer}>
-          {envVars.map((env, index) => (
+          {newProjectEnvVars.map((env, index) => (
             <div key={index} style={envRow}>
               <input
                 placeholder="KEY"
                 value={env.key}
-                onChange={(e) => {
-                  const updated = [...envVars];
+onChange={(e) => {
+  const updated = [...newProjectEnvVars];
 
-                  updated[index] = {
-                    ...updated[index],
-                    key: e.target.value,
-                  };
+  updated[index] = {
+    ...updated[index],
+    key: e.target.value,
+  };
 
-                  setEnvVars(updated);
-                }}
+  setNewProjectEnvVars(updated);
+}}
                 style={{
                   ...input,
                   flex: 1,
@@ -607,14 +609,14 @@ ${data.analysis?.detected?.join(", ") || "None"}
                 placeholder="VALUE"
                 value={env.value}
                 onChange={(e) => {
-                  const updated = [...envVars];
+                  const updated = [...newProjectEnvVars];
 
                   updated[index] = {
                     ...updated[index],
                     value: e.target.value,
                   };
 
-                  setEnvVars(updated);
+                  setNewProjectEnvVars(updated);
                 }}
                 style={{
                   ...input,
@@ -626,8 +628,8 @@ ${data.analysis?.detected?.join(", ") || "None"}
               <button
                 type="button"
                 onClick={() => {
-                  setEnvVars(
-                    envVars.filter(
+                  setNewProjectEnvVars(
+                    newProjectEnvVars.filter(
                       (_, i) => i !== index
                     )
                   );
@@ -643,8 +645,7 @@ ${data.analysis?.detected?.join(", ") || "None"}
         <button
           type="button"
           onClick={() =>
-            setEnvVars([
-              ...envVars,
+            setNewProjectEnvVars([
               {
                 key: "",
                 value: "",
@@ -749,22 +750,17 @@ ${data.analysis?.detected?.join(", ") || "None"}
             );
 
             if (project?.env_vars) {
-              setEnvVars(
-                Object.entries(project.env_vars).map(
-                  ([key, value]) => ({
-                    key,
-                    value,
-                  })
-                )
-              );
-            } else {
-              setEnvVars([
-                {
-                  key: "",
-                  value: "",
-                },
-              ]);
-            }
+  setSelectedProjectEnvVars(
+    Object.entries(project.env_vars).map(
+      ([key, value]) => ({
+        key,
+        value,
+      })
+    )
+  );
+} else {
+  setSelectedProjectEnvVars([]);
+}
           }}
         >
           <option value="">Select Project</option>

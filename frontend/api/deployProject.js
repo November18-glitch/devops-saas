@@ -193,11 +193,21 @@ export default async function handler(
       projectId,
     } = req.body;
 
-    const { data: project } = await supabase
-  .from("projects")
-  .select("env_vars")
-  .eq("id", projectId)
-  .single();
+    const { data: project, error: projectError } =
+  await supabase
+    .from("projects")
+    .select("id, env_vars")
+    .eq("id", projectId)
+    .eq("team_id", teamId)
+    .single();
+
+if (projectError || !project) {
+  throw new Error(
+    "Project not found or does not belong to this team."
+  );
+}
+
+const projectEnv = project.env_vars || {};
 
     if (
       !repoUrl ||
@@ -390,20 +400,21 @@ const vercelPayload = {
     : {}),
 },
 
-  env: project?.env_vars || {},
+  env: projectEnv,
 };
 
-console.log(
-  "[ENV CHECK]",
-  JSON.stringify(
-    vercelPayload.env,
-    null,
-    2
-  )
-); 
-    console.log(
-     JSON.stringify(vercelPayload, null, 2)
-    );
+console.log("[ENV CHECK]", {
+  projectId,
+  keys: Object.keys(projectEnv),
+  count: Object.keys(projectEnv).length,
+});
+    console.log("[VERCEL REQUEST]", {
+  name: vercelPayload.name,
+  framework: vercelPayload.projectSettings.framework,
+  rootDirectory:
+    vercelPayload.projectSettings.rootDirectory || null,
+  envKeys: Object.keys(projectEnv),
+});
 
     const vercelRes =
       await fetch(
