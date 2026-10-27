@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Dashboard() {
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const isPro = location.search.includes("success=true");
+  const [isPro, setIsPro] = useState(false);
 
   const [team, setTeam] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -48,6 +47,18 @@ export default function Dashboard() {
       session.user.id,
       session.user.email
     );
+    // Get actual subscription plan from Supabase
+const { data: userPlan, error: planError } = await supabase
+  .from("users")
+  .select("plan")
+  .eq("id", session.user.id)
+  .single();
+
+if (planError) {
+  console.error("[DASHBOARD] PLAN ERROR:", planError);
+}
+
+setIsPro(userPlan?.plan?.toUpperCase() === "PRO");
 
     // ========================================
     // GET TEAMS THROUGH OUR API
@@ -341,34 +352,24 @@ return (
             </div>
           </div>
 
-          {!isPro ? (
-            <button
-              onClick={handleCheckout}
-              onMouseEnter={() => setHoveredBtn("upgrade")}
-              onMouseLeave={() => setHoveredBtn(null)}
-              style={{
-                ...upgradeBtn,
-                transform:
-                  hoveredBtn === "upgrade"
-                    ? "translateY(-2px)"
-                    : "none",
-              }}
-            >
-              <span>🚀</span>
-              Upgrade to Pro
-              <span style={upgradeArrow}>→</span>
-            </button>
-          ) : (
-            <div style={successBox}>
-              <span style={successIcon}>✓</span>
-              <div>
-                <strong>Pro workspace active</strong>
-                <span>
-                  Unlimited deployments are unlocked.
-                </span>
-              </div>
-            </div>
-          )}
+          {!isPro && (
+  <button
+    onClick={handleCheckout}
+    onMouseEnter={() => setHoveredBtn("upgrade")}
+    onMouseLeave={() => setHoveredBtn(null)}
+    style={{
+      ...upgradeBtn,
+      transform:
+        hoveredBtn === "upgrade"
+          ? "translateY(-2px)"
+          : "none",
+    }}
+  >
+    <span>🚀</span>
+    Upgrade to Pro
+    <span style={upgradeArrow}>→</span>
+  </button>
+)}
         </div>
       </div>
 
