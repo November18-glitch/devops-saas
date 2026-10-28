@@ -565,48 +565,49 @@ export default function Teams() {
                     {team.id.slice(-4)}
                   </p>
 
+                  
                   {/* MEMBER COUNT */}
 
                   <div className="member-summary">
-
                     <div className="member-count">
                       👥
 
                       <strong>
-  {plan === "PRO"
-    ? `${memberCount} members`
-    : `${memberCount}/${maxMembers}`}
-</strong>
+                        {plan === "PRO"
+                          ? `${memberCount} members`
+                          : `${memberCount}/${maxMembers}`}
+                      </strong>
 
-<span>
-  {plan === "PRO"
-    ? "unlimited team"
-    : "active members"}
-</span>
+                      <span>
+                        {plan === "PRO"
+                          ? "unlimited team"
+                          : "active members"}
+                      </span>
 
-                    {plan === "PRO" ? (
-  <span className="available-badge">
-    Unlimited
-  </span>
-) : isFull ? (
-  <span className="full-badge">
-    Team full
-  </span>
-) : (
-  <span className="available-badge">
-    {slotsLeft}{" "}
-    {slotsLeft === 1
-      ? "slot"
-      : "slots"}{" "}
-    available
-  </span>
-)}
-
+                      {team.is_owner && (
+                        <>
+                          {plan === "PRO" ? (
+                            <span className="available-badge">
+                              Unlimited
+                            </span>
+                          ) : isFull ? (
+                            <span className="full-badge">
+                              Team full
+                            </span>
+                          ) : (
+                            <span className="available-badge">
+                              {slotsLeft}{" "}
+                              {slotsLeft === 1
+                                ? "slot"
+                                : "slots"}{" "}
+                              available
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  </div>
-
-                  {/* OWNER STATUS */}
 
                   <div className="role-summary">
 
